@@ -1,0 +1,37 @@
+name: Fit or rule update
+description: Propose a ship fit, preflight rule, skill plan, or task correction.
+title: "[Data] "
+labels: [game-data]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Ship fit
+        - Ship ranking
+        - Preflight rule
+        - Skill plan
+        - Activity or market rule
+        - ESI behavior
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: Proposed change
+      description: Include hull, role, activity, skill level, and restrictions where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Verification
+      description: EVE simulator result, CCP documentation, or reproducible data.
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: Limits and failure cases
+      description: State where this recommendation should not be used.

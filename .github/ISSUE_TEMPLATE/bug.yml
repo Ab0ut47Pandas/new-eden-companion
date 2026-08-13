@@ -1,0 +1,32 @@
+name: Bug report
+description: Report incorrect behavior or a broken workflow.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include EVE tokens, `.env.local`, database files, private mail, or corporation data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open...\n2. Select...\n3. See..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node.js version, and browser.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Redacted screenshots or logs only.

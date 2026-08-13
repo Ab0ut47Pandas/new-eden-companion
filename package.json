@@ -1,0 +1,35 @@
+{
+  "name": "new-eden-companion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A local-first, explainable EVE Online decision companion powered by ESI.",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "companion": "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/start-companion.ps1",
+    "dev": "next dev",
+    "build": "next build",
+    "eve": "node --env-file-if-exists=.env.local scripts/eve-bridge.mjs",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "jose": "6.2.8",
+    "lucide-react": "1.31.0",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.2",
+    "eslint-config-next": "16.3.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}

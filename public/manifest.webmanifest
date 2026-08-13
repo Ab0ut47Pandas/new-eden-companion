@@ -1,0 +1,10 @@
+{
+  "name": "New Eden Companion",
+  "short_name": "NE Companion",
+  "description": "A private, explainable EVE Online decision companion.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b0f",
+  "theme_color": "#0b1116",
+  "icons": [{ "src": "/mark.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
