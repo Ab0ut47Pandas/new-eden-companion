@@ -100,6 +100,10 @@ Main directories:
 
 Contributions are handled through pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md). The MIT license covers this project's original source code; CCP-owned names, data, images, and trademarks remain CCP property.
 
+## Support
+
+New Eden Companion is free and does not reserve features for contributors. Optional support through [Cash App](https://cash.app/$47pandas) is used toward project maintenance and hosting costs.
+
 ## CCP notice
 
 New Eden Companion is an independent third-party application and is not affiliated with or endorsed by CCP Games.
