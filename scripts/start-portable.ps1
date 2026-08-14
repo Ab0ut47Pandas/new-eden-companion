@@ -35,6 +35,17 @@ function Set-EnvValue([string]$Path, [string]$Name, [string]$Value) {
   [System.IO.File]::WriteAllLines($Path, $lines, [System.Text.UTF8Encoding]::new($false))
 }
 
+function New-AuthSecret {
+  $secretBytes = [byte[]]::new(32)
+  $random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try {
+    $random.GetBytes($secretBytes)
+  } finally {
+    $random.Dispose()
+  }
+  return -join ($secretBytes | ForEach-Object { $_.ToString("x2") })
+}
+
 function Test-CompanionPage {
   try {
     $response = Invoke-WebRequest -Uri $localUrl -UseBasicParsing -TimeoutSec 2
@@ -61,9 +72,7 @@ if (-not (Test-Path -LiteralPath $envPath)) {
 
 $authSecret = Get-EnvValue $envPath "AUTH_SECRET"
 if ($authSecret.Length -lt 32) {
-  $secretBytes = [byte[]]::new(32)
-  [System.Security.Cryptography.RandomNumberGenerator]::Fill($secretBytes)
-  $authSecret = [Convert]::ToHexString($secretBytes).ToLowerInvariant()
+  $authSecret = New-AuthSecret
   Set-EnvValue $envPath "AUTH_SECRET" $authSecret
   Write-Host "Created a private encryption key for this copy."
 } else {
