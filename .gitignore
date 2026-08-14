@@ -4,6 +4,7 @@
 # next.js
 /.next
 /out
+/dist
 
 # local secrets and session data
 .env*

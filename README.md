@@ -18,16 +18,16 @@ This is an early build. Recommendations are rule-based and include the source va
 
 ## Run on Windows
 
-Requirements: Windows 10/11 and Node.js 22.13 or newer.
+The easiest option does not require Node.js:
 
-1. Install [Node.js LTS](https://nodejs.org/en/download).
-2. Download and extract the project folder.
+1. Download the Windows ZIP from the [latest release](https://github.com/Ab0ut47Pandas/new-eden-companion/releases/latest).
+2. Extract the ZIP.
 3. Double-click `Start New Eden Companion.cmd`.
-4. Press Enter at the Client ID prompt to run the demo.
+4. Press Enter at the Client ID prompt to explore the demo.
 
 Keep the launcher window open. Closing it stops the local server.
 
-The first run installs dependencies and creates a production build. Later starts reuse that build until project files change.
+The Windows package includes its own runtime. Nothing is installed system-wide.
 
 See [Getting Started](docs/GETTING_STARTED.md) to connect an EVE character. See [Troubleshooting](docs/TROUBLESHOOTING.md) if the launcher stops with an error.
 
@@ -62,6 +62,8 @@ Do not share `.env.local` or the `data` directory.
 ESI is cached. It does not provide the game client screen, local chat, directional scan, hidden ships, or immediate inventory updates. Preflight results must be checked against the fitting and cargo windows before undocking.
 
 ## Manual start
+
+Running from source requires Windows, macOS, or Linux with Node.js 22.13 or newer.
 
 ```text
 npm install
