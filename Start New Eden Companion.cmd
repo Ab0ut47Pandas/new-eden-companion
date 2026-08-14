@@ -10,7 +10,10 @@ if errorlevel 1 (
   exit /b 1
 )
 
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start-companion.ps1"
+set "companion_launcher=%~dp0scripts\start-companion.ps1"
+if exist "%~dp0runtime\node.exe" set "companion_launcher=%~dp0scripts\start-portable.ps1"
+
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%companion_launcher%"
 set "companion_exit=%ERRORLEVEL%"
 
 if not "%companion_exit%"=="0" (
