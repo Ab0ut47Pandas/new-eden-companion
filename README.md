@@ -102,7 +102,7 @@ Contributions are handled through pull requests. See [CONTRIBUTING.md](CONTRIBUT
 
 ## Support
 
-New Eden Companion is free and does not reserve features for contributors. Optional support through [Cash App](https://cash.app/$47pandas) is used toward project maintenance and hosting costs.
+New Eden Companion is free and open source. If you find it useful, optional donations through [Cash App](https://cash.app/$47pandas) help support maintenance and future improvements.
 
 ## CCP notice
 
