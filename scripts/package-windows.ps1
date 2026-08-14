@@ -39,6 +39,21 @@ function Copy-DirectoryContents([string]$Source, [string]$Destination) {
   Get-ChildItem -LiteralPath $Source -Force | Copy-Item -Destination $Destination -Recurse -Force
 }
 
+function Get-Sha256([string]$Path) {
+  $stream = [System.IO.File]::OpenRead($Path)
+  try {
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+      $hashBytes = $sha256.ComputeHash($stream)
+      return -join ($hashBytes | ForEach-Object { $_.ToString("x2") })
+    } finally {
+      $sha256.Dispose()
+    }
+  } finally {
+    $stream.Dispose()
+  }
+}
+
 Set-Location -LiteralPath $projectRoot
 Write-Host "Building New Eden Companion $appVersion..." -ForegroundColor Cyan
 & npm.cmd run build
@@ -113,7 +128,7 @@ try {
   $checksumLine = Get-Content -LiteralPath $checksumsPath | Where-Object { $_ -match "\s$([regex]::Escape($nodeArchiveName))$" } | Select-Object -First 1
   if (-not $checksumLine) { throw "Node.js did not publish a checksum for $nodeArchiveName." }
   $expectedHash = ($checksumLine -split "\s+")[0].ToUpperInvariant()
-  $actualHash = (Get-FileHash -LiteralPath $nodeArchivePath -Algorithm SHA256).Hash.ToUpperInvariant()
+  $actualHash = (Get-Sha256 $nodeArchivePath).ToUpperInvariant()
   if ($actualHash -ne $expectedHash) { throw "The Node.js download failed its SHA-256 verification." }
 
   Expand-Archive -LiteralPath $nodeArchivePath -DestinationPath $tempRoot
@@ -129,7 +144,7 @@ try {
 
 Write-Host "Creating $zipPath..." -ForegroundColor Cyan
 Compress-Archive -LiteralPath $packageRoot -DestinationPath $zipPath -CompressionLevel Optimal
-$zipHash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$zipHash = Get-Sha256 $zipPath
 [System.IO.File]::WriteAllText("$zipPath.sha256", "$zipHash  $([System.IO.Path]::GetFileName($zipPath))`n", [System.Text.UTF8Encoding]::new($false))
 
 Write-Host "Windows package ready:" -ForegroundColor Green
