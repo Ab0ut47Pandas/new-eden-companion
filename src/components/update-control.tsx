@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Download, ExternalLink, RefreshCw, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface UpdateInfo {
   currentVersion: string;
@@ -23,6 +24,7 @@ export function UpdateControl() {
   const [phase, setPhase] = useState<Phase>("checking");
   const [message, setMessage] = useState("Checking for updates…");
   const [open, setOpen] = useState(false);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   async function checkForUpdates(manual = false) {
     setPhase("checking");
@@ -43,6 +45,7 @@ export function UpdateControl() {
   }
 
   useEffect(() => {
+    setPortalTarget(document.querySelector<HTMLElement>(".topbar-actions"));
     const timer = window.setTimeout(() => { void checkForUpdates(false); }, 1_000);
     return () => window.clearTimeout(timer);
   }, []);
@@ -89,9 +92,11 @@ export function UpdateControl() {
     ? `Update ${info.latestVersion}`
     : info
       ? `v${info.currentVersion}`
-      : "Updates";
+      : "Version";
 
-  return (
+  if (!portalTarget) return null;
+
+  return createPortal(
     <aside className={`update-control ${open ? "open" : ""} ${info?.updateAvailable ? "available" : ""}`}>
       {!open ? (
         <button type="button" className="update-chip" onClick={() => setOpen(true)} title="Check New Eden Companion updates">
@@ -135,10 +140,9 @@ export function UpdateControl() {
 
       <style jsx global>{`
         .update-control {
-          position: fixed;
-          right: 22px;
-          bottom: 20px;
-          z-index: 45;
+          position: relative;
+          z-index: 65;
+          flex: 0 0 auto;
           font-family: inherit;
         }
         .update-chip,
@@ -152,6 +156,7 @@ export function UpdateControl() {
         .update-chip {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
           min-height: 38px;
           padding: 0 13px;
@@ -159,13 +164,20 @@ export function UpdateControl() {
           font: inherit;
           font-size: 12px;
           font-weight: 800;
+          white-space: nowrap;
           cursor: pointer;
+        }
+        .update-chip:hover {
+          border-color: rgba(132, 181, 190, 0.5);
         }
         .update-control.available .update-chip {
           border-color: rgba(127, 255, 212, 0.58);
           color: #baffea;
         }
         .update-card {
+          position: absolute;
+          top: calc(100% + 10px);
+          right: 0;
           width: min(360px, calc(100vw - 32px));
           padding: 15px;
           border-radius: 13px;
@@ -203,9 +215,14 @@ export function UpdateControl() {
         @keyframes update-spin { to { transform: rotate(360deg); } }
         @keyframes update-slide { from { transform: translateX(-25%); } to { transform: translateX(165%); } }
         @media (max-width: 760px) {
-          .update-control { right: 16px; bottom: 16px; }
+          .update-card {
+            position: fixed;
+            top: 70px;
+            right: 16px;
+          }
         }
       `}</style>
-    </aside>
+    </aside>,
+    portalTarget,
   );
 }
