@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 import { DashboardShell } from "@/components/dashboard-shell";
+import { SkillExportButton } from "@/components/skill-export-button";
 import { getSession } from "@/lib/auth/session-store";
 import { validAccessToken } from "@/lib/auth/sso";
 import { getConfigurationIssues } from "@/lib/config";
@@ -46,14 +47,23 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const authStatus = typeof params.auth === "string" ? params.auth : undefined;
   const detail = typeof params.detail === "string" ? params.detail : undefined;
+  const connected = dashboard.mode === "live";
+
   return (
-    <DashboardShell
-      data={dashboard}
-      configured={getConfigurationIssues().length === 0}
-      connected={dashboard.mode === "live"}
-      authStatus={authStatus}
-      authDetail={detail}
-      liveError={liveError}
-    />
+    <>
+      <DashboardShell
+        data={dashboard}
+        configured={getConfigurationIssues().length === 0}
+        connected={connected}
+        authStatus={authStatus}
+        authDetail={detail}
+        liveError={liveError}
+      />
+      <SkillExportButton
+        characterName={dashboard.character.name}
+        skills={dashboard.skills}
+        connected={connected}
+      />
+    </>
   );
 }
