@@ -3,6 +3,7 @@ name: release
 on:
   workflow_dispatch:
   push:
+    branches: ["main"]
     tags: ["v*"]
 
 permissions:
@@ -12,28 +13,51 @@ jobs:
   windows-package:
     runs-on: windows-latest
     timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run package:windows
-      - uses: actions/upload-artifact@v4
+      - name: Resolve version and release state
+        id: release
+        shell: pwsh
+        run: |
+          $version = (Get-Content -Raw -LiteralPath package.json | ConvertFrom-Json).version
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "package.json must use a stable x.y.z version." }
+          $expectedTag = "v$version"
+          $tag = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}" } else { $expectedTag }
+          if ($tag -ne $expectedTag) { throw "Release tag $tag does not match package.json version $expectedTag." }
+
+          gh release view $tag --repo "${{ github.repository }}" *> $null
+          $exists = $LASTEXITCODE -eq 0
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "exists=$($exists.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          if ($exists) { Write-Host "Release $tag already exists; packaging is not needed." }
+      - if: steps.release.outputs.exists != 'true'
+        run: npm ci
+      - if: steps.release.outputs.exists != 'true'
+        run: npm test
+      - if: steps.release.outputs.exists != 'true'
+        run: npm run typecheck
+      - if: steps.release.outputs.exists != 'true'
+        run: npm run lint
+      - if: steps.release.outputs.exists != 'true'
+        run: npm run package:windows
+      - if: steps.release.outputs.exists != 'true'
+        uses: actions/upload-artifact@v4
         with:
           name: new-eden-companion-windows-x64
           path: |
             dist/*.zip
             dist/*.sha256
-      - name: Publish GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Publish stable GitHub release
+        if: steps.release.outputs.exists != 'true'
         shell: pwsh
         run: |
+          $tag = "${{ steps.release.outputs.tag }}"
           $assets = Get-ChildItem -Path dist -File | Where-Object { $_.Extension -in @(".zip", ".sha256") }
-          gh release create "${{ github.ref_name }}" @($assets.FullName) --generate-notes --title "New Eden Companion ${{ github.ref_name }}"
+          if (-not $assets) { throw "The Windows packaging step produced no release assets." }
+          gh release create $tag @($assets.FullName) --target "${{ github.sha }}" --generate-notes --title "New Eden Companion $tag"

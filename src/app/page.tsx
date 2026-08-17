@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 
 import { DashboardShell } from "@/components/dashboard-shell";
 import { SkillExportButton } from "@/components/skill-export-button";
+import { UpdateControl } from "@/components/update-control";
 import { getSession } from "@/lib/auth/session-store";
 import { validAccessToken } from "@/lib/auth/sso";
 import { getConfigurationIssues } from "@/lib/config";
@@ -64,6 +65,7 @@ export default async function Home({ searchParams }: HomeProps) {
         skills={dashboard.skills}
         connected={connected}
       />
+      <UpdateControl />
     </>
   );
 }

@@ -88,8 +88,10 @@ foreach ($relativePrivatePath in @(".env.local", "data")) {
 
 New-Item -ItemType Directory -Force -Path (Join-Path $packageRoot "scripts") | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\start-portable.ps1") -Destination (Join-Path $packageRoot "scripts\start-portable.ps1")
+Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\update-portable.ps1") -Destination (Join-Path $packageRoot "scripts\update-portable.ps1")
 Copy-Item -LiteralPath (Join-Path $projectRoot "Start New Eden Companion.cmd") -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $projectRoot ".env.example") -Destination $packageRoot
+Copy-Item -LiteralPath $packageJsonPath -Destination (Join-Path $packageRoot "package.json") -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot "LICENSE") -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\GETTING_STARTED.md") -Destination (Join-Path $packageRoot "GETTING STARTED.md")
@@ -110,6 +112,7 @@ NEW EDEN COMPANION
 3. Keep the launcher window open while using the companion.
 
 Node.js does not need to be installed. This package includes its own runtime.
+Stable updates can be checked and installed from inside the companion.
 See "GETTING STARTED.md" to connect an EVE character.
 "@
 [System.IO.File]::WriteAllText((Join-Path $packageRoot "START HERE.txt"), $startHere, [System.Text.UTF8Encoding]::new($false))
