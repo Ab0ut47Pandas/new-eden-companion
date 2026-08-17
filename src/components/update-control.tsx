@@ -45,9 +45,14 @@ export function UpdateControl() {
   }
 
   useEffect(() => {
-    setPortalTarget(document.querySelector<HTMLElement>(".topbar-actions"));
-    const timer = window.setTimeout(() => { void checkForUpdates(false); }, 1_000);
-    return () => window.clearTimeout(timer);
+    const mountTimer = window.setTimeout(() => {
+      setPortalTarget(document.querySelector<HTMLElement>(".topbar-actions"));
+    }, 0);
+    const updateTimer = window.setTimeout(() => { void checkForUpdates(false); }, 1_000);
+    return () => {
+      window.clearTimeout(mountTimer);
+      window.clearTimeout(updateTimer);
+    };
   }, []);
 
   async function waitForRestart(targetVersion: string) {
