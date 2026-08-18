@@ -1,7 +1,8 @@
+import type { ReadinessExplanation } from "../readiness/explanation";
+import type { FitTemplate } from "../ships/task-planner";
+import { listVettedAbyssalFits, type VettedAbyssalFitProfile } from "./abyssal-fit-catalog";
 import { buildActivityBriefing, type ActivityBriefingDefinition, type ActivityBriefingView } from "./briefing";
 import { buildActivityCheatSheet, type ActivityCheatSheetView } from "./cheat-sheet";
-import { listVettedAbyssalFits, type VettedAbyssalFitProfile } from "./abyssal-fit-catalog";
-import type { FitTemplate } from "../ships/task-planner";
 
 export type AbyssalFirstRunTier = 0 | 1;
 export type AbyssalFirstRunWeather = "dark" | "electrical";
@@ -195,8 +196,11 @@ export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): A
   };
 }
 
-export function buildAbyssalFirstRunPackage(option: AbyssalFirstRunOption): AbyssalFirstRunPackage {
-  const briefing = buildActivityBriefing(buildAbyssalFirstRunDefinition(option));
+export function buildAbyssalFirstRunPackage(
+  option: AbyssalFirstRunOption,
+  readiness: ReadinessExplanation | null = null,
+): AbyssalFirstRunPackage {
+  const briefing = buildActivityBriefing(buildAbyssalFirstRunDefinition(option), readiness);
   return {
     option,
     briefing,
