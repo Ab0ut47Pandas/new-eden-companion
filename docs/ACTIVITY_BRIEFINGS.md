@@ -40,4 +40,10 @@ Optional `why` text is shown directly with an entry so later activity adapters c
 
 The component is manually viewable guidance. It does not imply that NEC can see the live combat grid, overview, local chat, d-scan, active room state, NPC aggro, player inputs, or other client-only telemetry.
 
-ACT-02 can derive a smaller execution-focused cheat sheet from the same activity content rather than creating a competing activity schema.
+## Compact in-activity cheat sheet
+
+ACT-02 derives `ActivityCheatSheetView` from the complete ACT-01 briefing instead of defining another activity knowledge schema. The compact view intentionally keeps only the material needed while executing an activity: what to bring, how to start, ordered execution steps, relevant loot handling, and failure/watch-out conditions.
+
+The cheat sheet carries the existing readiness headline and next corrective action but does not recalculate readiness. Explanatory overview, motivation, and progression-unlock sections stay in the full briefing so the compact view remains scannable.
+
+`ActivityCheatSheet` renders static checklist boxes as a manual reference. It does not infer that a step is complete and does not claim live combat/client telemetry. A future UI may let the user mark items locally, but game-state completion must never be fabricated from unavailable client data.
