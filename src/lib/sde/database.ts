@@ -9,6 +9,12 @@ import {
   type ManufacturingDependency,
 } from "../acquisition/manufacturing-query";
 import {
+  expandManufacturingDependencies,
+  type RecursiveManufacturingNode,
+  type RecursiveManufacturingOptions,
+} from "../acquisition/recursive-manufacturing";
+import { queryReverseUsesForType, type ReverseUse } from "../acquisition/reverse-use";
+import {
   queryStaticItemIdentity,
   searchStaticItems as querySearchStaticItems,
   type StaticItemIdentity,
@@ -16,6 +22,8 @@ import {
 } from "./item-search";
 
 export type { ManufacturingDependency } from "../acquisition/manufacturing-query";
+export type { RecursiveManufacturingNode, RecursiveManufacturingOptions } from "../acquisition/recursive-manufacturing";
+export type { ReverseUse } from "../acquisition/reverse-use";
 export type { StaticItemIdentity, StaticItemKind, StaticItemSearchOptions } from "./item-search";
 
 export interface StaticDatabaseMetadata {
@@ -141,6 +149,17 @@ export function searchStaticItems(
   options: StaticItemSearchOptions = {},
 ): StaticItemIdentity[] {
   return querySearchStaticItems(getDatabase(), searchText, options);
+}
+
+export function getRecursiveManufacturingDependencies(
+  productTypeId: number,
+  options: RecursiveManufacturingOptions = {},
+): RecursiveManufacturingNode {
+  return expandManufacturingDependencies(getDatabase(), productTypeId, options);
+}
+
+export function getReverseUsesForType(typeId: number): ReverseUse[] {
+  return queryReverseUsesForType(getDatabase(), typeId);
 }
 
 export function getTypeSkillRequirements(typeId: number): TypeSkillRequirement[] {
