@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, mkdirSync, rmSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -51,6 +51,13 @@ function recordKey(record, ...fallbacks) {
     if (parsed !== null) return parsed;
   }
   return null;
+}
+
+function recordObject(record) {
+  if (record?._value && !Array.isArray(record._value) && typeof record._value === "object") {
+    return { ...record._value, _key: record._key };
+  }
+  return record;
 }
 
 async function readJsonLines(filename, visitor) {
@@ -206,7 +213,8 @@ function prepareStatements(db) {
 }
 
 async function importCategories(sourceDir, statements, counts) {
-  await readJsonLines(path.join(sourceDir, "categories.jsonl"), (record) => {
+  await readJsonLines(path.join(sourceDir, "categories.jsonl"), (rawRecord) => {
+    const record = recordObject(rawRecord);
     const id = recordKey(record, "categoryID");
     if (id === null) throw new Error("category has no numeric key");
     statements.category.run(id, localizedText(record.name), booleanInteger(record.published));
@@ -215,7 +223,8 @@ async function importCategories(sourceDir, statements, counts) {
 }
 
 async function importGroups(sourceDir, statements, counts) {
-  await readJsonLines(path.join(sourceDir, "groups.jsonl"), (record) => {
+  await readJsonLines(path.join(sourceDir, "groups.jsonl"), (rawRecord) => {
+    const record = recordObject(rawRecord);
     const id = recordKey(record, "groupID");
     const categoryId = integer(record.categoryID ?? record.categoryId);
     if (id === null || categoryId === null) throw new Error("group is missing group/category ID");
@@ -225,7 +234,8 @@ async function importGroups(sourceDir, statements, counts) {
 }
 
 async function importTypes(sourceDir, statements, counts) {
-  await readJsonLines(path.join(sourceDir, "types.jsonl"), (record) => {
+  await readJsonLines(path.join(sourceDir, "types.jsonl"), (rawRecord) => {
+    const record = recordObject(rawRecord);
     const id = recordKey(record, "typeID");
     const groupId = integer(record.groupID ?? record.groupId);
     if (id === null || groupId === null) throw new Error("type is missing type/group ID");
@@ -247,10 +257,15 @@ async function importTypes(sourceDir, statements, counts) {
 }
 
 async function importTypeMaterials(sourceDir, statements, counts) {
-  await readJsonLines(path.join(sourceDir, "typeMaterials.jsonl"), (record) => {
+  await readJsonLines(path.join(sourceDir, "typeMaterials.jsonl"), (rawRecord) => {
+    const record = recordObject(rawRecord);
     const typeId = recordKey(record, "typeID");
     if (typeId === null) throw new Error("typeMaterials record has no type ID");
-    const materials = Array.isArray(record.materials) ? record.materials : [];
+    const materials = Array.isArray(rawRecord._value)
+      ? rawRecord._value
+      : Array.isArray(record.materials)
+        ? record.materials
+        : [];
     for (const material of materials) {
       const materialTypeId = integer(material.materialTypeID ?? material.materialTypeId ?? material.typeID ?? material.typeId);
       const quantity = integer(material.quantity);
@@ -262,7 +277,8 @@ async function importTypeMaterials(sourceDir, statements, counts) {
 }
 
 async function importBlueprints(sourceDir, statements, counts) {
-  await readJsonLines(path.join(sourceDir, "blueprints.jsonl"), (record) => {
+  await readJsonLines(path.join(sourceDir, "blueprints.jsonl"), (rawRecord) => {
+    const record = recordObject(rawRecord);
     const blueprintTypeId = recordKey(record, "blueprintTypeID", "blueprintTypeId");
     if (blueprintTypeId === null) throw new Error("blueprint has no blueprint type ID");
     statements.blueprint.run(blueprintTypeId, integer(record.maxProductionLimit));
@@ -317,7 +333,8 @@ function dogmaAttributeMap(record) {
 }
 
 async function importSkillRequirements(sourceDir, statements, counts) {
-  await readJsonLines(path.join(sourceDir, "typeDogma.jsonl"), (record) => {
+  await readJsonLines(path.join(sourceDir, "typeDogma.jsonl"), (rawRecord) => {
+    const record = recordObject(rawRecord);
     const typeId = recordKey(record, "typeID");
     if (typeId === null) throw new Error("typeDogma record has no type ID");
     const attributes = dogmaAttributeMap(record);
@@ -331,6 +348,25 @@ async function importSkillRequirements(sourceDir, statements, counts) {
   });
 }
 
+function replaceKnownGoodDatabase(buildingPath, outputPath) {
+  if (!existsSync(outputPath)) {
+    renameSync(buildingPath, outputPath);
+    return;
+  }
+
+  const backupPath = `${outputPath}.previous`;
+  rmSync(backupPath, { force: true });
+  renameSync(outputPath, backupPath);
+  try {
+    renameSync(buildingPath, outputPath);
+    rmSync(backupPath, { force: true });
+  } catch (error) {
+    if (existsSync(outputPath)) rmSync(outputPath, { force: true });
+    renameSync(backupPath, outputPath);
+    throw error;
+  }
+}
+
 export async function buildStaticDatabase({ sourceDir, outputPath, buildNumber, createdAt = new Date().toISOString() }) {
   const resolvedSource = path.resolve(sourceDir);
   const resolvedOutput = path.resolve(outputPath);
@@ -342,8 +378,9 @@ export async function buildStaticDatabase({ sourceDir, outputPath, buildNumber, 
   }
 
   mkdirSync(path.dirname(resolvedOutput), { recursive: true });
-  rmSync(resolvedOutput, { force: true });
-  const db = new DatabaseSync(resolvedOutput);
+  const buildingPath = `${resolvedOutput}.building-${process.pid}-${Date.now()}`;
+  rmSync(buildingPath, { force: true });
+  const db = new DatabaseSync(buildingPath);
   const counts = {
     categories: 0,
     groups: 0,
@@ -357,6 +394,7 @@ export async function buildStaticDatabase({ sourceDir, outputPath, buildNumber, 
     typeSkillRequirements: 0,
   };
 
+  let built = false;
   try {
     createSchema(db);
     const statements = prepareStatements(db);
@@ -381,10 +419,13 @@ export async function buildStaticDatabase({ sourceDir, outputPath, buildNumber, 
       throw error;
     }
     db.exec("PRAGMA optimize;");
+    built = true;
   } finally {
     db.close();
+    if (!built) rmSync(buildingPath, { force: true });
   }
 
+  replaceKnownGoodDatabase(buildingPath, resolvedOutput);
   return { outputPath: resolvedOutput, buildNumber: build, counts };
 }
 
@@ -399,7 +440,7 @@ function parseArguments(argv) {
     index += 1;
   }
   const sourceDir = values.get("source");
-  const outputPath = values.get("output") ?? path.join(process.cwd(), "data", "eve-static.db");
+  const outputPath = values.get("output") ?? path.join(process.cwd(), "static", "eve-static.db");
   const buildNumber = values.get("build");
   if (!sourceDir) throw new Error("Usage: npm run sde:build -- --source <extracted-jsonl-dir> --build <sde-build> [--output <db-path>]");
   return { sourceDir, outputPath, buildNumber };
