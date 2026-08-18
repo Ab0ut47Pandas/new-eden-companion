@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "23 8 * * *"
+  pull_request:
+    paths:
+      - ".github/workflows/static-data.yml"
+      - "scripts/sde/**"
+      - "package.json"
+      - "package-lock.json"
 
 permissions:
   contents: read
