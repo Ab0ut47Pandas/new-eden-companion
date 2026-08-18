@@ -11,6 +11,11 @@ import {
   type AssetCoverageIndex,
 } from "@/lib/player/asset-coverage";
 import {
+  loadCharacterSkillReadiness,
+  readinessForSkillRequirement,
+  type SkillReadinessIndex,
+} from "@/lib/player/skill-readiness";
+import {
   getRecursiveManufacturingDependencies,
   getReverseUsesForType,
   getStaticDatabaseMetadata,
@@ -30,6 +35,11 @@ interface ItemDetailPageProps {
   params: Promise<{ typeId: string }>;
 }
 
+interface ViewerPlayerState {
+  assetCoverage: AssetCoverageIndex;
+  skillReadiness: SkillReadinessIndex;
+}
+
 function cleanDescription(value: string | null): string | null {
   if (!value) return null;
   return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || null;
@@ -47,7 +57,7 @@ function timeLabel(seconds: number | null): string {
   return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}h base time`;
 }
 
-async function viewerAssetCoverage(): Promise<AssetCoverageIndex | null> {
+async function viewerPlayerState(): Promise<ViewerPlayerState | null> {
   const sessionId = (await cookies()).get("eve_session")?.value;
   if (!sessionId) return null;
 
@@ -55,10 +65,17 @@ async function viewerAssetCoverage(): Promise<AssetCoverageIndex | null> {
     const session = getSession(sessionId);
     if (!session) return null;
     const token = await validAccessToken(session);
-    return await loadCharacterAssetCoverage(session.characterId, token);
+    const [assetCoverage, skillReadiness] = await Promise.all([
+      loadCharacterAssetCoverage(session.characterId, token),
+      loadCharacterSkillReadiness(session.characterId, token),
+    ]);
+    return { assetCoverage, skillReadiness };
   } catch (error) {
-    console.warn("Unable to prepare player asset coverage for Item Explorer", error);
-    return { visibility: "unavailable", reason: "esi-unavailable", byType: new Map() };
+    console.warn("Unable to prepare player overlays for Item Explorer", error);
+    return {
+      assetCoverage: { visibility: "unavailable", reason: "esi-unavailable", byType: new Map() },
+      skillReadiness: { visibility: "unavailable", reason: "esi-unavailable", bySkill: new Map() },
+    };
   }
 }
 
@@ -74,27 +91,34 @@ function AssetCoverageBadge({
   if (!coverage) return null;
   const result = coverageForRequirement(coverage, typeId, requiredQuantity);
 
-  if (result.status === "unavailable") {
-    return <span className={styles.mutedPill}>asset visibility unavailable</span>;
-  }
-  if (result.status === "owned") {
-    return <span className={styles.kindPill}>owned {result.totalQuantity.toLocaleString()}</span>;
-  }
+  if (result.status === "unavailable") return <span className={styles.mutedPill}>asset visibility unavailable</span>;
+  if (result.status === "owned") return <span className={styles.kindPill}>owned {result.totalQuantity.toLocaleString()}</span>;
   if (result.status === "partial") {
-    return (
-      <span className={styles.warnPill}>
-        owned {result.totalQuantity.toLocaleString()} · missing {result.missingQuantity.toLocaleString()}
-      </span>
-    );
+    return <span className={styles.warnPill}>owned {result.totalQuantity.toLocaleString()} · missing {result.missingQuantity.toLocaleString()}</span>;
   }
   if (result.status === "location-unknown") {
-    return (
-      <span className={styles.warnPill}>
-        own {result.totalQuantity.toLocaleString()} · location/access unknown
-      </span>
-    );
+    return <span className={styles.warnPill}>own {result.totalQuantity.toLocaleString()} · location/access unknown</span>;
   }
   return <span className={styles.warnPill}>missing {requiredQuantity.toLocaleString()}</span>;
+}
+
+function SkillReadinessBadge({
+  readiness,
+  skillTypeId,
+  requiredLevel,
+}: {
+  readiness: SkillReadinessIndex | null;
+  skillTypeId: number;
+  requiredLevel: number;
+}) {
+  if (!readiness) return null;
+  const result = readinessForSkillRequirement(readiness, skillTypeId, requiredLevel);
+  if (result.status === "unavailable") return <span className={styles.mutedPill}>skill visibility unavailable</span>;
+  if (result.status === "met") return <span className={styles.kindPill}>trained {result.trainedLevel} · met</span>;
+  if (result.status === "below-required") {
+    return <span className={styles.warnPill}>trained {result.trainedLevel} · needs {requiredLevel}</span>;
+  }
+  return <span className={styles.warnPill}>not trained · needs {requiredLevel}</span>;
 }
 
 function SourceBoundary({ node }: { node: RecursiveManufacturingNode }) {
@@ -140,10 +164,12 @@ function SourceBoundary({ node }: { node: RecursiveManufacturingNode }) {
 function DependencyNode({
   node,
   assetCoverage,
+  skillReadiness,
   root = false,
 }: {
   node: RecursiveManufacturingNode;
   assetCoverage: AssetCoverageIndex | null;
+  skillReadiness: SkillReadinessIndex | null;
   root?: boolean;
 }) {
   const label = itemLabel(node.typeId, node.item?.name ?? null);
@@ -177,7 +203,12 @@ function DependencyNode({
                   <ul className={styles.skillList}>
                     {alternative.activity.skills.map((skill) => (
                       <li key={skill.typeId}>
-                        <Link className={styles.itemLink} href={`/items/${skill.typeId}`}>{itemLabel(skill.typeId, skill.name)}</Link> {skill.level}
+                        <span>
+                          <Link className={styles.itemLink} href={`/items/${skill.typeId}`}>{itemLabel(skill.typeId, skill.name)}</Link> {skill.level}
+                        </span>
+                        {!skill.isPlaceholder && (
+                          <SkillReadinessBadge readiness={skillReadiness} skillTypeId={skill.typeId} requiredLevel={skill.level} />
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -197,14 +228,10 @@ function DependencyNode({
                           </span>
                           <span className={styles.treeNote}>× {material.requirement.quantity}</span>
                           {!material.requirement.isPlaceholder && (
-                            <AssetCoverageBadge
-                              coverage={assetCoverage}
-                              typeId={material.requirement.typeId}
-                              requiredQuantity={material.requirement.quantity}
-                            />
+                            <AssetCoverageBadge coverage={assetCoverage} typeId={material.requirement.typeId} requiredQuantity={material.requirement.quantity} />
                           )}
                         </div>
-                        <DependencyNode node={material.dependency} assetCoverage={assetCoverage} />
+                        <DependencyNode node={material.dependency} assetCoverage={assetCoverage} skillReadiness={skillReadiness} />
                       </li>
                     ))}
                   </ul>
@@ -270,7 +297,9 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const reverseUses = getReverseUsesForType(typeId);
   const visibleUses = reverseUses.slice(0, 100);
   const description = cleanDescription(staticType.description);
-  const assetCoverage = await viewerAssetCoverage();
+  const playerState = await viewerPlayerState();
+  const assetCoverage = playerState?.assetCoverage ?? null;
+  const skillReadiness = playerState?.skillReadiness ?? null;
 
   return (
     <main className={styles.shell}>
@@ -320,13 +349,18 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               <ul className={styles.skillList}>
                 {skillRequirements.map((skill) => (
                   <li key={`${skill.skillTypeId}-${skill.requirementSlot}`}>
-                    <Link className={styles.itemLink} href={`/items/${skill.skillTypeId}`}>
-                      {itemLabel(skill.skillTypeId, skill.skillName)}
-                    </Link> {skill.level}
+                    <span>
+                      <Link className={styles.itemLink} href={`/items/${skill.skillTypeId}`}>
+                        {itemLabel(skill.skillTypeId, skill.skillName)}
+                      </Link> {skill.level}
+                    </span>
+                    <SkillReadinessBadge readiness={skillReadiness} skillTypeId={skill.skillTypeId} requiredLevel={skill.level} />
                   </li>
                 ))}
               </ul>
             )}
+            {playerState === null && <p className={styles.description}>Connect a character to compare these requirements with your trained skills.</p>}
+            {skillReadiness?.visibility === "unavailable" && <p className={styles.description}>Skill visibility is unavailable right now; NEC will not treat that as untrained.</p>}
           </article>
         </div>
 
@@ -335,14 +369,14 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             <div><div className={styles.eyebrow}>Acquisition</div><h2>How do I get this?</h2></div>
             <p>Manufacturing dependencies expand four levels inline. Open any dependency to continue deeper.</p>
           </div>
-          {assetCoverage === null ? (
-            <div className={styles.notice}>Connect an EVE character to compare these requirements against your ESI-visible assets.</div>
-          ) : assetCoverage.visibility === "unavailable" ? (
-            <div className={styles.notice}>Character connected, but asset visibility is unavailable right now. NEC will not treat that as zero owned.</div>
+          {playerState === null ? (
+            <div className={styles.notice}>Connect an EVE character to compare material and skill requirements against your character.</div>
+          ) : assetCoverage?.visibility === "unavailable" || skillReadiness?.visibility === "unavailable" ? (
+            <div className={styles.notice}>Character connected, but part of the player overlay is unavailable right now. NEC preserves that as unknown rather than assuming zero assets or skills.</div>
           ) : (
-            <div className={styles.notice}>Player overlay active. Owned quantities come from ESI-visible character assets; remote/uncertain roots are not assumed immediately usable.</div>
+            <div className={styles.notice}>Player overlay active. Material quantities and trained skill levels come from ESI; uncertain asset roots are not assumed immediately usable.</div>
           )}
-          <DependencyNode node={dependencyTree} assetCoverage={assetCoverage} root />
+          <DependencyNode node={dependencyTree} assetCoverage={assetCoverage} skillReadiness={skillReadiness} root />
         </section>
 
         <section className={styles.section} id="used-for">
