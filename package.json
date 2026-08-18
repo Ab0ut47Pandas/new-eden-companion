@@ -10,6 +10,7 @@
     "companion": "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/start-companion.ps1",
     "package:windows": "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/package-windows.ps1",
     "sde:build": "node scripts/sde/build-static-db.mjs",
+    "sde:current": "node scripts/sde/build-current-sde.mjs",
     "dev": "next dev",
     "build": "next build",
     "eve": "node --env-file-if-exists=.env.local scripts/eve-bridge.mjs",
