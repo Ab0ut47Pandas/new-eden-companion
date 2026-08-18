@@ -42,13 +42,21 @@ function fixture() {
     { _key: 3380, groupID: 257, name: { en: "Industry" }, published: true },
   ]);
   writeJsonl(sourceDir, "typeMaterials.jsonl", [
-    { _key: 587, materials: [{ materialTypeID: 34, quantity: 1000 }] },
+    { _key: 587, _value: [{ materialTypeID: 34, quantity: 1000 }] },
   ]);
   writeJsonl(sourceDir, "blueprints.jsonl", [
     {
       _key: 1000,
       maxProductionLimit: 10,
       activities: {
+        copying: {
+          time: 60,
+          materials: [{ typeID: 9999, quantity: 1 }],
+          skills: [
+            { typeID: 3380, level: 1 },
+            { typeID: 3380, level: 3 },
+          ],
+        },
         manufacturing: {
           time: 120,
           materials: [{ typeID: 34, quantity: 21111 }],
@@ -89,12 +97,13 @@ describe("SDE static database importer", () => {
       categories: 4,
       groups: 4,
       types: 5,
+      placeholderTypes: 1,
       typeMaterials: 1,
       blueprints: 1,
-      activities: 1,
-      blueprintMaterials: 1,
+      activities: 2,
+      blueprintMaterials: 2,
       blueprintProducts: 1,
-      blueprintSkills: 1,
+      blueprintSkills: 3,
       typeSkillRequirements: 1,
     });
 
@@ -107,6 +116,7 @@ describe("SDE static database importer", () => {
         schema_version: String(STATIC_DB_SCHEMA_VERSION),
         sde_build: "3424810",
         source_format: "jsonl",
+        placeholder_types: "1",
       });
 
       const production = db.prepare(`
@@ -145,6 +155,25 @@ describe("SDE static database importer", () => {
         WHERE tm.type_id = 587
       `).get();
       expect(reprocessing).toEqual({ name: "Tritanium", quantity: 1000 });
+
+      const placeholder = db.prepare(`
+        SELECT type_id, group_id, name, is_placeholder
+        FROM types
+        WHERE type_id = 9999
+      `).get();
+      expect(placeholder).toEqual({ type_id: 9999, group_id: null, name: null, is_placeholder: 1 });
+
+      const normalizedDuplicateSkill = db.prepare(`
+        SELECT level
+        FROM blueprint_skills
+        WHERE blueprint_type_id = 1000 AND activity = 'copying' AND skill_type_id = 3380
+      `).get();
+      expect(normalizedDuplicateSkill).toEqual({ level: 3 });
+      expect(db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM blueprint_skills
+        WHERE blueprint_type_id = 1000 AND activity = 'copying' AND skill_type_id = 3380
+      `).get()).toEqual({ count: 1 });
     } finally {
       db.close();
     }
