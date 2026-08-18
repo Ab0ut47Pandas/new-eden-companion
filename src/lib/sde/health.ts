@@ -7,6 +7,7 @@ import {
   staticDatabaseAvailable,
   staticDatabasePath,
 } from "@/lib/sde/database";
+import { staticDatabaseAgeSeconds } from "@/lib/sde/health-core";
 
 export interface StaticDatabaseHealth {
   available: boolean;
@@ -34,17 +35,15 @@ export function getStaticDatabaseHealth(now = new Date()): StaticDatabaseHealth 
 
   try {
     const metadata = getStaticDatabaseMetadata();
-    const createdAtMs = Date.parse(metadata.createdAt);
+    const createdAt = metadata.createdAt === "unknown" ? null : metadata.createdAt;
     const fileMtimeMs = statSync(staticDatabasePath()).mtimeMs;
-    const referenceMs = Number.isFinite(createdAtMs) ? createdAtMs : fileMtimeMs;
-    const ageSeconds = Math.max(0, Math.floor((now.getTime() - referenceMs) / 1000));
 
     return {
       available: true,
       schemaVersion: metadata.schemaVersion,
       sdeBuild: metadata.sdeBuild,
-      ageSeconds,
-      createdAt: metadata.createdAt === "unknown" ? null : metadata.createdAt,
+      ageSeconds: staticDatabaseAgeSeconds(now, createdAt, fileMtimeMs),
+      createdAt,
       placeholderTypes: metadata.placeholderTypes,
       status: "ok",
     };
