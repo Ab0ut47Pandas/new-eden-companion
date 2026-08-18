@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { appendFileSync, closeSync, existsSync, mkdtempSync, openSync } from "node:fs";
+import { appendFileSync, existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -121,7 +121,6 @@ export async function POST() {
     );
 
     updateStarting = true;
-    const logHandle = openSync(logPath, "a");
     const child = spawn(powershell, [
       "-NoLogo",
       "-NoProfile",
@@ -144,10 +143,9 @@ export async function POST() {
     ], {
       cwd: packageRoot,
       detached: true,
-      stdio: ["ignore", logHandle, logHandle],
+      stdio: "ignore",
       windowsHide: true,
     });
-    closeSync(logHandle);
 
     if (!child.pid) {
       updateStarting = false;
