@@ -38,7 +38,7 @@ export interface RecursiveManufacturingNode {
   depth: number;
   state: RecursiveManufacturingState;
   alternatives: RecursiveManufacturingAlternative[];
-  sourceResolution: AcquisitionSourceResolution | null;
+  sourceResolution?: AcquisitionSourceResolution;
 }
 
 export interface RecursiveManufacturingOptions {
@@ -91,18 +91,11 @@ export function expandManufacturingDependencies(
   function expand(typeId: number, depth: number, path: ReadonlySet<number>, knownItem?: ManufacturingTypeRef): RecursiveManufacturingNode {
     const item = knownItem ?? queryTypeRef(db, typeId);
     if (!item) {
-      return {
-        item: null,
-        typeId,
-        depth,
-        state: "unknown-type",
-        alternatives: [],
-        sourceResolution: resolveAcquisitionSources(db, typeId, curatedSources),
-      };
+      return { item: null, typeId, depth, state: "unknown-type", alternatives: [] };
     }
 
     if (path.has(typeId)) {
-      return { item, typeId, depth, state: "cycle", alternatives: [], sourceResolution: null };
+      return { item, typeId, depth, state: "cycle", alternatives: [] };
     }
 
     const dependencies = queryManufacturingDependenciesForProduct(db, typeId);
@@ -118,7 +111,7 @@ export function expandManufacturingDependencies(
     }
 
     if (depth >= maxDepth) {
-      return { item, typeId, depth, state: "depth-limit", alternatives: [], sourceResolution: null };
+      return { item, typeId, depth, state: "depth-limit", alternatives: [] };
     }
 
     const nextPath = new Set(path);
@@ -129,7 +122,6 @@ export function expandManufacturingDependencies(
       typeId,
       depth,
       state: "manufacturable",
-      sourceResolution: null,
       alternatives: dependencies.map((dependency) => ({
         blueprint: dependency.blueprint,
         product: dependency.product,
