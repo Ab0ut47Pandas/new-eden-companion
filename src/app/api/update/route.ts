@@ -1,5 +1,5 @@
-import { spawn } from "node:child_process";
-import { appendFileSync, closeSync, copyFileSync, existsSync, mkdtempSync, openSync } from "node:fs";
+import { spawn, type ChildProcess } from "node:child_process";
+import { appendFileSync, copyFileSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -15,13 +15,50 @@ function delay(milliseconds: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function waitForFile(filePath: string, timeoutMilliseconds: number) {
+interface UpdaterStartResult {
+  ready: boolean;
+  detail: string | null;
+}
+
+interface UpdaterProcessState {
+  spawnError: string | null;
+  earlyExit: { code: number | null; signal: NodeJS.Signals | null } | null;
+}
+
+function startupFailure(state: UpdaterProcessState): string | null {
+  if (state.spawnError) return `Updater bootstrap could not start: ${state.spawnError}`;
+  if (!state.earlyExit) return null;
+  const suffix = state.earlyExit.signal
+    ? ` (signal ${state.earlyExit.signal})`
+    : ` (exit code ${state.earlyExit.code ?? "unknown"})`;
+  return `Updater bootstrap exited before PowerShell wrote the startup handshake${suffix}.`;
+}
+
+async function waitForUpdaterStart(child: ChildProcess, readyPath: string, timeoutMilliseconds: number): Promise<UpdaterStartResult> {
+  const state: UpdaterProcessState = { spawnError: null, earlyExit: null };
+
+  child.once("error", (error) => {
+    state.spawnError = error.message;
+  });
+  child.once("exit", (code, signal) => {
+    state.earlyExit = { code, signal };
+  });
+
   const deadline = Date.now() + timeoutMilliseconds;
   while (Date.now() < deadline) {
-    if (existsSync(filePath)) return true;
+    if (existsSync(readyPath)) return { ready: true, detail: null };
+    const failure = startupFailure(state);
+    if (failure) return { ready: false, detail: failure };
     await delay(100);
   }
-  return existsSync(filePath);
+
+  if (existsSync(readyPath)) return { ready: true, detail: null };
+  const failure = startupFailure(state);
+  if (failure) return { ready: false, detail: failure };
+  return {
+    ready: false,
+    detail: `Updater bootstrap PID ${child.pid ?? "unknown"} stayed alive but PowerShell did not write the startup handshake within ${Math.round(timeoutMilliseconds / 1000)} seconds.`,
+  };
 }
 
 export async function GET(request: Request) {
@@ -59,15 +96,25 @@ export async function POST() {
 
     const packageRoot = process.cwd();
     const updaterSource = path.join(packageRoot, "scripts", "update-portable.ps1");
-    if (!existsSync(updaterSource)) {
-      return NextResponse.json({ error: "The portable updater script is missing." }, { status: 500 });
+    const bootstrapSource = path.join(packageRoot, "scripts", "update-bootstrap.mjs");
+    const runtimeNodeSource = path.join(packageRoot, "runtime", "node.exe");
+    for (const required of [updaterSource, bootstrapSource, runtimeNodeSource]) {
+      if (!existsSync(required)) {
+        return NextResponse.json({ error: `The portable updater is missing ${path.relative(packageRoot, required)}.` }, { status: 500 });
+      }
     }
 
     const updaterRoot = mkdtempSync(path.join(tmpdir(), "new-eden-companion-updater-"));
     const updaterCopy = path.join(updaterRoot, "update-portable.ps1");
+    const bootstrapCopy = path.join(updaterRoot, "update-bootstrap.mjs");
+    const bootstrapNode = path.join(updaterRoot, "node.exe");
+    const configPath = path.join(updaterRoot, "bootstrap.json");
     const readyPath = path.join(updaterRoot, "updater.ready");
     const logPath = path.join(tmpdir(), "New-Eden-Companion-update.log");
+
     copyFileSync(updaterSource, updaterCopy);
+    copyFileSync(bootstrapSource, bootstrapCopy);
+    copyFileSync(runtimeNodeSource, bootstrapNode);
 
     appendFileSync(
       logPath,
@@ -79,62 +126,57 @@ export async function POST() {
     const bundledPowerShell = path.join(windowsRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
     const powershell = existsSync(bundledPowerShell) ? bundledPowerShell : "powershell.exe";
 
+    const updaterArgs = [
+      "-PackageRoot", packageRoot,
+      "-ServerPid", String(process.pid),
+      "-Repository", UPDATE_REPOSITORY,
+      "-CurrentVersion", status.currentVersion,
+      "-ExpectedVersion", status.latestVersion,
+      "-ReadyPath", readyPath,
+    ];
+    writeFileSync(configPath, JSON.stringify({
+      powershell,
+      updaterScript: updaterCopy,
+      updaterArgs,
+      workingDirectory: updaterRoot,
+      logPath,
+    }), "utf8");
+
+    appendFileSync(
+      logPath,
+      `[${new Date().toISOString()}] API: launching detached Node updater bootstrap from ${bootstrapNode}.\n`,
+      "utf8",
+    );
+
     updateStarting = true;
-    const logHandle = openSync(logPath, "a");
-    const child = spawn(powershell, [
-      "-NoLogo",
-      "-NoProfile",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-File",
-      updaterCopy,
-      "-PackageRoot",
-      packageRoot,
-      "-ServerPid",
-      String(process.pid),
-      "-Repository",
-      UPDATE_REPOSITORY,
-      "-CurrentVersion",
-      status.currentVersion,
-      "-ExpectedVersion",
-      status.latestVersion,
-      "-ReadyPath",
-      readyPath,
-    ], {
+    const child = spawn(bootstrapNode, [bootstrapCopy, configPath], {
       cwd: updaterRoot,
       detached: true,
-      stdio: ["ignore", logHandle, logHandle],
+      stdio: "ignore",
       windowsHide: true,
     });
-    closeSync(logHandle);
-
-    const spawnErrors: string[] = [];
-    child.once("error", (error) => {
-      spawnErrors.push(error.message);
-    });
-    child.unref();
 
     if (!child.pid) {
       updateStarting = false;
-      appendFileSync(logPath, `[${new Date().toISOString()}] API: Windows did not return an updater PID.\n`, "utf8");
-      return NextResponse.json({ error: `Windows did not start the updater process. Log: ${logPath}` }, { status: 500 });
+      appendFileSync(logPath, `[${new Date().toISOString()}] API: Windows did not return an updater bootstrap PID.\n`, "utf8");
+      return NextResponse.json({ error: `Windows did not start the updater bootstrap. Log: ${logPath}` }, { status: 500 });
     }
 
-    const updaterReady = await waitForFile(readyPath, 7_000);
-    if (!updaterReady) {
+    const startup = await waitForUpdaterStart(child, readyPath, 30_000);
+    if (!startup.ready) {
       updateStarting = false;
       try { child.kill(); } catch {}
-      const detail = spawnErrors.length > 0 ? ` ${spawnErrors[0]}` : "";
       appendFileSync(
         logPath,
-        `[${new Date().toISOString()}] API: updater startup handshake timed out.${detail}\n`,
+        `[${new Date().toISOString()}] API: updater startup failed. ${startup.detail ?? "No diagnostic was returned."}\n`,
         "utf8",
       );
       return NextResponse.json({
-        error: `The updater did not confirm that it started, so New Eden Companion was left running.${detail} Log: ${logPath}`,
+        error: `The updater did not confirm that it started, so New Eden Companion was left running. ${startup.detail ?? ""} Log: ${logPath}`.trim(),
       }, { status: 500 });
     }
 
+    child.unref();
     appendFileSync(logPath, `[${new Date().toISOString()}] API: updater startup handshake received. Shutting down the old server.\n`, "utf8");
 
     const shutdownTimer = setTimeout(() => process.exit(0), 1_500);

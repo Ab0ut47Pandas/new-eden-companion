@@ -42,6 +42,7 @@ export function portableUpdateSupport(): { supported: boolean; reason: string | 
   const required = [
     path.join(packageRoot, "runtime", "node.exe"),
     path.join(packageRoot, "scripts", "update-portable.ps1"),
+    path.join(packageRoot, "scripts", "update-bootstrap.mjs"),
     path.join(packageRoot, "Start New Eden Companion.cmd"),
   ];
   if (required.some((file) => !existsSync(file))) {
