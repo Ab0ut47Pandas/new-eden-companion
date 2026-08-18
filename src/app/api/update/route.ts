@@ -20,34 +20,41 @@ interface UpdaterStartResult {
   detail: string | null;
 }
 
+interface UpdaterProcessState {
+  spawnError: string | null;
+  earlyExit: { code: number | null; signal: NodeJS.Signals | null } | null;
+}
+
+function startupFailure(state: UpdaterProcessState): string | null {
+  if (state.spawnError) return `PowerShell could not start: ${state.spawnError}`;
+  if (!state.earlyExit) return null;
+  const suffix = state.earlyExit.signal
+    ? ` (signal ${state.earlyExit.signal})`
+    : ` (exit code ${state.earlyExit.code ?? "unknown"})`;
+  return `PowerShell exited before writing the updater handshake${suffix}.`;
+}
+
 async function waitForUpdaterStart(child: ChildProcess, readyPath: string, timeoutMilliseconds: number): Promise<UpdaterStartResult> {
-  let spawnError: string | null = null;
-  let earlyExit: { code: number | null; signal: NodeJS.Signals | null } | null = null;
+  const state: UpdaterProcessState = { spawnError: null, earlyExit: null };
 
   child.once("error", (error) => {
-    spawnError = error.message;
+    state.spawnError = error.message;
   });
   child.once("exit", (code, signal) => {
-    earlyExit = { code, signal };
+    state.earlyExit = { code, signal };
   });
 
   const deadline = Date.now() + timeoutMilliseconds;
   while (Date.now() < deadline) {
     if (existsSync(readyPath)) return { ready: true, detail: null };
-    if (spawnError) return { ready: false, detail: `PowerShell could not start: ${spawnError}` };
-    if (earlyExit) {
-      const suffix = earlyExit.signal ? ` (signal ${earlyExit.signal})` : ` (exit code ${earlyExit.code ?? "unknown"})`;
-      return { ready: false, detail: `PowerShell exited before writing the updater handshake${suffix}.` };
-    }
+    const failure = startupFailure(state);
+    if (failure) return { ready: false, detail: failure };
     await delay(100);
   }
 
   if (existsSync(readyPath)) return { ready: true, detail: null };
-  if (spawnError) return { ready: false, detail: `PowerShell could not start: ${spawnError}` };
-  if (earlyExit) {
-    const suffix = earlyExit.signal ? ` (signal ${earlyExit.signal})` : ` (exit code ${earlyExit.code ?? "unknown"})`;
-    return { ready: false, detail: `PowerShell exited before writing the updater handshake${suffix}.` };
-  }
+  const failure = startupFailure(state);
+  if (failure) return { ready: false, detail: failure };
   return {
     ready: false,
     detail: `PowerShell updater PID ${child.pid ?? "unknown"} stayed alive but did not write the startup handshake within ${Math.round(timeoutMilliseconds / 1000)} seconds.`,
