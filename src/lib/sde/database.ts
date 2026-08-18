@@ -8,8 +8,15 @@ import {
   queryManufacturingDependenciesForProduct,
   type ManufacturingDependency,
 } from "../acquisition/manufacturing-query";
+import {
+  queryStaticItemIdentity,
+  searchStaticItems as querySearchStaticItems,
+  type StaticItemIdentity,
+  type StaticItemSearchOptions,
+} from "./item-search";
 
 export type { ManufacturingDependency } from "../acquisition/manufacturing-query";
+export type { StaticItemIdentity, StaticItemKind, StaticItemSearchOptions } from "./item-search";
 
 export interface StaticDatabaseMetadata {
   schemaVersion: number;
@@ -123,6 +130,17 @@ export function getStaticType(typeId: number): StaticType | null {
     marketGroupId: row.market_group_id,
     isPlaceholder: row.is_placeholder === 1,
   };
+}
+
+export function getStaticItemIdentity(typeId: number): StaticItemIdentity | null {
+  return queryStaticItemIdentity(getDatabase(), typeId);
+}
+
+export function searchStaticItems(
+  searchText: string,
+  options: StaticItemSearchOptions = {},
+): StaticItemIdentity[] {
+  return querySearchStaticItems(getDatabase(), searchText, options);
 }
 
 export function getTypeSkillRequirements(typeId: number): TypeSkillRequirement[] {
