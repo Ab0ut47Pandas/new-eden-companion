@@ -1,5 +1,6 @@
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseLatestBuild } from "./build-current-sde.mjs";
+import { parseLatestBuild, parseOutputDirectoryArgument } from "./build-current-sde.mjs";
 
 describe("parseLatestBuild", () => {
   it("reads CCP's current buildNumber metadata shape", () => {
@@ -12,5 +13,17 @@ describe("parseLatestBuild", () => {
 
   it("rejects metadata without a numeric sde record", () => {
     expect(() => parseLatestBuild('{"_key":"sde","buildNumber":"latest"}\n')).toThrow(/numeric sde build/i);
+  });
+});
+
+describe("parseOutputDirectoryArgument", () => {
+  it("accepts an isolated output directory for runtime updates", () => {
+    expect(parseOutputDirectoryArgument(["--output-dir", "staging"]))
+      .toBe(path.resolve("staging"));
+  });
+
+  it("rejects missing values and unknown arguments", () => {
+    expect(() => parseOutputDirectoryArgument(["--output-dir"])).toThrow(/requires a path/i);
+    expect(() => parseOutputDirectoryArgument(["--wat"])).toThrow(/unknown argument/i);
   });
 });

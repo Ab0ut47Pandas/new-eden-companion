@@ -96,6 +96,16 @@ New-Item -ItemType Directory -Force -Path (Join-Path $packageRoot "scripts") | O
 Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\start-portable.ps1") -Destination (Join-Path $packageRoot "scripts\start-portable.ps1")
 Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\update-portable.ps1") -Destination (Join-Path $packageRoot "scripts\update-portable.ps1")
 Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\update-bootstrap.mjs") -Destination (Join-Path $packageRoot "scripts\update-bootstrap.mjs")
+
+# Static-data refreshes use the same importer that CI validates. Keep these
+# scripts in the portable package so the bundled Node runtime can rebuild the
+# public SDE database without requiring Node or SQLite on the user's machine.
+$sdeScriptRoot = Join-Path $packageRoot "scripts\sde"
+New-Item -ItemType Directory -Force -Path $sdeScriptRoot | Out-Null
+foreach ($sdeScript in @("build-current-sde.mjs", "build-static-db.mjs")) {
+  Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\sde\$sdeScript") -Destination (Join-Path $sdeScriptRoot $sdeScript)
+}
+
 Copy-Item -LiteralPath (Join-Path $projectRoot "Start New Eden Companion.cmd") -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $projectRoot ".env.example") -Destination $packageRoot
 Copy-Item -LiteralPath $packageJsonPath -Destination (Join-Path $packageRoot "package.json") -Force
