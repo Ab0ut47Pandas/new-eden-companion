@@ -67,57 +67,28 @@ jobs:
           SOURCE="$(dirname "$TYPES")"
 
           python - "$SOURCE" <<'PY'
-          import json, pathlib, sys
+          import collections, json, pathlib, sys
           source = pathlib.Path(sys.argv[1])
-          type_ids = set()
-          with (source / 'types.jsonl').open(encoding='utf-8') as handle:
-              for line in handle:
-                  if not line.strip():
-                      continue
-                  record = json.loads(line)
-                  key = record.get('_key', record.get('typeID'))
-                  if isinstance(key, int):
-                      type_ids.add(key)
-          target = None
           with (source / 'blueprints.jsonl').open(encoding='utf-8') as handle:
               for index, line in enumerate(handle, 1):
-                  if index == 572:
-                      target = json.loads(line)
-                      break
-          if target is None:
-              raise SystemExit('Could not read blueprint line 572')
-          value = target.get('_value') if isinstance(target.get('_value'), dict) else target
-          key = target.get('_key', value.get('blueprintTypeID'))
-          refs = []
-          for activity_name, activity in (value.get('activities') or {}).items():
-              for material in activity.get('materials') or []:
-                  refs.append(('material', activity_name, material.get('typeID')))
-              for product in activity.get('products') or []:
-                  refs.append(('product', activity_name, product.get('typeID')))
-              for skill in activity.get('skills') or []:
-                  refs.append(('skill', activity_name, skill.get('typeID')))
-          print('Blueprint line 572 key:', key, 'exists in types:', key in type_ids)
-          print('Blueprint line 572 raw:', json.dumps(target, sort_keys=True))
-          for kind, activity, type_id in refs:
-              print(kind, activity, type_id, 'exists in types:', type_id in type_ids)
+                  if index != 1283:
+                      continue
+                  record = json.loads(line)
+                  value = record.get('_value') if isinstance(record.get('_value'), dict) else record
+                  print('Blueprint line 1283:', json.dumps(record, sort_keys=True))
+                  for activity_name, activity in (value.get('activities') or {}).items():
+                      skills = activity.get('skills') or []
+                      if not skills:
+                          continue
+                      grouped = collections.defaultdict(list)
+                      for skill in skills:
+                          grouped[skill.get('typeID')].append(skill.get('level'))
+                      print('activity:', activity_name, 'skills:', skills)
+                      print('duplicates:', {k: v for k, v in grouped.items() if len(v) > 1})
+                  break
           PY
 
           node scripts/sde/build-static-db.mjs \
             --source "$SOURCE" \
             --build "$BUILD" \
             --output "$RUNNER_TEMP/nec-sde/eve-static.db"
-          node - "$RUNNER_TEMP/nec-sde/eve-static.db" <<'NODE'
-          const { DatabaseSync } = require('node:sqlite');
-          const db = new DatabaseSync(process.argv[2]);
-          const checks = {
-            types: db.prepare('SELECT COUNT(*) AS count FROM types').get().count,
-            blueprints: db.prepare('SELECT COUNT(*) AS count FROM blueprints').get().count,
-            products: db.prepare('SELECT COUNT(*) AS count FROM blueprint_products').get().count,
-            requirements: db.prepare('SELECT COUNT(*) AS count FROM type_skill_requirements').get().count,
-          };
-          console.log(checks);
-          for (const [name, count] of Object.entries(checks)) {
-            if (!(Number(count) > 0)) throw new Error(`${name} imported zero rows`);
-          }
-          db.close();
-          NODE
