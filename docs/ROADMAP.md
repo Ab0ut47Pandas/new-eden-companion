@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `FND-05`
-- Last completed: `FND-04`
+- Current work item: `GRF-01`
+- Last completed: `FND-05`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -32,7 +32,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **FND-02 — Ship the static DB with zero user setup.** Windows packaging now requires and bundles `static/eve-static.db`, permits that one rebuildable SQLite file, and still rejects private `data/` DBs, unexpected database files, and `.env.local`. Users do not install SQLite, Node, or another database service. PR #16.
 - [x] **FND-03 — Automated current-SDE build artifact.** Resolve CCP's current SDE build from official metadata, download the exact numbered JSONL archive, build and validate the DB, verify SHA-256, and upload the DB plus source/build metadata/checksum as a GitHub artifact. PR #17.
 - [x] **FND-04 — Static DB freshness/update path.** NEC compares the installed static DB build with CCP's current official SDE build, builds newer data in isolation using the validated importer, verifies checksum/integrity/schema/build, closes the live DB, swaps only the replaceable static DB, and retains/restores the known-good copy until the replacement successfully reopens. PR #18.
-- [ ] **FND-05 — Static DB health diagnostics.** Expose schema version, SDE build, age, unresolved placeholder count, and database availability to diagnostics without exposing private data.
+- [x] **FND-05 — Static DB health diagnostics.** Expose local static-data health at `/api/static-data/health`: availability/status, schema version, SDE build, database age, creation timestamp, and unresolved placeholder count, without exposing private session data or filesystem paths. PR #19.
 
 ## Phase B — Acquisition / “How do I get this?” graph
 
