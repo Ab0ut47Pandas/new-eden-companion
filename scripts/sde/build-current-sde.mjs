@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { buildStaticDatabase, STATIC_DB_SCHEMA_VERSION } from "./build-static-db.mjs";
 
@@ -146,7 +147,11 @@ export async function buildCurrentSde({ outputDir = path.join(process.cwd(), "st
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (match) => match.slice(1))) {
+const invokedAsScript = process.argv[1]
+  ? path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
+  : false;
+
+if (invokedAsScript) {
   try {
     const outputDir = parseOutputDirectoryArgument(process.argv.slice(2));
     const result = await buildCurrentSde(outputDir ? { outputDir } : undefined);
