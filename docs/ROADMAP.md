@@ -19,9 +19,11 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `ABY-06`
-- Last completed: `ABY-05`
+- Current work item: `TEST CHECKPOINT — Abyssal vertical slice`
+- Last completed: `ABY-06`
 - Last updated: 2026-08-18
+- Next after test: `ECO-01`
+- Test checkpoint: ABY-01 through ABY-06 are complete. Before economy work begins, validate the non-publishing Windows package from PR #52 in the real portable app. Confirm the dashboard Abyssal Guide shortcut, T0/T1 fit switching, briefing/readiness wording, T0 vs T1 loot-container differences, compact cheat sheet, and the full eight-fit validation catalog. Readiness should remain `needs information` where character-specific skill/supply/replacement/experience adapters are not yet attached; it must not claim ready from fit selection alone.
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
 ---
@@ -75,7 +77,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **ABY-03 — First-run briefing.** Build a T0/T1 beginner briefing with ship/fit/supplies, activation steps, timer, room flow, failure conditions, and safe practice guidance. PR #49.
 - [x] **ABY-04 — Loot teaching.** Explain Bioadaptive Cache versus optional side nodes, no ordinary wreck-loot expectation, major loot families, red-loot cash-out behavior, and keep/sell/use guidance. PR #50.
 - [x] **ABY-05 — Tier progression readiness.** Gate higher tiers on fit/skills/replacement capacity plus explicit experience milestones; finding a higher-tier filament must not automatically imply readiness. PR #51.
-- [ ] **ABY-06 — Integrate existing vetted Abyssal fits.** Connect the existing fit library to the briefing/readiness system and preserve each fit's validated tier limits.
+- [x] **ABY-06 — Integrate existing vetted Abyssal fits.** Connect the existing fit library to the briefing/readiness system and preserve each fit's validated tier limits. PR #52. TEST CHECKPOINT: validate the PR #52 Windows smoke package before continuing to ECO-01.
 
 ## Phase G — Economy, assets, location, and “what should I keep?”
 
