@@ -28,7 +28,7 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function versionOnPort() {
+async function ipv4VersionOnPort() {
   try {
     const response = await fetch("http://127.0.0.1:3000/api/update?local=1", { signal: AbortSignal.timeout(1500) });
     if (!response.ok) return null;
@@ -39,13 +39,40 @@ async function versionOnPort() {
   }
 }
 
-async function waitForVersion(version, timeoutMs) {
+function legacyUpdaterVersionOnLocalhost() {
+  const probe = spawnSync(
+    powershell,
+    [
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "$ErrorActionPreference='Stop'; $r=Invoke-RestMethod -Uri 'http://localhost:3000/api/update?local=1' -TimeoutSec 2; [Console]::Out.Write([string]$r.currentVersion)",
+    ],
+    { encoding: "utf8", windowsHide: true },
+  );
+  if (probe.status !== 0) return null;
+  const value = String(probe.stdout ?? "").trim();
+  return /^\d+\.\d+\.\d+$/.test(value) ? value : null;
+}
+
+async function waitForIpv4Version(version, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if ((await versionOnPort()) === version) return;
+    if ((await ipv4VersionOnPort()) === version) return;
     await delay(250);
   }
-  throw new Error(`Timed out waiting for New Eden Companion ${version} on port 3000; last version was ${await versionOnPort() ?? "none"}.`);
+  throw new Error(`Timed out waiting for IPv4 New Eden Companion ${version}; last version was ${await ipv4VersionOnPort() ?? "none"}.`);
+}
+
+async function waitForLegacyUpdaterVersion(version, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  let lastVersion = null;
+  while (Date.now() < deadline) {
+    lastVersion = legacyUpdaterVersionOnLocalhost();
+    if (lastVersion === version) return;
+    await delay(500);
+  }
+  throw new Error(`Legacy 0.1.9 localhost health check did not see ${version}; last version was ${lastVersion ?? "none"}.`);
 }
 
 function stopPort3000() {
@@ -62,7 +89,8 @@ function stopPort3000() {
 }
 
 try {
-  if (await versionOnPort()) throw new Error("Port 3000 already has a New Eden Companion instance before the test starts.");
+  stopPort3000();
+  await delay(500);
 
   const expand = spawnSync(
     powershell,
@@ -96,7 +124,7 @@ try {
 
   staleServer = spawn(process.execPath, [fakeServerPath], { stdio: "ignore", windowsHide: true });
   if (!staleServer.pid) throw new Error("Could not start fake stale New Eden Companion server.");
-  await waitForVersion("0.1.9", 10_000);
+  await waitForIpv4Version("0.1.9", 10_000);
 
   launcher = spawn(
     powershell,
@@ -109,7 +137,7 @@ try {
   launcher.stderr?.on("data", (chunk) => { launcherStderr += chunk.toString(); });
 
   try {
-    await waitForVersion(expectedVersion, 75_000);
+    await waitForLegacyUpdaterVersion(expectedVersion, 75_000);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`${message}\nLauncher stdout:\n${launcherStdout}\nLauncher stderr:\n${launcherStderr}`);
@@ -120,7 +148,7 @@ try {
     throw new Error(`The stale 0.1.9 process was not terminated.\nLauncher stdout:\n${launcherStdout}\nLauncher stderr:\n${launcherStderr}`);
   }
 
-  console.log(`Portable launcher replaced stale 0.1.9 with ${expectedVersion} successfully.`);
+  console.log(`Legacy 0.1.9 localhost health check sees packaged ${expectedVersion}; stale 0.1.9 was replaced successfully.`);
 } finally {
   stopPort3000();
   try { launcher?.kill(); } catch {}

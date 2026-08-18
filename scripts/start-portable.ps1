@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $packageRoot = Split-Path -Parent $PSScriptRoot
 $localUrl = "http://localhost:3000"
-$probeUrl = "http://127.0.0.1:3000"
+$probeUrls = @($localUrl, "http://127.0.0.1:3000")
 $nodePath = Join-Path $packageRoot "runtime\node.exe"
 $serverPath = Join-Path $packageRoot "server.js"
 $envPath = Join-Path $packageRoot ".env.local"
@@ -68,21 +68,24 @@ function Wait-ForPort3000Clear([int]$TimeoutMilliseconds = 10000) {
 }
 
 function Get-RunningCompanionVersion {
-  try {
-    $result = Invoke-RestMethod -Uri "$probeUrl/api/update?local=1" -TimeoutSec 2
-    $version = [string]$result.currentVersion
-    if ($version -match '^\d+\.\d+\.\d+$') { return $version }
-  } catch {}
+  foreach ($baseUrl in $probeUrls) {
+    try {
+      $result = Invoke-RestMethod -Uri "$baseUrl/api/update?local=1" -TimeoutSec 2
+      $version = [string]$result.currentVersion
+      if ($version -match '^\d+\.\d+\.\d+$') { return $version }
+    } catch {}
+  }
   return $null
 }
 
 function Test-CompanionPage {
-  try {
-    $response = Invoke-WebRequest -Uri $probeUrl -UseBasicParsing -TimeoutSec 2
-    return $response.StatusCode -eq 200 -and $response.Content -match "New Eden"
-  } catch {
-    return $false
+  foreach ($baseUrl in $probeUrls) {
+    try {
+      $response = Invoke-WebRequest -Uri $baseUrl -UseBasicParsing -TimeoutSec 2
+      if ($response.StatusCode -eq 200 -and $response.Content -match "New Eden") { return $true }
+    } catch {}
   }
+  return $false
 }
 
 function Stop-VerifiedCompanionListener([string]$RunningVersion, [string]$ExpectedVersion) {
@@ -187,7 +190,7 @@ if ($NoBrowser) {
   }
 }
 
-$env:HOSTNAME = "127.0.0.1"
+$env:HOSTNAME = "localhost"
 $env:PORT = "3000"
 $env:NODE_ENV = "production"
 
