@@ -11,6 +11,11 @@
 !.env.example
 /data
 
+# generated CCP static data
+/static/*.db
+/static/*.db.previous
+/static/*.db.building-*
+
 # test and editor output
 /coverage
 *.log
