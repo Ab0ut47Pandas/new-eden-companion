@@ -5,6 +5,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "package-database-policy.ps1")
+
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $packageJsonPath = Join-Path $projectRoot "package.json"
 $packageJson = Get-Content -Raw -LiteralPath $packageJsonPath | ConvertFrom-Json
@@ -86,6 +88,10 @@ foreach ($relativePrivatePath in @(".env.local", "data")) {
   }
 }
 
+# The SDE database is public, rebuildable application data. It must be bundled
+# so end users never have to install SQLite or fetch game data themselves.
+Copy-StaticDatabaseForPackage $projectRoot $packageRoot | Out-Null
+
 New-Item -ItemType Directory -Force -Path (Join-Path $packageRoot "scripts") | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\start-portable.ps1") -Destination (Join-Path $packageRoot "scripts\start-portable.ps1")
 Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\update-portable.ps1") -Destination (Join-Path $packageRoot "scripts\update-portable.ps1")
@@ -98,12 +104,7 @@ Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $packag
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\GETTING_STARTED.md") -Destination (Join-Path $packageRoot "GETTING STARTED.md")
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\TROUBLESHOOTING.md") -Destination (Join-Path $packageRoot "TROUBLESHOOTING.md")
 
-$privateArtifacts = Get-ChildItem -LiteralPath $packageRoot -Force -Recurse -File | Where-Object {
-  $_.Name -eq ".env.local" -or $_.Extension -in @(".db", ".sqlite", ".sqlite3")
-}
-if ($privateArtifacts) {
-  throw "Refusing to package private runtime data: $($privateArtifacts.FullName -join ', ')"
-}
+Assert-PackageDatabasePolicy $packageRoot
 
 $startHere = @"
 NEW EDEN COMPANION
@@ -112,7 +113,7 @@ NEW EDEN COMPANION
 2. Press Enter at the Client ID prompt to explore the demo, or paste your EVE PKCE Client ID.
 3. Keep the launcher window open while using the companion.
 
-Node.js does not need to be installed. This package includes its own runtime.
+Node.js, SQLite, and a separate database service do not need to be installed. This package includes its own runtime and static EVE database.
 Stable updates can be checked and installed from inside the companion.
 See "GETTING STARTED.md" to connect an EVE character.
 "@
