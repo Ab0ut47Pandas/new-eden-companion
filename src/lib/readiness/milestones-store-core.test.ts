@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { GoalStore } from "../goals/store-core";
 import { ActivityPrerequisiteGraph, type ActivityDefinition } from "./activity-graph";
 import { buildReadinessSnapshot } from "./model";
 import { ExperienceMilestoneStore, milestoneRequirementResult } from "./milestones-store-core";
@@ -52,6 +53,18 @@ describe("experience milestone store", () => {
     const reopened = new ExperienceMilestoneStore(filename);
     expect(reopened.get(10, "abyss:t0-success")).toEqual(saved);
     reopened.close();
+  });
+
+  it("coexists with saved goals in the same private app database", () => {
+    const { store, filename } = makeStore();
+    const goals = new GoalStore(filename);
+    goals.saveGoal({ characterId: 10, kind: "activity", targetKey: "activity:abyssals", title: "Try Abyssals" });
+    store.setState({ characterId: 10, milestoneKey: "abyss:t0-success", label: "Completed a T0 Abyssal run", state: "confirmed", now: 100 });
+
+    expect(goals.listGoals(10).map((goal) => goal.title)).toEqual(["Try Abyssals"]);
+    expect(store.get(10, "abyss:t0-success")?.state).toBe("confirmed");
+    goals.close();
+    store.close();
   });
 
   it("keeps milestones separate between characters", () => {
