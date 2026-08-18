@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `FND-02`
-- Last completed: `FND-01`
+- Current work item: `FND-03`
+- Last completed: `FND-02`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -29,7 +29,7 @@ This file is the persistent implementation state for the new-player progression 
 ## Phase A — Static knowledge foundation
 
 - [x] **FND-01 — Static SDE SQLite foundation.** Stream current CCP JSONL SDE into a replaceable SQLite knowledge database containing types, groups/categories, type materials, blueprints, activity materials/products/skills, and Dogma-derived skill prerequisites. Preserve unresolved official references explicitly. PR #14, merge `a014c0b87357efb4d8167686404e4d12cd5f1d3d`.
-- [ ] **FND-02 — Ship the static DB with zero user setup.** Update Windows packaging so `static/eve-static.db` is allowed and bundled while private DBs under `data/` remain forbidden. User must not install SQLite, Node, or another database service.
+- [x] **FND-02 — Ship the static DB with zero user setup.** Windows packaging now requires and bundles `static/eve-static.db`, permits that one rebuildable SQLite file, and still rejects private `data/` DBs, unexpected database files, and `.env.local`. Users do not install SQLite, Node, or another database service. PR #16.
 - [ ] **FND-03 — Automated current-SDE build artifact.** Add a reproducible GitHub workflow/script that follows CCP's current SDE build, downloads the exact JSONL archive, builds the DB, validates it, and emits the DB plus build metadata/checksum as an artifact.
 - [ ] **FND-04 — Static DB freshness/update path.** Let NEC determine the installed SDE build versus available validated build and safely replace only the static DB, with rollback to known-good data.
 - [ ] **FND-05 — Static DB health diagnostics.** Expose schema version, SDE build, age, unresolved placeholder count, and database availability to diagnostics without exposing private data.
