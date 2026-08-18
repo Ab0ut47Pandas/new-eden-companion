@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `GRF-07`
-- Last completed: `GRF-06`
+- Current work item: `PLY-01`
+- Last completed: `GRF-07`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -42,7 +42,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **GRF-04 — Non-manufacturing source boundaries.** Explicitly distinguish ordinary-blueprint availability from no-ordinary-blueprint and unknown-type boundaries; resolve evidence-backed SDE non-manufacturing activities plus cited curated NPC-seeded, loot/drop, LP/faction, exploration, PI, reaction, salvage, market, and other source categories while preserving unsupported sources as unknown. Recursive terminal leaves now carry the source resolution. PR #23.
 - [x] **GRF-05 — Reverse-use queries.** Answer “What is this used for?” from the installed SDE by following material -> blueprint/activity -> product relationships in reverse, including product-producing uses of blueprint types themselves, deterministic ordering, and unresolved-placeholder preservation without inventing unsupported purposes. PR #24.
 - [x] **GRF-06 — Item search and identity.** Search types by name/category/group and distinguish published, unpublished, blueprint, material, ship, module, skill, commodity, and unresolved placeholder records. PR #25.
-- [ ] **GRF-07 — Item explorer UI.** Add a user-facing item page with `How do I get this?` and `What is this used for?` entry points and recursively clickable dependencies.
+- [x] **GRF-07 — Item explorer UI.** Add a user-facing item page with `How do I get this?` and `What is this used for?` entry points and recursively clickable dependencies. PR #26.
 
 ## Phase C — Overlay the actual player
 

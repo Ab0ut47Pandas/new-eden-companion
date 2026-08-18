@@ -1,0 +1,506 @@
+.shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(83, 220, 181, 0.12), transparent 34rem),
+    radial-gradient(circle at 90% 8%, rgba(91, 160, 255, 0.09), transparent 30rem),
+    #091015;
+  color: #e8f0f2;
+  padding: 32px;
+}
+
+.container {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.backLink,
+.secondaryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #a9bdc2;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.backLink:hover,
+.secondaryLink:hover {
+  color: #ecffff;
+}
+
+.dataBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(136, 185, 194, 0.18);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #9db2b7;
+  background: rgba(15, 25, 31, 0.76);
+  font-size: 12px;
+}
+
+.hero {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  color: #62d8b8;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.hero h1,
+.detailHero h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 52px);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+
+.hero p,
+.detailHero p {
+  max-width: 760px;
+  color: #9eb0b5;
+  line-height: 1.65;
+  margin: 12px 0 0;
+}
+
+.searchForm {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin: 22px 0 28px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid rgba(151, 190, 198, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 25, 31, 0.88);
+}
+
+.searchBox:focus-within {
+  border-color: rgba(98, 216, 184, 0.55);
+  box-shadow: 0 0 0 3px rgba(98, 216, 184, 0.08);
+}
+
+.searchBox input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #edf7f8;
+  font: inherit;
+  font-size: 15px;
+}
+
+.searchButton {
+  border: 0;
+  border-radius: 12px;
+  padding: 0 20px;
+  background: #65d7b8;
+  color: #07110f;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.searchButton:hover {
+  filter: brightness(1.05);
+}
+
+.panel,
+.resultCard,
+.treeCard,
+.useCard,
+.infoCard {
+  border: 1px solid rgba(148, 186, 194, 0.14);
+  background: rgba(13, 22, 28, 0.84);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+}
+
+.panel {
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.emptyState {
+  border-radius: 16px;
+  padding: 34px;
+  text-align: center;
+  color: #9eb0b5;
+  border: 1px dashed rgba(148, 186, 194, 0.18);
+  background: rgba(13, 22, 28, 0.5);
+}
+
+.emptyState strong {
+  display: block;
+  color: #e8f0f2;
+  font-size: 17px;
+  margin-bottom: 7px;
+}
+
+.resultsHeader,
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 28px 0 12px;
+}
+
+.resultsHeader h2,
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.resultsHeader span,
+.sectionHeader p {
+  color: #80949a;
+  font-size: 13px;
+  margin: 0;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.resultCard {
+  display: block;
+  border-radius: 14px;
+  padding: 17px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.resultCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(98, 216, 184, 0.42);
+  background: rgba(18, 31, 37, 0.95);
+}
+
+.resultTop,
+.detailMeta,
+.pills,
+.inlineMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.resultCard h3 {
+  margin: 11px 0 6px;
+  font-size: 17px;
+}
+
+.resultCard p {
+  margin: 0;
+  color: #8fa2a8;
+  font-size: 13px;
+}
+
+.pill,
+.kindPill,
+.warnPill,
+.mutedPill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.kindPill {
+  background: rgba(98, 216, 184, 0.11);
+  color: #78e2c5;
+  border: 1px solid rgba(98, 216, 184, 0.18);
+}
+
+.pill,
+.mutedPill {
+  background: rgba(153, 180, 187, 0.08);
+  color: #9db0b5;
+  border: 1px solid rgba(153, 180, 187, 0.12);
+}
+
+.warnPill {
+  background: rgba(238, 176, 93, 0.11);
+  color: #efbd78;
+  border: 1px solid rgba(238, 176, 93, 0.2);
+}
+
+.detailHero {
+  margin: 10px 0 22px;
+}
+
+.detailMeta {
+  margin-top: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.infoCard {
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.infoCard h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.infoRows {
+  display: grid;
+  gap: 9px;
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.infoRow span:first-child {
+  color: #7e9298;
+}
+
+.description {
+  white-space: pre-wrap;
+  color: #a9b9bd;
+  line-height: 1.6;
+  font-size: 14px;
+  margin: 0;
+}
+
+.section {
+  margin-top: 34px;
+}
+
+.treeRoot,
+.treeChildren,
+.useList,
+.skillList,
+.sourceList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.treeChildren {
+  margin: 10px 0 0 15px;
+  padding-left: 15px;
+  border-left: 1px solid rgba(134, 174, 183, 0.18);
+}
+
+.treeCard {
+  border-radius: 13px;
+  padding: 14px;
+  margin-bottom: 9px;
+}
+
+.treeSummary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  list-style: none;
+}
+
+.treeSummary::-webkit-details-marker {
+  display: none;
+}
+
+.treeSummary strong {
+  font-size: 14px;
+}
+
+.treeSummary small,
+.treeNote {
+  color: #7f949a;
+  font-size: 12px;
+}
+
+.alternatives {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.alternative {
+  border-radius: 11px;
+  background: rgba(7, 14, 18, 0.48);
+  border: 1px solid rgba(133, 171, 180, 0.1);
+  padding: 12px;
+}
+
+.alternativeHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.alternativeHeader strong,
+.itemLink {
+  color: #dff8f1;
+}
+
+.itemLink {
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.itemLink:hover {
+  color: #73dfc2;
+  text-decoration: underline;
+}
+
+.requirement {
+  margin-top: 9px;
+}
+
+.requirementTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skillList,
+.sourceList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.skillList li,
+.sourceList li {
+  border-radius: 9px;
+  padding: 7px 9px;
+  background: rgba(109, 147, 156, 0.08);
+  color: #a8bbc0;
+  font-size: 12px;
+}
+
+.terminal {
+  margin-top: 10px;
+  border-radius: 10px;
+  padding: 10px 11px;
+  background: rgba(238, 176, 93, 0.06);
+  border: 1px solid rgba(238, 176, 93, 0.12);
+  color: #b9aaa0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.useList {
+  display: grid;
+  gap: 9px;
+}
+
+.useCard {
+  border-radius: 13px;
+  padding: 14px;
+}
+
+.useCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.productLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notice {
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid rgba(238, 176, 93, 0.17);
+  background: rgba(238, 176, 93, 0.06);
+  color: #cbb59b;
+  line-height: 1.55;
+  font-size: 13px;
+}
+
+.error {
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid rgba(241, 111, 111, 0.18);
+  background: rgba(241, 111, 111, 0.06);
+  color: #e8b4b4;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    padding: 20px 14px 34px;
+  }
+
+  .topbar,
+  .resultsHeader,
+  .sectionHeader,
+  .useCardHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .searchForm {
+    grid-template-columns: 1fr;
+  }
+
+  .searchButton {
+    min-height: 48px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .infoRow {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .treeChildren {
+    margin-left: 6px;
+    padding-left: 10px;
+  }
+}
