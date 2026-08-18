@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { copyFileSync, existsSync, mkdtempSync } from "node:fs";
+import { appendFileSync, closeSync, copyFileSync, existsSync, mkdtempSync, openSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -10,6 +10,19 @@ import { CURRENT_VERSION, getUpdateStatus, portableUpdateSupport, UPDATE_REPOSIT
 export const dynamic = "force-dynamic";
 
 let updateStarting = false;
+
+function delay(milliseconds: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function waitForFile(filePath: string, timeoutMilliseconds: number) {
+  const deadline = Date.now() + timeoutMilliseconds;
+  while (Date.now() < deadline) {
+    if (existsSync(filePath)) return true;
+    await delay(100);
+  }
+  return existsSync(filePath);
+}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -52,13 +65,22 @@ export async function POST() {
 
     const updaterRoot = mkdtempSync(path.join(tmpdir(), "new-eden-companion-updater-"));
     const updaterCopy = path.join(updaterRoot, "update-portable.ps1");
+    const readyPath = path.join(updaterRoot, "updater.ready");
+    const logPath = path.join(tmpdir(), "New-Eden-Companion-update.log");
     copyFileSync(updaterSource, updaterCopy);
+
+    appendFileSync(
+      logPath,
+      `[${new Date().toISOString()}] API: preparing updater ${status.currentVersion} -> ${status.latestVersion}.\n`,
+      "utf8",
+    );
 
     const windowsRoot = process.env.SystemRoot ?? "C:\\Windows";
     const bundledPowerShell = path.join(windowsRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
     const powershell = existsSync(bundledPowerShell) ? bundledPowerShell : "powershell.exe";
 
     updateStarting = true;
+    const logHandle = openSync(logPath, "a");
     const child = spawn(powershell, [
       "-NoLogo",
       "-NoProfile",
@@ -76,18 +98,44 @@ export async function POST() {
       status.currentVersion,
       "-ExpectedVersion",
       status.latestVersion,
+      "-ReadyPath",
+      readyPath,
     ], {
       cwd: updaterRoot,
       detached: true,
-      stdio: "ignore",
-      windowsHide: false,
+      stdio: ["ignore", logHandle, logHandle],
+      windowsHide: true,
+    });
+    closeSync(logHandle);
+
+    const spawnErrors: string[] = [];
+    child.once("error", (error) => {
+      spawnErrors.push(error.message);
     });
     child.unref();
 
     if (!child.pid) {
       updateStarting = false;
-      return NextResponse.json({ error: "Windows did not start the updater process." }, { status: 500 });
+      appendFileSync(logPath, `[${new Date().toISOString()}] API: Windows did not return an updater PID.\n`, "utf8");
+      return NextResponse.json({ error: `Windows did not start the updater process. Log: ${logPath}` }, { status: 500 });
     }
+
+    const updaterReady = await waitForFile(readyPath, 7_000);
+    if (!updaterReady) {
+      updateStarting = false;
+      try { child.kill(); } catch {}
+      const detail = spawnErrors.length > 0 ? ` ${spawnErrors[0]}` : "";
+      appendFileSync(
+        logPath,
+        `[${new Date().toISOString()}] API: updater startup handshake timed out.${detail}\n`,
+        "utf8",
+      );
+      return NextResponse.json({
+        error: `The updater did not confirm that it started, so New Eden Companion was left running.${detail} Log: ${logPath}`,
+      }, { status: 500 });
+    }
+
+    appendFileSync(logPath, `[${new Date().toISOString()}] API: updater startup handshake received. Shutting down the old server.\n`, "utf8");
 
     const shutdownTimer = setTimeout(() => process.exit(0), 1_500);
     shutdownTimer.unref();
@@ -96,6 +144,7 @@ export async function POST() {
       started: true,
       currentVersion: status.currentVersion,
       targetVersion: status.latestVersion,
+      logPath,
     }, { status: 202 });
   } catch (error) {
     updateStarting = false;

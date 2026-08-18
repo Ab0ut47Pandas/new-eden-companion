@@ -4,7 +4,8 @@ param(
   [Parameter(Mandatory = $true)][int]$ServerPid,
   [Parameter(Mandatory = $true)][string]$Repository,
   [Parameter(Mandatory = $true)][string]$CurrentVersion,
-  [Parameter(Mandatory = $true)][string]$ExpectedVersion
+  [Parameter(Mandatory = $true)][string]$ExpectedVersion,
+  [Parameter(Mandatory = $true)][string]$ReadyPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,6 +14,7 @@ $logPath = Join-Path $env:TEMP "New-Eden-Companion-update.log"
 $tempRoot = $null
 $stagingPath = $null
 $backupPath = $null
+$launcherPid = $null
 
 function Write-UpdateLog([string]$Message) {
   $line = "[$(Get-Date -Format o)] $Message"
@@ -59,12 +61,31 @@ function Find-ExpandedPackage([string]$ExtractRoot) {
   throw "The downloaded ZIP did not contain a New Eden Companion package root."
 }
 
-function Start-Companion([string]$Root) {
-  $launcher = Join-Path $Root "Start New Eden Companion.cmd"
-  if (-not (Test-Path -LiteralPath $launcher)) {
-    throw "The launcher is missing after the update."
+function Get-WindowsPowerShell {
+  $windowsRoot = if ($env:SystemRoot) { $env:SystemRoot } else { "C:\Windows" }
+  $bundledPowerShell = Join-Path $windowsRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+  if (Test-Path -LiteralPath $bundledPowerShell) {
+    return $bundledPowerShell
   }
-  Start-Process -FilePath $launcher -WorkingDirectory $Root
+  return "powershell.exe"
+}
+
+function Start-Companion([string]$Root) {
+  $launcherScript = Join-Path $Root "scripts\start-portable.ps1"
+  if (-not (Test-Path -LiteralPath $launcherScript)) {
+    throw "The portable launcher script is missing after the update."
+  }
+
+  $powershell = Get-WindowsPowerShell
+  $arguments = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$launcherScript`""
+  Write-UpdateLog "Starting New Eden Companion from $launcherScript."
+  $process = Start-Process -FilePath $powershell -ArgumentList $arguments -WorkingDirectory $Root -WindowStyle Normal -PassThru
+  Start-Sleep -Milliseconds 500
+  if (-not $process -or $process.HasExited) {
+    throw "The New Eden Companion launcher exited immediately."
+  }
+  Write-UpdateLog "Launcher process started (PID $($process.Id))."
+  return $process.Id
 }
 
 function Stop-Port3000 {
@@ -101,8 +122,14 @@ try {
   if (-not $parentRoot -or -not $packageLeaf) {
     throw "Refusing to update an unsafe package path: $PackageRoot"
   }
+  if (-not (Test-Path -LiteralPath (Join-Path $PackageRoot "scripts\start-portable.ps1"))) {
+    throw "The current portable launcher is missing: $PackageRoot"
+  }
 
   Write-UpdateLog "Preparing New Eden Companion $CurrentVersion -> $ExpectedVersion."
+  [System.IO.File]::WriteAllText($ReadyPath, "ready`n", [System.Text.UTF8Encoding]::new($false))
+  Write-UpdateLog "Updater startup handshake written."
+
   for ($attempt = 0; $attempt -lt 40; $attempt++) {
     if (-not (Get-Process -Id $ServerPid -ErrorAction SilentlyContinue)) { break }
     Start-Sleep -Milliseconds 500
@@ -198,7 +225,7 @@ try {
     throw
   }
 
-  Start-Companion $PackageRoot
+  $launcherPid = Start-Companion $PackageRoot
   if (-not (Wait-ForExpectedServer $ExpectedVersion)) {
     throw "The updated server did not become healthy within one minute."
   }
@@ -212,6 +239,11 @@ try {
 } catch {
   $failure = $_.Exception.Message
   Write-UpdateLog "UPDATE FAILED: $failure"
+
+  if ($launcherPid) {
+    try { Stop-Process -Id $launcherPid -Force -ErrorAction SilentlyContinue } catch {}
+    $launcherPid = $null
+  }
 
   if ($backupPath -and (Test-Path -LiteralPath $backupPath)) {
     Stop-Port3000
@@ -228,8 +260,12 @@ try {
     }
   }
 
-  if (Test-Path -LiteralPath (Join-Path $PackageRoot "Start New Eden Companion.cmd")) {
-    try { Start-Companion $PackageRoot } catch {}
+  if (Test-Path -LiteralPath (Join-Path $PackageRoot "scripts\start-portable.ps1")) {
+    try {
+      [void](Start-Companion $PackageRoot)
+    } catch {
+      Write-UpdateLog "Could not relaunch the previous package: $($_.Exception.Message)"
+    }
   }
 
   Write-Host ""
