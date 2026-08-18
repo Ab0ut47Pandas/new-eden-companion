@@ -214,7 +214,12 @@ function prepareStatements(db) {
     activity: db.prepare("INSERT INTO blueprint_activities (blueprint_type_id, activity, time_seconds) VALUES (?, ?, ?)"),
     material: db.prepare("INSERT INTO blueprint_materials (blueprint_type_id, activity, material_type_id, quantity) VALUES (?, ?, ?, ?)"),
     product: db.prepare("INSERT INTO blueprint_products (blueprint_type_id, activity, product_type_id, quantity, probability) VALUES (?, ?, ?, ?, ?)"),
-    blueprintSkill: db.prepare("INSERT INTO blueprint_skills (blueprint_type_id, activity, skill_type_id, level) VALUES (?, ?, ?, ?)"),
+    blueprintSkill: db.prepare(`
+      INSERT INTO blueprint_skills (blueprint_type_id, activity, skill_type_id, level)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(blueprint_type_id, activity, skill_type_id)
+      DO UPDATE SET level = MAX(blueprint_skills.level, excluded.level)
+    `),
     typeSkill: db.prepare("INSERT INTO type_skill_requirements (type_id, skill_type_id, level, requirement_slot) VALUES (?, ?, ?, ?)"),
   };
 }
