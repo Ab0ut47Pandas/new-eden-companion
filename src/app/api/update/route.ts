@@ -108,9 +108,9 @@ export async function POST() {
     });
     closeSync(logHandle);
 
-    let spawnError: Error | null = null;
+    const spawnErrors: string[] = [];
     child.once("error", (error) => {
-      spawnError = error;
+      spawnErrors.push(error.message);
     });
     child.unref();
 
@@ -124,7 +124,7 @@ export async function POST() {
     if (!updaterReady) {
       updateStarting = false;
       try { child.kill(); } catch {}
-      const detail = spawnError ? ` ${spawnError.message}` : "";
+      const detail = spawnErrors.length > 0 ? ` ${spawnErrors[0]}` : "";
       appendFileSync(
         logPath,
         `[${new Date().toISOString()}] API: updater startup handshake timed out.${detail}\n`,
