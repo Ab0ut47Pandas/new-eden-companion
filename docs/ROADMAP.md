@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `RDY-07`
-- Last completed: `RDY-06`
+- Current work item: `ACT-01`
+- Last completed: `RDY-07`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -60,7 +60,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **RDY-04 — Local experience milestones.** Persist per-character `confirmed`/`not-yet` milestones in the mutable private app database, preserve absence as unknown, and feed milestone requirements with explicit user evidence only rather than inferring gameplay experience from ESI. PR #40.
 - [x] **RDY-05 — Readiness explanation engine.** Deterministically classify assessed activity readiness as ready, nearly-ready, not-recommended, or unknown; separate hard blockers from soft gaps/warnings/unknowns, choose a primary issue by stable priority, preserve `why`/evidence, and expose a corrective action without fake percentage scores. PR #41.
 - [x] **RDY-06 — “I don't know what to do” recommender.** Bucket evaluated candidates into ready-now, short-preparation, longer-goal, needs-information, or explicitly deferred ignore-for-now; rank transparently by goal relevance and activity role without numeric scores, hidden effort inference, or automatic demotion of side activities. PR #42.
-- [ ] **RDY-07 — Goal-mode progression plan.** Given a chosen goal (ship, activity, item), generate the ordered path from current state to goal rather than merely listing missing requirements.
+- [x] **RDY-07 — Goal-mode progression plan.** Build a validated dependency-aware plan for selected item/ship or activity goals with explicit complete/incomplete/unknown state, deterministic topological ordering, parallel next steps, unknown blocking, and no inference that readiness equals completion. PR #43.
 
 ## Phase E — Activity briefing framework
 
