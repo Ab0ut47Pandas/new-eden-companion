@@ -139,12 +139,13 @@ export async function updateStaticDatabase(): Promise<StaticDatabaseUpdateResult
       expectedSchemaVersion: SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION,
       expectedSha256: candidateSha256,
       beforeSwap: closeStaticDatabase,
+      afterSwap: () => {
+        const installed = getStaticDatabaseMetadata();
+        if (installed.sdeBuild !== candidateBuild) {
+          throw new Error(`Static database reopened as build ${installed.sdeBuild}, expected ${candidateBuild}.`);
+        }
+      },
     });
-
-    const installed = getStaticDatabaseMetadata();
-    if (installed.sdeBuild !== candidateBuild) {
-      throw new Error(`Static database reopened as build ${installed.sdeBuild}, expected ${candidateBuild}.`);
-    }
 
     return {
       installedBuild: candidateBuild,
