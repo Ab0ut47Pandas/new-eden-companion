@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `GRF-03`
-- Last completed: `GRF-02`
+- Current work item: `GRF-04`
+- Last completed: `GRF-03`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -38,7 +38,7 @@ This file is the persistent implementation state for the new-player progression 
 
 - [x] **GRF-01 — Core acquisition graph domain model.** Define typed item, blueprint, manufacturing-activity, material, skill, and terminal source nodes plus typed dependency edges, explicit alternative acquisition options, unknown-source preservation, and graph integrity validation. PR #20.
 - [x] **GRF-02 — Manufacturing dependency queries.** Resolve every manufacturing blueprint alternative for a target product from SQLite, including product quantity, manufacturing time, required materials, and required activity skills; preserve unresolved placeholder types and deterministic ordering while excluding non-manufacturing activities. PR #21.
-- [ ] **GRF-03 — Recursive dependency expansion.** Walk manufacturable dependencies recursively with cycle/depth protection and stable deterministic output.
+- [x] **GRF-03 — Recursive dependency expansion.** Recursively expand manufacturable materials across every manufacturing blueprint alternative with deterministic ordering, active-path cycle detection, configurable depth protection, and explicit terminal states for non-manufacturable, cycle, depth-limit, and unknown-type boundaries. PR #22.
 - [ ] **GRF-04 — Non-manufacturing source boundaries.** Represent “cannot make this from an ordinary blueprint” explicitly and add a sourced acquisition layer for NPC-seeded, loot/drop, LP/faction, exploration, PI, reaction, salvage, market-only/other cases as each source becomes known.
 - [ ] **GRF-05 — Reverse-use queries.** Answer “What is this used for?” for materials/items by following blueprint/material/product relationships in the opposite direction.
 - [ ] **GRF-06 — Item search and identity.** Search types by name/category/group and distinguish published, unpublished, blueprint, material, ship, module, skill, commodity, and unresolved placeholder records.
