@@ -1,19 +1,29 @@
-import { ArrowLeft, CheckCircle2, Circle, ExternalLink, Target } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, ExternalLink, Search, Target } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { getSession } from "@/lib/auth/session-store";
 import { getGoalStore, type SavedGoal } from "@/lib/goals/store";
+import { searchStaticItems, staticDatabaseAvailable } from "@/lib/sde/database";
 
 import {
   addGoalStepAction,
   saveActivityGoalAction,
+  saveItemGoalAction,
   setGoalCompletedAction,
   setGoalStepCompletedAction,
 } from "./actions";
 import styles from "../items/item-explorer.module.css";
 
 export const dynamic = "force-dynamic";
+
+interface GoalsPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function single(value: string | string[] | undefined): string {
+  return typeof value === "string" ? value : "";
+}
 
 async function viewer(): Promise<{ characterId: number; characterName: string } | null> {
   const sessionId = (await cookies()).get("eve_session")?.value;
@@ -84,11 +94,16 @@ function GoalCard({ goal }: { goal: SavedGoal }) {
   );
 }
 
-export default async function GoalsPage() {
+export default async function GoalsPage({ searchParams }: GoalsPageProps) {
+  const params = await searchParams;
+  const itemQuery = single(params.item).trim();
   const current = await viewer();
   const goals = current ? getGoalStore().listGoals(current.characterId) : [];
   const activeGoals = goals.filter((goal) => goal.status === "active");
   const completedGoals = goals.filter((goal) => goal.status === "completed");
+  const itemResults = current && itemQuery && staticDatabaseAvailable()
+    ? searchStaticItems(itemQuery, { limit: 12 }).filter((item) => !item.isPlaceholder)
+    : [];
 
   return (
     <main className={styles.shell}>
@@ -108,7 +123,38 @@ export default async function GoalsPage() {
           <div className={styles.notice}>Connect an EVE character first. Goals are stored per character so progress does not bleed between alts.</div>
         ) : (
           <>
-            <div className={styles.notice}>Showing goals for {current.characterName}. Item goals can be saved directly from Item Explorer. For now, activity goals and checklist steps are user-entered; later readiness phases will generate explainable progression steps.</div>
+            <div className={styles.notice}>Showing goals for {current.characterName}. For now, checklist steps are user-entered; later readiness phases will generate explainable progression steps from your character state.</div>
+
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <div><div className={styles.eyebrow}>Obtain something</div><h2>Save an item goal</h2></div>
+                <p>Search the installed CCP static database, then save the exact item.</p>
+              </div>
+              <form className={styles.searchForm} action="/goals" method="get">
+                <label className={styles.searchBox}>
+                  <Search size={17} aria-hidden="true" />
+                  <input type="search" name="item" defaultValue={itemQuery} placeholder="Rifter, Gila, Tritanium, blueprint..." aria-label="Search item goals" />
+                </label>
+                <button className={styles.searchButton} type="submit">Find item</button>
+              </form>
+              {itemQuery && !staticDatabaseAvailable() && <div className={styles.error}>Static EVE data is unavailable, so NEC cannot safely resolve that item goal.</div>}
+              {itemQuery && staticDatabaseAvailable() && itemResults.length === 0 && <div className={styles.emptyState}><strong>No matching item found.</strong>Try the exact item name or a broader group/category.</div>}
+              {itemResults.length > 0 && (
+                <div className={styles.results}>
+                  {itemResults.map((item) => (
+                    <article className={styles.infoCard} key={item.typeId}>
+                      <div className={styles.resultTop}>{item.kinds.map((kind) => <span className={styles.kindPill} key={kind}>{kind}</span>)}</div>
+                      <h3><Link className={styles.itemLink} href={`/items/${item.typeId}`}>{item.name ?? `Type ${item.typeId}`}</Link></h3>
+                      <p className={styles.description}>{item.categoryName ?? "Unknown category"} · {item.groupName ?? "Unknown group"} · Type {item.typeId}</p>
+                      <form action={saveItemGoalAction}>
+                        <input type="hidden" name="typeId" value={item.typeId} />
+                        <button className={styles.secondaryLink} type="submit"><Target size={15} /> Save as goal</button>
+                      </form>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
@@ -130,7 +176,7 @@ export default async function GoalsPage() {
                 <p>{activeGoals.length} active goal{activeGoals.length === 1 ? "" : "s"}</p>
               </div>
               {activeGoals.length === 0 ? (
-                <div className={styles.emptyState}><strong>No active goals yet.</strong>Save an activity above or open an item in Item Explorer and save it as a goal.</div>
+                <div className={styles.emptyState}><strong>No active goals yet.</strong>Save an item or activity above to start tracking progress.</div>
               ) : (
                 <div className={styles.results}>{activeGoals.map((goal) => <GoalCard goal={goal} key={goal.id} />)}</div>
               )}
