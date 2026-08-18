@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `ACT-03`
-- Last completed: `ACT-02`
+- Current work item: `ABY-01`
+- Last completed: `ACT-03`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -66,7 +66,7 @@ This file is the persistent implementation state for the new-player progression 
 
 - [x] **ACT-01 — Reusable activity briefing UI/model.** Standardize `what it is`, `why care`, `am I ready`, `what to bring`, `how to start`, `what to do`, `what to loot/keep/sell`, `failure conditions`, and `what this unlocks next`. PR #44.
 - [x] **ACT-02 — Compact in-activity cheat sheet.** Provide a concise, manually viewable checklist for execution without claiming live combat/client telemetry. PR #45.
-- [ ] **ACT-03 — Post-activity debrief model.** Interpret newly acquired relevant items against goals and offer keep/sell/use-next explanations where data supports them.
+- [x] **ACT-03 — Post-activity debrief model.** Interpret newly acquired relevant items against goals and offer keep/sell/use-next explanations where data supports them. PR #46.
 
 ## Phase F — Abyssals as the first complete vertical slice
 
