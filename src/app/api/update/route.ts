@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { appendFileSync, existsSync, mkdtempSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -26,12 +26,12 @@ interface UpdaterProcessState {
 }
 
 function startupFailure(state: UpdaterProcessState): string | null {
-  if (state.spawnError) return `PowerShell could not start: ${state.spawnError}`;
+  if (state.spawnError) return `Updater bootstrap could not start: ${state.spawnError}`;
   if (!state.earlyExit) return null;
   const suffix = state.earlyExit.signal
     ? ` (signal ${state.earlyExit.signal})`
     : ` (exit code ${state.earlyExit.code ?? "unknown"})`;
-  return `PowerShell exited before writing the updater handshake${suffix}.`;
+  return `Updater bootstrap exited before PowerShell wrote the startup handshake${suffix}.`;
 }
 
 async function waitForUpdaterStart(child: ChildProcess, readyPath: string, timeoutMilliseconds: number): Promise<UpdaterStartResult> {
@@ -57,7 +57,7 @@ async function waitForUpdaterStart(child: ChildProcess, readyPath: string, timeo
   if (failure) return { ready: false, detail: failure };
   return {
     ready: false,
-    detail: `PowerShell updater PID ${child.pid ?? "unknown"} stayed alive but did not write the startup handshake within ${Math.round(timeoutMilliseconds / 1000)} seconds.`,
+    detail: `Updater bootstrap PID ${child.pid ?? "unknown"} stayed alive but PowerShell did not write the startup handshake within ${Math.round(timeoutMilliseconds / 1000)} seconds.`,
   };
 }
 
@@ -96,13 +96,25 @@ export async function POST() {
 
     const packageRoot = process.cwd();
     const updaterSource = path.join(packageRoot, "scripts", "update-portable.ps1");
-    if (!existsSync(updaterSource)) {
-      return NextResponse.json({ error: "The portable updater script is missing." }, { status: 500 });
+    const bootstrapSource = path.join(packageRoot, "scripts", "update-bootstrap.mjs");
+    const runtimeNodeSource = path.join(packageRoot, "runtime", "node.exe");
+    for (const required of [updaterSource, bootstrapSource, runtimeNodeSource]) {
+      if (!existsSync(required)) {
+        return NextResponse.json({ error: `The portable updater is missing ${path.relative(packageRoot, required)}.` }, { status: 500 });
+      }
     }
 
     const updaterRoot = mkdtempSync(path.join(tmpdir(), "new-eden-companion-updater-"));
+    const updaterCopy = path.join(updaterRoot, "update-portable.ps1");
+    const bootstrapCopy = path.join(updaterRoot, "update-bootstrap.mjs");
+    const bootstrapNode = path.join(updaterRoot, "node.exe");
+    const configPath = path.join(updaterRoot, "bootstrap.json");
     const readyPath = path.join(updaterRoot, "updater.ready");
     const logPath = path.join(tmpdir(), "New-Eden-Companion-update.log");
+
+    copyFileSync(updaterSource, updaterCopy);
+    copyFileSync(bootstrapSource, bootstrapCopy);
+    copyFileSync(runtimeNodeSource, bootstrapNode);
 
     appendFileSync(
       logPath,
@@ -114,34 +126,31 @@ export async function POST() {
     const bundledPowerShell = path.join(windowsRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
     const powershell = existsSync(bundledPowerShell) ? bundledPowerShell : "powershell.exe";
 
+    const updaterArgs = [
+      "-PackageRoot", packageRoot,
+      "-ServerPid", String(process.pid),
+      "-Repository", UPDATE_REPOSITORY,
+      "-CurrentVersion", status.currentVersion,
+      "-ExpectedVersion", status.latestVersion,
+      "-ReadyPath", readyPath,
+    ];
+    writeFileSync(configPath, JSON.stringify({
+      powershell,
+      updaterScript: updaterCopy,
+      updaterArgs,
+      workingDirectory: updaterRoot,
+      logPath,
+    }), "utf8");
+
     appendFileSync(
       logPath,
-      `[${new Date().toISOString()}] API: launching ${powershell} with ${updaterSource}.\n`,
+      `[${new Date().toISOString()}] API: launching detached Node updater bootstrap from ${bootstrapNode}.\n`,
       "utf8",
     );
 
     updateStarting = true;
-    const child = spawn(powershell, [
-      "-NoLogo",
-      "-NoProfile",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-File",
-      updaterSource,
-      "-PackageRoot",
-      packageRoot,
-      "-ServerPid",
-      String(process.pid),
-      "-Repository",
-      UPDATE_REPOSITORY,
-      "-CurrentVersion",
-      status.currentVersion,
-      "-ExpectedVersion",
-      status.latestVersion,
-      "-ReadyPath",
-      readyPath,
-    ], {
-      cwd: packageRoot,
+    const child = spawn(bootstrapNode, [bootstrapCopy, configPath], {
+      cwd: updaterRoot,
       detached: true,
       stdio: "ignore",
       windowsHide: true,
@@ -149,8 +158,8 @@ export async function POST() {
 
     if (!child.pid) {
       updateStarting = false;
-      appendFileSync(logPath, `[${new Date().toISOString()}] API: Windows did not return an updater PID.\n`, "utf8");
-      return NextResponse.json({ error: `Windows did not start the updater process. Log: ${logPath}` }, { status: 500 });
+      appendFileSync(logPath, `[${new Date().toISOString()}] API: Windows did not return an updater bootstrap PID.\n`, "utf8");
+      return NextResponse.json({ error: `Windows did not start the updater bootstrap. Log: ${logPath}` }, { status: 500 });
     }
 
     const startup = await waitForUpdaterStart(child, readyPath, 30_000);
