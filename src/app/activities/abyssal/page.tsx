@@ -55,7 +55,7 @@ export default async function AbyssalActivityPage({ searchParams }: AbyssalActiv
         </section>
 
         <div className={styles.notice}>
-          The selected fit's tier/weather validation now feeds the readiness engine. Character-specific skill, owned-supply, replacement-capacity, and experience inputs remain explicitly unknown on this page until their live adapters are attached; NEC will not turn missing evidence into a ready verdict.
+          The selected fit&apos;s tier/weather validation now feeds the readiness engine. Character-specific skill, owned-supply, replacement-capacity, and experience inputs remain explicitly unknown on this page until their live adapters are attached; NEC will not turn missing evidence into a ready verdict.
         </div>
 
         <section className={styles.section}>
