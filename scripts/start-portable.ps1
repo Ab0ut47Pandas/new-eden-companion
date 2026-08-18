@@ -91,12 +91,12 @@ function Stop-VerifiedCompanionListener([string]$RunningVersion, [string]$Expect
   Write-Host "New Eden Companion $RunningVersion is still using port 3000." -ForegroundColor Yellow
   Write-Host "This package is $ExpectedVersion, so the stale companion process will be stopped before launching the new copy." -ForegroundColor Yellow
 
-  $pids = @($listeners | ForEach-Object { $_.OwningProcess } | Where-Object { $_ -and $_ -ne $PID } | Sort-Object -Unique)
-  if ($pids.Count -eq 0) {
+  $listenerProcessIds = @($listeners | ForEach-Object { $_.OwningProcess } | Where-Object { $_ -and $_ -ne $PID } | Sort-Object -Unique)
+  if ($listenerProcessIds.Count -eq 0) {
     throw "A stale New Eden Companion listener was detected, but Windows did not expose a stoppable process ID."
   }
 
-  foreach ($listenerPid in $pids) {
+  foreach ($listenerPid in $listenerProcessIds) {
     Stop-Process -Id $listenerPid -Force -ErrorAction Stop
   }
 
