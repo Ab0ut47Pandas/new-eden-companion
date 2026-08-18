@@ -10,15 +10,17 @@ export interface StaticDatabaseMetadata {
   sourceFormat: string;
   createdAt: string;
   datasets: string[];
+  placeholderTypes: number;
 }
 
 export interface StaticType {
   typeId: number;
-  groupId: number;
+  groupId: number | null;
   name: string | null;
   description: string | null;
   published: boolean | null;
   marketGroupId: number | null;
+  isPlaceholder: boolean;
 }
 
 export interface TypeSkillRequirement {
@@ -70,7 +72,8 @@ export function getStaticDatabaseMetadata(): StaticDatabaseMetadata {
   const metadata = metaMap();
   const schemaVersion = Number(metadata.get("schema_version"));
   const sdeBuild = Number(metadata.get("sde_build"));
-  if (!Number.isInteger(schemaVersion) || !Number.isInteger(sdeBuild)) {
+  const placeholderTypes = Number(metadata.get("placeholder_types") ?? "0");
+  if (!Number.isInteger(schemaVersion) || !Number.isInteger(sdeBuild) || !Number.isInteger(placeholderTypes)) {
     throw new Error("The EVE static database metadata is missing or invalid.");
   }
   return {
@@ -79,21 +82,23 @@ export function getStaticDatabaseMetadata(): StaticDatabaseMetadata {
     sourceFormat: metadata.get("source_format") ?? "unknown",
     createdAt: metadata.get("created_at") ?? "unknown",
     datasets: (metadata.get("datasets") ?? "").split(",").filter(Boolean),
+    placeholderTypes,
   };
 }
 
 export function getStaticType(typeId: number): StaticType | null {
   const row = getDatabase().prepare(`
-    SELECT type_id, group_id, name, description, published, market_group_id
+    SELECT type_id, group_id, name, description, published, market_group_id, is_placeholder
     FROM types
     WHERE type_id = ?
   `).get(typeId) as unknown as {
     type_id: number;
-    group_id: number;
+    group_id: number | null;
     name: string | null;
     description: string | null;
     published: number | null;
     market_group_id: number | null;
+    is_placeholder: number;
   } | undefined;
   if (!row) return null;
   return {
@@ -103,6 +108,7 @@ export function getStaticType(typeId: number): StaticType | null {
     description: row.description,
     published: row.published === null ? null : row.published === 1,
     marketGroupId: row.market_group_id,
+    isPlaceholder: row.is_placeholder === 1,
   };
 }
 
