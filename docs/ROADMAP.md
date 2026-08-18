@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `GRF-01`
-- Last completed: `FND-05`
+- Current work item: `GRF-02`
+- Last completed: `GRF-01`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -36,7 +36,7 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Phase B — Acquisition / “How do I get this?” graph
 
-- [ ] **GRF-01 — Core acquisition graph domain model.** Define typed nodes/edges for item, blueprint, manufacturing activity, material, skill, and terminal acquisition/source with support for alternatives rather than a single linear recipe.
+- [x] **GRF-01 — Core acquisition graph domain model.** Define typed item, blueprint, manufacturing-activity, material, skill, and terminal source nodes plus typed dependency edges, explicit alternative acquisition options, unknown-source preservation, and graph integrity validation. PR #20.
 - [ ] **GRF-02 — Manufacturing dependency queries.** Given an item, resolve manufacturing blueprint(s), product quantity, activity requirements, materials, and activity skills from SQLite.
 - [ ] **GRF-03 — Recursive dependency expansion.** Walk manufacturable dependencies recursively with cycle/depth protection and stable deterministic output.
 - [ ] **GRF-04 — Non-manufacturing source boundaries.** Represent “cannot make this from an ordinary blueprint” explicitly and add a sourced acquisition layer for NPC-seeded, loot/drop, LP/faction, exploration, PI, reaction, salvage, market-only/other cases as each source becomes known.
