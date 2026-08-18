@@ -80,7 +80,7 @@ describe("Abyssal tier readiness", () => {
     expect(result.explanation.nextAction).toMatch(/reserve\/replacement capacity/i);
   });
 
-  it("maps explicit local experience records without inferring missing records", () => {
+  it("maps only the exact prior-tier local milestone and never infers missing or mismatched records", () => {
     expect(priorTierExperienceState(0, null)).toBe("not-applicable");
     expect(priorTierExperienceState(1, null)).toBe("unknown");
     expect(priorTierExperienceState(1, {
@@ -99,5 +99,13 @@ describe("Abyssal tier readiness", () => {
       updatedAt: 100,
       confirmedAt: null,
     })).toBe("unmet");
+    expect(priorTierExperienceState(2, {
+      characterId: 7,
+      milestoneKey: abyssalExperienceMilestoneKey(0),
+      label: abyssalExperienceMilestoneLabel(0),
+      state: "confirmed",
+      updatedAt: 100,
+      confirmedAt: 100,
+    })).toBe("unknown");
   });
 });
