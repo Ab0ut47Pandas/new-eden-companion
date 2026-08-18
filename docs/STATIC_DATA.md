@@ -6,7 +6,9 @@ New Eden Companion keeps CCP-owned static game facts separate from private playe
 - `static/eve-static.db` is a replaceable SQLite database generated from CCP's Static Data Export (SDE).
 - `STATIC_DATABASE_PATH` can override the static database location for development or testing.
 
-The generated database is intentionally not committed to Git. A later packaging/update step can ship or refresh a validated database without modifying the user's private database.
+The generated database is intentionally not committed to Git. Windows packaging requires a validated `static/eve-static.db` to be present and copies it into the portable package. End users do not install SQLite, Node.js, or a database service; the package carries its own Node runtime and static EVE database.
+
+The package policy permits exactly that public/rebuildable database. Private runtime data under `data/`, `.env.local`, and any unexpected `.db`, `.sqlite`, or `.sqlite3` file remain forbidden from release ZIPs.
 
 ## Official source
 
@@ -82,6 +84,18 @@ static/eve-static.db
 An alternate location can be supplied with `--output`.
 
 The build number is required rather than accepting the word `latest`. This makes every generated database reproducible and lets bug reports identify the exact CCP data used.
+
+## Windows packaging boundary
+
+`scripts/package-windows.ps1` copies `static/eve-static.db` into the portable release only after removing traced `.env.local` and `data/` content. Packaging fails if the static database is missing, rather than producing a build that asks the user to prepare game data manually.
+
+After the copy, `scripts/package-database-policy.ps1` scans the package recursively. The only permitted SQLite-style file is:
+
+```text
+static/eve-static.db
+```
+
+Any other `.db`, `.sqlite`, `.sqlite3`, or `.env.local` artifact aborts packaging. A Windows CI smoke test exercises the allow/deny cases independently of a full release build.
 
 ## Safe replacement
 

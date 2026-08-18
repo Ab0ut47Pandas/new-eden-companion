@@ -32,5 +32,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - name: Exercise package database policy
+        shell: pwsh
+        run: ./scripts/test-package-database-policy.ps1
       - name: Exercise detached updater handshake
         run: node scripts/test-update-startup.mjs
