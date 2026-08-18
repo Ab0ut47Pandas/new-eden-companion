@@ -1,7 +1,8 @@
+import type { ReadinessExplanation } from "../readiness/explanation";
+import type { FitTemplate } from "../ships/task-planner";
+import { listVettedAbyssalFits, type VettedAbyssalFitProfile } from "./abyssal-fit-catalog";
 import { buildActivityBriefing, type ActivityBriefingDefinition, type ActivityBriefingView } from "./briefing";
 import { buildActivityCheatSheet, type ActivityCheatSheetView } from "./cheat-sheet";
-import { ABYSSAL_TASKS, ABYSSAL_FIT_METADATA } from "../ships/abyssal-fits";
-import type { FitTemplate } from "../ships/task-planner";
 
 export type AbyssalFirstRunTier = 0 | 1;
 export type AbyssalFirstRunWeather = "dark" | "electrical";
@@ -25,55 +26,43 @@ export interface AbyssalFirstRunPackage {
   cheatSheet: ActivityCheatSheetView;
 }
 
-const FIRST_RUN_FITS: Readonly<Record<string, { tier: AbyssalFirstRunTier; weather: AbyssalFirstRunWeather }>> = {
-  "abyss-kestrel-t0-dark-community": { tier: 0, weather: "dark" },
-  "abyss-punisher-t0-electrical-community": { tier: 0, weather: "electrical" },
-  "abyss-rifter-t0-electrical-community": { tier: 0, weather: "electrical" },
-  "abyss-tristan-t0-electrical-a2o": { tier: 0, weather: "electrical" },
-  "abyss-hookbill-t1-dark": { tier: 1, weather: "dark" },
-  "abyss-worm-t1-electrical-a2o": { tier: 1, weather: "electrical" },
-};
-
-function firstRunFits(): FitTemplate[] {
-  const seen = new Set<string>();
-  const fits: FitTemplate[] = [];
-  for (const task of ABYSSAL_TASKS) {
-    for (const fit of task.fits) {
-      if (!FIRST_RUN_FITS[fit.id] || seen.has(fit.id)) continue;
-      seen.add(fit.id);
-      fits.push(fit);
-    }
-  }
-  return fits;
+function isFirstRunProfile(profile: VettedAbyssalFitProfile): profile is VettedAbyssalFitProfile & {
+  primaryTier: AbyssalFirstRunTier;
+  weather: AbyssalFirstRunWeather;
+} {
+  return (profile.primaryTier === 0 || profile.primaryTier === 1)
+    && (profile.weather === "dark" || profile.weather === "electrical")
+    && profile.hullClass === "frigate";
 }
 
-function toOption(fit: FitTemplate): AbyssalFirstRunOption {
-  const rules = FIRST_RUN_FITS[fit.id];
-  if (!rules) throw new Error(`Fit ${fit.id} is not a supported T0/T1 first-run option.`);
-  const metadata = ABYSSAL_FIT_METADATA[fit.id];
+function firstRunProfiles(): Array<VettedAbyssalFitProfile & { primaryTier: AbyssalFirstRunTier; weather: AbyssalFirstRunWeather }> {
+  return listVettedAbyssalFits().filter(isFirstRunProfile);
+}
+
+function toOption(profile: VettedAbyssalFitProfile & { primaryTier: AbyssalFirstRunTier; weather: AbyssalFirstRunWeather }): AbyssalFirstRunOption {
   return {
-    id: fit.id,
-    tier: rules.tier,
-    weather: rules.weather,
-    shipName: fit.shipName,
-    fitName: fit.name,
-    summary: fit.summary,
-    loadout: fit.loadout,
-    supplies: [...fit.supplies],
-    sourceUrl: metadata?.sourceUrl ?? null,
-    validation: metadata?.validation ?? null,
+    id: profile.fit.id,
+    tier: profile.primaryTier,
+    weather: profile.weather,
+    shipName: profile.fit.shipName,
+    fitName: profile.fit.name,
+    summary: profile.fit.summary,
+    loadout: profile.fit.loadout,
+    supplies: [...profile.fit.supplies],
+    sourceUrl: profile.metadata.sourceUrl,
+    validation: `${profile.metadata.validation} ${profile.validationNote}`,
   };
 }
 
 export function listAbyssalFirstRunOptions(): AbyssalFirstRunOption[] {
-  return firstRunFits()
+  return firstRunProfiles()
     .map(toOption)
     .sort((left, right) => left.tier - right.tier || left.shipName.localeCompare(right.shipName) || left.id.localeCompare(right.id));
 }
 
 export function getAbyssalFirstRunOption(id: string): AbyssalFirstRunOption | null {
-  const fit = firstRunFits().find((candidate) => candidate.id === id);
-  return fit ? toOption(fit) : null;
+  const profile = firstRunProfiles().find((candidate) => candidate.fitId === id);
+  return profile ? toOption(profile) : null;
 }
 
 function tierName(tier: AbyssalFirstRunTier): string {
@@ -106,7 +95,7 @@ export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): A
         id: "selected-fit",
         label: `${option.shipName}: ${option.fitName}`,
         detail: loadoutSummary,
-        why: option.validation ?? "This fit is part of NEC's existing vetted low-tier Abyssal library.",
+        why: option.validation ?? "This fit is part of NEC's vetted low-tier Abyssal catalog.",
         tone: "required",
       },
       ...option.supplies.map((supply, index) => ({
@@ -166,7 +155,7 @@ export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): A
       {
         id: "loot-with-time",
         label: "Take caches only when doing so will not compromise the timer or your survival.",
-        detail: "Abyssal pockets contain caches, but ABY-04 owns the detailed Bioadaptive Cache, side-node, and keep/sell teaching. Until then NEC should not invent a liquidation recommendation for unfamiliar drops.",
+        detail: "Use the detailed loot guide on this activity page for Bioadaptive Cache, optional side-node, red-loot, and keep/sell guidance. Unfamiliar drops remain unknown unless NEC has evidence for a use or sale path.",
         tone: "recommended",
       },
     ],
@@ -200,15 +189,18 @@ export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): A
       {
         id: "record-clear",
         label: `Record successful ${tier} clears as explicit experience rather than inferring mastery from owning a higher-tier filament.`,
-        detail: "ABY-05 will use explicit experience milestones together with fit, skills, supplies, and replacement capacity before recommending a higher tier.",
+        detail: "ABY-05 uses explicit experience milestones together with validated fit tier, skills, supplies, and replacement capacity before recommending a higher tier.",
         tone: "positive",
       },
     ],
   };
 }
 
-export function buildAbyssalFirstRunPackage(option: AbyssalFirstRunOption): AbyssalFirstRunPackage {
-  const briefing = buildActivityBriefing(buildAbyssalFirstRunDefinition(option));
+export function buildAbyssalFirstRunPackage(
+  option: AbyssalFirstRunOption,
+  readiness: ReadinessExplanation | null = null,
+): AbyssalFirstRunPackage {
+  const briefing = buildActivityBriefing(buildAbyssalFirstRunDefinition(option), readiness);
   return {
     option,
     briefing,

@@ -14,6 +14,12 @@ on:
       - "scripts/test-portable-launcher-stale-instance.mjs"
       - "package.json"
       - "package-lock.json"
+      - "src/app/activities/**"
+      - "src/lib/activity/**"
+      - "src/components/activity-*.tsx"
+      - "src/components/activity-*.module.css"
+      - "src/components/abyssal-*.tsx"
+      - "src/components/abyssal-*.module.css"
 
 permissions:
   contents: read

@@ -1,6 +1,7 @@
 import { ArrowLeft, ExternalLink, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
+import { AbyssalFitCatalog } from "@/components/abyssal-fit-catalog";
 import { AbyssalLootGuide } from "@/components/abyssal-loot-guide";
 import { ActivityBriefing } from "@/components/activity-briefing";
 import { ActivityCheatSheet } from "@/components/activity-cheat-sheet";
@@ -9,6 +10,7 @@ import {
   getAbyssalFirstRunOption,
   listAbyssalFirstRunOptions,
 } from "@/lib/activity/abyssal-first-run";
+import { buildVettedAbyssalFitReadiness } from "@/lib/activity/abyssal-fit-catalog";
 
 import styles from "../../items/item-explorer.module.css";
 
@@ -25,7 +27,18 @@ export default async function AbyssalActivityPage({ searchParams }: AbyssalActiv
   const options = listAbyssalFirstRunOptions();
   const requestedFitId = single(params.fit);
   const selected = getAbyssalFirstRunOption(requestedFitId) ?? options[0];
-  const firstRun = buildAbyssalFirstRunPackage(selected);
+
+  const readiness = buildVettedAbyssalFitReadiness({
+    fitId: selected.id,
+    targetTier: selected.tier,
+    weather: selected.weather,
+    skillReadiness: "unknown",
+    suppliesReady: "unknown",
+    replacementCapacity: "unknown",
+    priorTierExperience: selected.tier === 0 ? "not-applicable" : "unknown",
+    filamentAvailable: "unknown",
+  });
+  const firstRun = buildAbyssalFirstRunPackage(selected, readiness.explanation);
 
   return (
     <main className={styles.shell}>
@@ -38,11 +51,11 @@ export default async function AbyssalActivityPage({ searchParams }: AbyssalActiv
         <section className={styles.hero}>
           <div className={styles.eyebrow}>First complete activity slice</div>
           <h1>Abyssal first-run guide</h1>
-          <p>Choose a vetted T0/T1 starter fit. NEC keeps the exact fit, matching filament weather, supplies, activation steps, three-pocket flow, timer, failure conditions, and loot teaching in one guide.</p>
+          <p>Choose a vetted T0/T1 starter fit. NEC keeps the exact fit, matching filament weather, supplies, activation steps, three-pocket flow, timer, failure conditions, loot teaching, and tier-validation rules in one guide.</p>
         </section>
 
         <div className={styles.notice}>
-          Character-specific Abyssal readiness is intentionally not enabled yet. ABY-05 will combine fit, skills, supplies, replacement capacity, and explicit experience milestones before NEC tells you to move up a tier.
+          The selected fit&apos;s tier/weather validation now feeds the readiness engine. Character-specific skill, owned-supply, replacement-capacity, and experience inputs remain explicitly unknown on this page until their live adapters are attached; NEC will not turn missing evidence into a ready verdict.
         </div>
 
         <section className={styles.section}>
@@ -94,6 +107,10 @@ export default async function AbyssalActivityPage({ searchParams }: AbyssalActiv
             <p>Manual reference; no fake live telemetry</p>
           </div>
           <ActivityCheatSheet sheet={firstRun.cheatSheet} />
+        </section>
+
+        <section className={styles.section}>
+          <AbyssalFitCatalog />
         </section>
       </div>
     </main>
