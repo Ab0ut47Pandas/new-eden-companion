@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -16,6 +16,7 @@ function tempRoot(): string {
 }
 
 function writeDatabase(filename: string, build: number, schemaVersion = 1) {
+  mkdirSync(path.dirname(filename), { recursive: true });
   const db = new DatabaseSync(filename);
   try {
     db.exec("CREATE TABLE sde_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); PRAGMA foreign_keys = ON;");
@@ -45,14 +46,10 @@ afterEach(() => {
 });
 
 describe("static database update core", () => {
-  it("validates and installs a newer database while removing the old copy", async () => {
+  it("validates and installs a newer database while replacing the old copy", async () => {
     const root = tempRoot();
     const target = path.join(root, "static", "eve-static.db");
     const candidate = path.join(root, "candidate.db");
-    writeFileSync(path.dirname(target), "", { flag: "a" });
-    rmSync(path.dirname(target), { force: true });
-    const staticDir = path.dirname(target);
-    await import("node:fs/promises").then(({ mkdir }) => mkdir(staticDir, { recursive: true }));
     writeDatabase(target, 100);
     writeDatabase(candidate, 101);
 
