@@ -42,12 +42,30 @@ The supported entry shapes are modeled explicitly:
 
 For cooperative entry, the filaments must match in type/weather and tier. The model records the maximum ships and filament cost separately so later supply/readiness checks can calculate what the selected entry format actually requires.
 
+## Filament acquisition
+
+ABY-02 routes Abyssal filament sourcing through the same evidence-backed acquisition boundary used by the Item Explorer.
+
+- All tiers may be obtained from other capsuleers through the player market.
+- Tranquil (T0) filaments have CCP-documented exploration-site and T0/T1 Abyssal sources.
+- Calm (T1) filaments are documented in Data Sites across New Eden and within the Abyss.
+- Agitated through Chaotic (T2-T5) are treated as Abyssal Deadspace drops; no exploration source is invented for them.
+- Cataclysmic (T6) filaments are specifically documented as obtainable from T5 Abyssal Deadspace.
+
+The source adapter does not claim that an Abyssal filament has an ordinary manufacturing blueprint. Instead, the current SDE-backed acquisition layer determines the manufacturing boundary for the resolved filament type. This keeps `no ordinary blueprint` separate from `unknown type` and will surface a future data change rather than hiding it behind a hardcoded assumption.
+
+## Other consumables
+
+Abyssal fits may also require ammunition, drones, repair paste, boosters, cap charges, or other supplies. ABY-02 does not invent a universal consumable list before a fit/activity definition supplies one. Each required item is resolved through the existing acquisition graph using its actual type ID and optional sourced curation.
+
+That means a normal item with a manufacturing blueprint remains visibly manufacturable, a documented non-manufacturing source remains visible with provenance, and a source NEC cannot establish remains `unknown` rather than being silently rewritten as `buy it on the market`.
+
 ## Sources verified 2026-08-18
 
-- CCP Help Center — `https://support.eveonline.com/hc/en-us/articles/360000852629-Abyssal-Deadspace` — current tier names, five weather families/effects, and current cruiser/frigate/destroyer entry formats.
-- CCP patch notes 18.09 — `https://www.eveonline.com/news/view/patch-notes-for-version-18-09` — Tranquil T0, Cataclysmic T6, and two-destroyer/two-filament entry.
+- CCP Help Center — `https://support.eveonline.com/hc/en-us/articles/360000852629-Abyssal-Deadspace` — current tier names, five weather families/effects, current cruiser/frigate/destroyer entry formats, Calm/Data Site/Abyss sourcing, and market availability.
+- CCP patch notes 18.09 — `https://www.eveonline.com/news/view/patch-notes-for-version-18-09` — Tranquil T0, Cataclysmic T6, T0 exploration/T0-T1 Abyss sources, T6-from-T5 source, and two-destroyer/two-filament entry.
 - CCP Onslaught patch notes — `https://www.eveonline.com/news/view/patch-notes-for-eve-online-onslaught` — three-frigate cooperative entry using three matching filaments.
 
 ## Boundary for later roadmap items
 
-ABY-01 does not yet explain how to obtain filaments or consumables; that is ABY-02. It does not prescribe a beginner ship/fit, activation procedure, room tactics, timer management, or loot behavior; those belong to ABY-03 and ABY-04. It also does not decide whether a connected character is ready for a tier; ABY-05 will feed sourced Abyssal requirements into the existing readiness engine.
+ABY-03 will consume this knowledge to build a first-run T0/T1 briefing with a concrete selected fit and supplies. ABY-04 handles Abyssal loot interpretation. ABY-05 feeds sourced Abyssal requirements into the existing readiness engine. ABY-06 connects the vetted fit library and its validated tier limits.
