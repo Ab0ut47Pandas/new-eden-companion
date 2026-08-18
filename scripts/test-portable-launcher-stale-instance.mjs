@@ -21,6 +21,8 @@ const extractRoot = path.join(tempRoot, "extract");
 const fakeServerPath = path.join(tempRoot, "stale-server.mjs");
 let staleServer = null;
 let launcher = null;
+let launcherStdout = "";
+let launcherStderr = "";
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -103,15 +105,19 @@ try {
   );
   if (!launcher.pid) throw new Error("Could not start the packaged launcher.");
 
-  let stdout = "";
-  let stderr = "";
-  launcher.stdout?.on("data", (chunk) => { stdout += chunk.toString(); });
-  launcher.stderr?.on("data", (chunk) => { stderr += chunk.toString(); });
+  launcher.stdout?.on("data", (chunk) => { launcherStdout += chunk.toString(); });
+  launcher.stderr?.on("data", (chunk) => { launcherStderr += chunk.toString(); });
 
-  await waitForVersion(expectedVersion, 75_000);
+  try {
+    await waitForVersion(expectedVersion, 75_000);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`${message}\nLauncher stdout:\n${launcherStdout}\nLauncher stderr:\n${launcherStderr}`);
+  }
+
   await delay(500);
   if (staleServer.exitCode === null && !staleServer.killed) {
-    throw new Error(`The stale 0.1.9 process was not terminated.\nLauncher stdout:\n${stdout}\nLauncher stderr:\n${stderr}`);
+    throw new Error(`The stale 0.1.9 process was not terminated.\nLauncher stdout:\n${launcherStdout}\nLauncher stderr:\n${launcherStderr}`);
   }
 
   console.log(`Portable launcher replaced stale 0.1.9 with ${expectedVersion} successfully.`);
