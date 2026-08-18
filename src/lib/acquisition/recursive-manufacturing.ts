@@ -6,6 +6,11 @@ import {
   type ManufacturingMaterialRequirement,
   type ManufacturingTypeRef,
 } from "./manufacturing-query";
+import {
+  resolveAcquisitionSources,
+  type AcquisitionSourceResolution,
+  type CuratedAcquisitionSource,
+} from "./source-boundaries";
 
 export type RecursiveManufacturingState =
   | "manufacturable"
@@ -33,10 +38,12 @@ export interface RecursiveManufacturingNode {
   depth: number;
   state: RecursiveManufacturingState;
   alternatives: RecursiveManufacturingAlternative[];
+  sourceResolution: AcquisitionSourceResolution | null;
 }
 
 export interface RecursiveManufacturingOptions {
   maxDepth?: number;
+  curatedSources?: readonly CuratedAcquisitionSource[];
 }
 
 type TypeRow = {
@@ -79,24 +86,39 @@ export function expandManufacturingDependencies(
   options: RecursiveManufacturingOptions = {},
 ): RecursiveManufacturingNode {
   const maxDepth = normalizeMaxDepth(options.maxDepth);
+  const curatedSources = options.curatedSources ?? [];
 
   function expand(typeId: number, depth: number, path: ReadonlySet<number>, knownItem?: ManufacturingTypeRef): RecursiveManufacturingNode {
     const item = knownItem ?? queryTypeRef(db, typeId);
     if (!item) {
-      return { item: null, typeId, depth, state: "unknown-type", alternatives: [] };
+      return {
+        item: null,
+        typeId,
+        depth,
+        state: "unknown-type",
+        alternatives: [],
+        sourceResolution: resolveAcquisitionSources(db, typeId, curatedSources),
+      };
     }
 
     if (path.has(typeId)) {
-      return { item, typeId, depth, state: "cycle", alternatives: [] };
+      return { item, typeId, depth, state: "cycle", alternatives: [], sourceResolution: null };
     }
 
     const dependencies = queryManufacturingDependenciesForProduct(db, typeId);
     if (dependencies.length === 0) {
-      return { item, typeId, depth, state: "not-manufacturable", alternatives: [] };
+      return {
+        item,
+        typeId,
+        depth,
+        state: "not-manufacturable",
+        alternatives: [],
+        sourceResolution: resolveAcquisitionSources(db, typeId, curatedSources),
+      };
     }
 
     if (depth >= maxDepth) {
-      return { item, typeId, depth, state: "depth-limit", alternatives: [] };
+      return { item, typeId, depth, state: "depth-limit", alternatives: [], sourceResolution: null };
     }
 
     const nextPath = new Set(path);
@@ -107,6 +129,7 @@ export function expandManufacturingDependencies(
       typeId,
       depth,
       state: "manufacturable",
+      sourceResolution: null,
       alternatives: dependencies.map((dependency) => ({
         blueprint: dependency.blueprint,
         product: dependency.product,
