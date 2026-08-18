@@ -50,13 +50,19 @@ export function staticDatabaseAvailable(): boolean {
   return existsSync(staticDatabasePath());
 }
 
+export function closeStaticDatabase(): void {
+  database?.close();
+  database = undefined;
+  openedPath = undefined;
+}
+
 function getDatabase(): DatabaseSync {
   const filename = staticDatabasePath();
   if (database && openedPath === filename) return database;
   if (!existsSync(filename)) {
     throw new Error(`The EVE static database is not available at ${filename}. Build or install an SDE database first.`);
   }
-  database?.close();
+  closeStaticDatabase();
   database = new DatabaseSync(filename);
   database.exec("PRAGMA foreign_keys = ON;");
   openedPath = filename;
