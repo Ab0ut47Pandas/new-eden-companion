@@ -34,3 +34,61 @@ jobs:
           node-version: 22
       - name: Exercise detached updater handshake
         run: node scripts/test-update-startup.mjs
+
+  sde-current-smoke:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/sde-static-db-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Download and import current CCP JSONL SDE
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/nec-sde/download" "$RUNNER_TEMP/nec-sde/extract"
+          BUILD="$(python - <<'PY'
+          import json, urllib.request
+          url = 'https://developers.eveonline.com/static-data/tranquility/latest.jsonl'
+          with urllib.request.urlopen(url, timeout=30) as response:
+              for raw in response:
+                  record = json.loads(raw)
+                  if record.get('_key') == 'sde':
+                      value = record.get('_value', record.get('value'))
+                      print(value)
+                      break
+              else:
+                  raise SystemExit('latest.jsonl did not contain the sde build record')
+          PY
+          )"
+          test "$BUILD" != ""
+          echo "Current CCP SDE build: $BUILD"
+          ZIP="$RUNNER_TEMP/nec-sde/download/eve-sde.zip"
+          curl --fail --location --retry 3 \
+            "https://developers.eveonline.com/static-data/tranquility/eve-online-static-data-${BUILD}-jsonl.zip" \
+            --output "$ZIP"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/nec-sde/extract"
+          TYPES="$(find "$RUNNER_TEMP/nec-sde/extract" -type f -name types.jsonl -print -quit)"
+          test -n "$TYPES"
+          SOURCE="$(dirname "$TYPES")"
+          node scripts/sde/build-static-db.mjs \
+            --source "$SOURCE" \
+            --build "$BUILD" \
+            --output "$RUNNER_TEMP/nec-sde/eve-static.db"
+          node - "$RUNNER_TEMP/nec-sde/eve-static.db" <<'NODE'
+          const { DatabaseSync } = require('node:sqlite');
+          const db = new DatabaseSync(process.argv[2]);
+          const checks = {
+            types: db.prepare('SELECT COUNT(*) AS count FROM types').get().count,
+            blueprints: db.prepare('SELECT COUNT(*) AS count FROM blueprints').get().count,
+            products: db.prepare('SELECT COUNT(*) AS count FROM blueprint_products').get().count,
+            requirements: db.prepare('SELECT COUNT(*) AS count FROM type_skill_requirements').get().count,
+          };
+          console.log(checks);
+          for (const [name, count] of Object.entries(checks)) {
+            if (!(Number(count) > 0)) throw new Error(`${name} imported zero rows`);
+          }
+          db.close();
+          NODE
