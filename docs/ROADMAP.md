@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `FND-04`
-- Last completed: `FND-03`
+- Current work item: `FND-05`
+- Last completed: `FND-04`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -31,7 +31,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **FND-01 — Static SDE SQLite foundation.** Stream current CCP JSONL SDE into a replaceable SQLite knowledge database containing types, groups/categories, type materials, blueprints, activity materials/products/skills, and Dogma-derived skill prerequisites. Preserve unresolved official references explicitly. PR #14, merge `a014c0b87357efb4d8167686404e4d12cd5f1d3d`.
 - [x] **FND-02 — Ship the static DB with zero user setup.** Windows packaging now requires and bundles `static/eve-static.db`, permits that one rebuildable SQLite file, and still rejects private `data/` DBs, unexpected database files, and `.env.local`. Users do not install SQLite, Node, or another database service. PR #16.
 - [x] **FND-03 — Automated current-SDE build artifact.** Resolve CCP's current SDE build from official metadata, download the exact numbered JSONL archive, build and validate the DB, verify SHA-256, and upload the DB plus source/build metadata/checksum as a GitHub artifact. PR #17.
-- [ ] **FND-04 — Static DB freshness/update path.** Let NEC determine the installed SDE build versus available validated build and safely replace only the static DB, with rollback to known-good data.
+- [x] **FND-04 — Static DB freshness/update path.** NEC compares the installed static DB build with CCP's current official SDE build, builds newer data in isolation using the validated importer, verifies checksum/integrity/schema/build, closes the live DB, swaps only the replaceable static DB, and retains/restores the known-good copy until the replacement successfully reopens. PR #18.
 - [ ] **FND-05 — Static DB health diagnostics.** Expose schema version, SDE build, age, unresolved placeholder count, and database availability to diagnostics without exposing private data.
 
 ## Phase B — Acquisition / “How do I get this?” graph
