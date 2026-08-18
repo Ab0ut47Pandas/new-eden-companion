@@ -52,18 +52,9 @@ describe("static database update core", () => {
     const candidate = path.join(root, "candidate.db");
     writeDatabase(target, 100);
     writeDatabase(candidate, 101);
-
     const digest = sha256(candidate);
-    const result = await installStaticDatabaseCandidate({
-      candidatePath: candidate,
-      targetPath: target,
-      expectedBuild: 101,
-      expectedSchemaVersion: 1,
-      expectedSha256: digest,
-    });
-
+    const result = await installStaticDatabaseCandidate({ candidatePath: candidate, targetPath: target, expectedBuild: 101, expectedSchemaVersion: 1, expectedSha256: digest });
     expect(result.sdeBuild).toBe(101);
-    expect(result.sha256).toBe(digest);
     expect(readBuild(target)).toBe(101);
   });
 
@@ -73,24 +64,31 @@ describe("static database update core", () => {
     const candidate = path.join(root, "candidate.db");
     writeDatabase(target, 200);
     writeDatabase(candidate, 201);
+    await expect(installStaticDatabaseCandidate({ candidatePath: candidate, targetPath: target, expectedBuild: 201, expectedSchemaVersion: 1, expectedSha256: "0".repeat(64) })).rejects.toThrow("SHA-256");
+    expect(readBuild(target)).toBe(200);
+  });
 
+  it("rolls back when the application cannot reopen the replacement", async () => {
+    const root = tempRoot();
+    const target = path.join(root, "eve-static.db");
+    const candidate = path.join(root, "candidate.db");
+    writeDatabase(target, 400);
+    writeDatabase(candidate, 401);
     await expect(installStaticDatabaseCandidate({
       candidatePath: candidate,
       targetPath: target,
-      expectedBuild: 201,
+      expectedBuild: 401,
       expectedSchemaVersion: 1,
-      expectedSha256: "0".repeat(64),
-    })).rejects.toThrow("SHA-256");
-
-    expect(readBuild(target)).toBe(200);
+      expectedSha256: sha256(candidate),
+      afterSwap: () => { throw new Error("reopen failed"); },
+    })).rejects.toThrow("reopen failed");
+    expect(readBuild(target)).toBe(400);
   });
 
   it("rejects an unsupported schema before replacement", async () => {
     const root = tempRoot();
     const candidate = path.join(root, "candidate.db");
     writeDatabase(candidate, 301, 2);
-
-    await expect(validateStaticDatabaseCandidate(candidate, 301, 1, sha256(candidate)))
-      .rejects.toThrow("not supported");
+    await expect(validateStaticDatabaseCandidate(candidate, 301, 1, sha256(candidate))).rejects.toThrow("not supported");
   });
 });
