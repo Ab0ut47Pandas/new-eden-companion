@@ -66,6 +66,7 @@ export interface InstallStaticDatabaseCandidateOptions {
   expectedSchemaVersion: number;
   expectedSha256: string;
   beforeSwap?: () => void;
+  afterSwap?: () => void;
 }
 
 export async function installStaticDatabaseCandidate({
@@ -75,6 +76,7 @@ export async function installStaticDatabaseCandidate({
   expectedSchemaVersion,
   expectedSha256,
   beforeSwap,
+  afterSwap,
 }: InstallStaticDatabaseCandidateOptions): Promise<StaticDatabaseCandidateInfo> {
   const target = path.resolve(targetPath);
   const targetDirectory = path.dirname(target);
@@ -107,6 +109,8 @@ export async function installStaticDatabaseCandidate({
     }
 
     await validateStaticDatabaseCandidate(target, expectedBuild, expectedSchemaVersion, expectedSha256);
+    afterSwap?.();
+
     if (oldMoved && existsSync(backup)) {
       rmSync(backup, { force: true });
       oldMoved = false;
