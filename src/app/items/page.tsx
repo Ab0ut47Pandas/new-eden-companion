@@ -1,4 +1,4 @@
-import { ArrowLeft, Database, Search } from "lucide-react";
+import { ArrowLeft, Database, Search, Target } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -43,7 +43,10 @@ export default async function ItemExplorerPage({ searchParams }: ItemExplorerPag
       <div className={styles.container}>
         <div className={styles.topbar}>
           <Link className={styles.backLink} href="/"><ArrowLeft size={15} /> Back to companion</Link>
-          <span className={styles.dataBadge}><Database size={14} /> {build ? `CCP SDE build ${build}` : "Static data unavailable"}</span>
+          <div className={styles.pills}>
+            <Link className={styles.secondaryLink} href="/goals"><Target size={15} /> Goals & plans</Link>
+            <span className={styles.dataBadge}><Database size={14} /> {build ? `CCP SDE build ${build}` : "Static data unavailable"}</span>
+          </div>
         </div>
 
         <section className={styles.hero}>
