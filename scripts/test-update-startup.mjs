@@ -88,6 +88,7 @@ try {
 } finally {
   try { bootstrap?.kill(); } catch {}
   try { sleeper?.kill(); } catch {}
-  rmSync(smokeRoot, { recursive: true, force: true });
+  await delay(500);
+  try { rmSync(smokeRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 250 }); } catch {}
   rmSync(logPath, { force: true });
 }
