@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { EsiAsset } from "@/lib/esi/types";
-import { buildAssetCoverageIndex, coverageForRequirement } from "./asset-coverage";
+import { buildAssetCoverageIndex, coverageForRequirement } from "./asset-coverage-core";
 
 function asset(overrides: Partial<EsiAsset> & Pick<EsiAsset, "item_id" | "location_id" | "type_id">): EsiAsset {
   return {
