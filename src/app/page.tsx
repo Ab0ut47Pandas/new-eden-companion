@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 import { DashboardShell } from "@/components/dashboard-shell";
+import { ItemExplorerShortcut } from "@/components/item-explorer-shortcut";
 import { SkillExportButton } from "@/components/skill-export-button";
 import { UpdateControl } from "@/components/update-control";
 import { getSession } from "@/lib/auth/session-store";
@@ -60,6 +61,7 @@ export default async function Home({ searchParams }: HomeProps) {
         authDetail={detail}
         liveError={liveError}
       />
+      <ItemExplorerShortcut />
       <SkillExportButton
         characterName={dashboard.character.name}
         skills={dashboard.skills}
