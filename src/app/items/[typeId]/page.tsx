@@ -1,7 +1,15 @@
 import { ArrowLeft, Database, ExternalLink, Search } from "lucide-react";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getSession } from "@/lib/auth/session-store";
+import { validAccessToken } from "@/lib/auth/sso";
+import {
+  coverageForRequirement,
+  loadCharacterAssetCoverage,
+  type AssetCoverageIndex,
+} from "@/lib/player/asset-coverage";
 import {
   getRecursiveManufacturingDependencies,
   getReverseUsesForType,
@@ -37,6 +45,56 @@ function timeLabel(seconds: number | null): string {
   if (seconds < 3600) return `${Math.round(seconds / 60)}m base time`;
   const hours = seconds / 3600;
   return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}h base time`;
+}
+
+async function viewerAssetCoverage(): Promise<AssetCoverageIndex | null> {
+  const sessionId = (await cookies()).get("eve_session")?.value;
+  if (!sessionId) return null;
+
+  try {
+    const session = getSession(sessionId);
+    if (!session) return null;
+    const token = await validAccessToken(session);
+    return await loadCharacterAssetCoverage(session.characterId, token);
+  } catch (error) {
+    console.warn("Unable to prepare player asset coverage for Item Explorer", error);
+    return { visibility: "unavailable", reason: "esi-unavailable", byType: new Map() };
+  }
+}
+
+function AssetCoverageBadge({
+  coverage,
+  typeId,
+  requiredQuantity,
+}: {
+  coverage: AssetCoverageIndex | null;
+  typeId: number;
+  requiredQuantity: number;
+}) {
+  if (!coverage) return null;
+  const result = coverageForRequirement(coverage, typeId, requiredQuantity);
+
+  if (result.status === "unavailable") {
+    return <span className={styles.mutedPill}>asset visibility unavailable</span>;
+  }
+  if (result.status === "owned") {
+    return <span className={styles.kindPill}>owned {result.totalQuantity.toLocaleString()}</span>;
+  }
+  if (result.status === "partial") {
+    return (
+      <span className={styles.warnPill}>
+        owned {result.totalQuantity.toLocaleString()} · missing {result.missingQuantity.toLocaleString()}
+      </span>
+    );
+  }
+  if (result.status === "location-unknown") {
+    return (
+      <span className={styles.warnPill}>
+        own {result.totalQuantity.toLocaleString()} · location/access unknown
+      </span>
+    );
+  }
+  return <span className={styles.warnPill}>missing {requiredQuantity.toLocaleString()}</span>;
 }
 
 function SourceBoundary({ node }: { node: RecursiveManufacturingNode }) {
@@ -79,7 +137,15 @@ function SourceBoundary({ node }: { node: RecursiveManufacturingNode }) {
   );
 }
 
-function DependencyNode({ node, root = false }: { node: RecursiveManufacturingNode; root?: boolean }) {
+function DependencyNode({
+  node,
+  assetCoverage,
+  root = false,
+}: {
+  node: RecursiveManufacturingNode;
+  assetCoverage: AssetCoverageIndex | null;
+  root?: boolean;
+}) {
   const label = itemLabel(node.typeId, node.item?.name ?? null);
   const stateLabel = node.state === "manufacturable" ? "manufacturable" : node.state.replaceAll("-", " ");
 
@@ -130,8 +196,15 @@ function DependencyNode({ node, root = false }: { node: RecursiveManufacturingNo
                             </Link>
                           </span>
                           <span className={styles.treeNote}>× {material.requirement.quantity}</span>
+                          {!material.requirement.isPlaceholder && (
+                            <AssetCoverageBadge
+                              coverage={assetCoverage}
+                              typeId={material.requirement.typeId}
+                              requiredQuantity={material.requirement.quantity}
+                            />
+                          )}
                         </div>
-                        <DependencyNode node={material.dependency} />
+                        <DependencyNode node={material.dependency} assetCoverage={assetCoverage} />
                       </li>
                     ))}
                   </ul>
@@ -197,6 +270,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const reverseUses = getReverseUsesForType(typeId);
   const visibleUses = reverseUses.slice(0, 100);
   const description = cleanDescription(staticType.description);
+  const assetCoverage = await viewerAssetCoverage();
 
   return (
     <main className={styles.shell}>
@@ -261,7 +335,14 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             <div><div className={styles.eyebrow}>Acquisition</div><h2>How do I get this?</h2></div>
             <p>Manufacturing dependencies expand four levels inline. Open any dependency to continue deeper.</p>
           </div>
-          <DependencyNode node={dependencyTree} root />
+          {assetCoverage === null ? (
+            <div className={styles.notice}>Connect an EVE character to compare these requirements against your ESI-visible assets.</div>
+          ) : assetCoverage.visibility === "unavailable" ? (
+            <div className={styles.notice}>Character connected, but asset visibility is unavailable right now. NEC will not treat that as zero owned.</div>
+          ) : (
+            <div className={styles.notice}>Player overlay active. Owned quantities come from ESI-visible character assets; remote/uncertain roots are not assumed immediately usable.</div>
+          )}
+          <DependencyNode node={dependencyTree} assetCoverage={assetCoverage} root />
         </section>
 
         <section className={styles.section} id="used-for">
