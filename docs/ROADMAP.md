@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `PLY-02`
-- Last completed: `PLY-01`
+- Current work item: `PLY-03`
+- Last completed: `PLY-02`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -47,7 +47,7 @@ This file is the persistent implementation state for the new-player progression 
 ## Phase C — Overlay the actual player
 
 - [x] **PLY-01 — Asset coverage overlay.** Compare dependency quantities against the character's ESI-visible assets and clearly mark owned, partially owned, missing, inaccessible/unknown-location, and unresolved quantities. PR #27.
-- [ ] **PLY-02 — Skill readiness overlay.** Compare required item/activity skills against the character's trained skills and expose blockers without inventing training ETA when the required data is unavailable.
+- [x] **PLY-02 — Skill readiness overlay.** Compare required item/activity skills against the character's trained skills and expose blockers without inventing training ETA when the required data is unavailable. PR #28.
 - [ ] **PLY-03 — Blueprint ownership overlay.** Use ESI-visible blueprint data where available to distinguish owned BPO/BPC, runs, research state, and “must obtain blueprint.”
 - [ ] **PLY-04 — Wallet/market affordability overlay.** Distinguish purchase price from affordability and retain enough reserve/replacement context for later readiness rules.
 - [ ] **PLY-05 — Saved goals/plans.** Let the user save an item/activity goal locally and persist checklist/progress state separately from the replaceable static DB.
@@ -106,7 +106,7 @@ This file is the persistent implementation state for the new-player progression 
 - [ ] **FIT-04 — Fit identity classifier.** Score brawler, scram-kiter, kiter, sniper, tackle, active/buffer/passive tank, EWAR/neut/logi/other roles from explainable fit facts.
 - [ ] **FIT-05 — Contradiction/weakness rules.** Detect mismatched range plans, mobility/tank conflicts, cap dependence, resist holes, poor tackle compatibility, application problems, and other explainable weaknesses.
 - [ ] **FIT-06 — Tactical explanation UI.** Translate calculator/rule output into `what this fit wants`, `how to fly it`, `what ruins its plan`, and expandable `why` explanations.
-- [ ] **PVP-01 — Two-fit matchup model.** Compare engagement envelopes, range control, tackle, application, tank, cap/neuts, mobility, damage types, and escape conditions without deterministic fake win percentages.
+- [ ] **PVP-01 — Two-fit matchup model.** Compare engagement envelopes, range control, tackle, application, tank, cap/neuts, mobility, damage types, escape conditions without deterministic fake win percentages.
 - [ ] **PVP-02 — Matchup briefing.** Show your advantage/their advantage, good/bad engagement conditions, run-if conditions, and likely failure transition.
 - [ ] **PVP-03 — Killmail/post-loss debrief.** Use available killmail/fit context to explain plausible primary/secondary failure factors and learning points with uncertainty clearly stated.
 
