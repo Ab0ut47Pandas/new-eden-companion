@@ -41,6 +41,9 @@ export function priorTierExperienceState(
   record: ExperienceMilestoneRecord | null,
 ): ReadinessFindingState {
   if (targetTier === 0) return "not-applicable";
+  const priorTier = (targetTier - 1) as AbyssalTier;
+  const expectedKey = abyssalExperienceMilestoneKey(priorTier);
+  if (record && record.milestoneKey !== expectedKey) return "unknown";
   const result = milestoneRequirementResult("prior-tier-experience", record);
   return result.state;
 }
