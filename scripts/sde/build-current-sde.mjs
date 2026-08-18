@@ -18,7 +18,7 @@ export function parseLatestBuild(text) {
     const record = JSON.parse(line);
     const key = record?._key ?? record?.key;
     if (key !== "sde") continue;
-    const candidate = record?._value ?? record?.value ?? record?.sde;
+    const candidate = record?.buildNumber ?? record?.build_number ?? record?._value ?? record?.value ?? record?.sde;
     const build = String(candidate ?? "").trim();
     if (/^\d+$/.test(build)) return build;
   }
