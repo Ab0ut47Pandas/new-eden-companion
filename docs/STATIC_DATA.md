@@ -50,6 +50,21 @@ The resulting SQLite tables are:
 
 Useful indexes are created for product-to-blueprint, material-to-blueprint, and skill lookups.
 
+## SDE normalization and unresolved references
+
+The current CCP SDE is not always perfectly referentially closed. A blueprint or other dataset can reference a type ID that is absent from `types.jsonl`. Dropping the relationship would make the production graph silently incomplete, while disabling foreign keys would hide data-integrity failures.
+
+Instead, the importer creates an explicit placeholder row in `types` for an unresolved official type reference:
+
+- `type_id` keeps the original CCP ID;
+- `is_placeholder = 1` marks the missing static metadata;
+- group, name, description, and other unavailable fields remain `NULL`;
+- the original blueprint/material/skill relationship remains intact.
+
+The number of placeholder types is recorded in `sde_meta` as `placeholder_types`. Runtime callers can also inspect `StaticType.isPlaceholder` and avoid presenting guessed names or metadata.
+
+CCP data can also contain a duplicate required skill inside one blueprint activity. The importer normalizes those duplicates to one `(blueprint, activity, skill)` row and keeps the highest required level. This preserves the effective prerequisite without treating redundant source rows as separate requirements.
+
 ## Build a database
 
 Download the JSON Lines SDE from CCP and extract it. Then run:
@@ -90,6 +105,7 @@ Each database records:
 - source format
 - build timestamp
 - imported dataset list
+- unresolved placeholder-type count
 
 Runtime code can read these values through `src/lib/sde/database.ts`.
 
