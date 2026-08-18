@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `RDY-05`
-- Last completed: `RDY-04`
+- Current work item: `RDY-06`
+- Last completed: `RDY-05`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -58,7 +58,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **RDY-02 — Replacement-capacity model.** Calculate post-purchase risk budget from liquid ISK, immediate acquisition cost, explicit cash reserve, replacement exposure, and caller-supplied replacement count; keep `can purchase` separate from `can afford to lose` and leave loss affordability unknown when no policy is supplied. PR #38.
 - [x] **RDY-03 — Activity prerequisite graph.** Define serializable primary/side activities with hard/soft typed requirements for skills, ship constraints, supplies, ISK, replacement policy, location/access, milestones, knowledge, and prerequisite activities; validate missing references/cycles and translate evaluated results into RDY-01 findings while preserving omitted evaluations as unknown. PR #39.
 - [x] **RDY-04 — Local experience milestones.** Persist per-character `confirmed`/`not-yet` milestones in the mutable private app database, preserve absence as unknown, and feed milestone requirements with explicit user evidence only rather than inferring gameplay experience from ESI. PR #40.
-- [ ] **RDY-05 — Readiness explanation engine.** Produce deterministic “ready / nearly ready / not recommended” output with primary blockers, warnings, and next corrective action; every conclusion must expose why.
+- [x] **RDY-05 — Readiness explanation engine.** Deterministically classify assessed activity readiness as ready, nearly-ready, not-recommended, or unknown; separate hard blockers from soft gaps/warnings/unknowns, choose a primary issue by stable priority, preserve `why`/evidence, and expose a corrective action without fake percentage scores. PR #41.
 - [ ] **RDY-06 — “I don't know what to do” recommender.** Rank realistic activities/goals from current character state and separate `ready now`, `short preparation`, `longer goal`, and `ignore for now`.
 - [ ] **RDY-07 — Goal-mode progression plan.** Given a chosen goal (ship, activity, item), generate the ordered path from current state to goal rather than merely listing missing requirements.
 
