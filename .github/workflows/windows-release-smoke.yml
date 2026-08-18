@@ -8,7 +8,10 @@ on:
       - ".github/workflows/release.yml"
       - "scripts/sde/**"
       - "scripts/package-windows.ps1"
-      - "scripts/package-policy.ps1"
+      - "scripts/package-database-policy.ps1"
+      - "scripts/start-portable.ps1"
+      - "scripts/update-portable.ps1"
+      - "scripts/test-portable-launcher-stale-instance.mjs"
       - "package.json"
       - "package-lock.json"
 
@@ -18,7 +21,7 @@ permissions:
 jobs:
   package-smoke:
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -54,6 +57,8 @@ jobs:
           $privateDb = Get-ChildItem -Path $extract -Recurse -File | Where-Object { $_.FullName -match '[\\/]data[\\/].*\.(db|sqlite|sqlite3)$' }
           if ($privateDb) { throw "Portable ZIP contains a private data database." }
           Write-Host "Package contains static DB: $($staticDb[0].FullName)"
+      - name: Replace stale running NEC instance
+        run: node scripts/test-portable-launcher-stale-instance.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: windows-release-smoke
