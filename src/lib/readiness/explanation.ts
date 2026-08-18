@@ -23,6 +23,7 @@ export interface ReadinessExplanation {
   primaryIssue: ReadinessFinding | null;
   nextAction: string | null;
   blockers: readonly ReadinessFinding[];
+  gaps: readonly ReadinessFinding[];
   warnings: readonly ReadinessFinding[];
   unknowns: readonly ReadinessFinding[];
   satisfied: readonly ReadinessFinding[];
@@ -31,7 +32,7 @@ export interface ReadinessExplanation {
 function findingPriority(finding: ReadinessFinding): number {
   if (finding.requirement === "hard" && finding.state === "unmet") return 0;
   if (finding.requirement === "hard" && finding.state === "unknown") return 1;
-  if (finding.requirement !== "context" && finding.state === "unmet") return 2;
+  if (finding.requirement === "soft" && finding.state === "unmet") return 2;
   if (finding.state === "unknown") return 3;
   if (finding.state === "caution") return 4;
   return 99;
@@ -51,7 +52,7 @@ function classify(snapshot: ReadinessSnapshot): ReadinessRecommendationStatus {
 
   const relevant = snapshot.findings.filter((finding) => finding.state !== "not-applicable");
   if (relevant.some((finding) => finding.state === "unknown")) return "unknown";
-  if (relevant.some((finding) => finding.requirement !== "context" && finding.state === "unmet")) return "nearly-ready";
+  if (relevant.some((finding) => finding.requirement === "soft" && finding.state === "unmet")) return "nearly-ready";
   if (relevant.some((finding) => finding.state === "caution")) return "nearly-ready";
   return "ready";
 }
@@ -92,7 +93,8 @@ export function explainReadiness(
   const hints = new Map((options.actionHints ?? []).map((hint) => [hint.findingId, hint.action.trim()]));
   const hintedAction = primaryIssue ? hints.get(primaryIssue.id) : undefined;
 
-  const blockers = snapshot.findings.filter((finding) => finding.state === "unmet");
+  const blockers = snapshot.findings.filter((finding) => finding.requirement === "hard" && finding.state === "unmet");
+  const gaps = snapshot.findings.filter((finding) => finding.requirement === "soft" && finding.state === "unmet");
   const warnings = snapshot.findings.filter((finding) => finding.state === "caution");
   const unknowns = snapshot.findings.filter((finding) => finding.state === "unknown");
   const satisfied = snapshot.findings.filter((finding) => finding.state === "met");
@@ -105,6 +107,7 @@ export function explainReadiness(
     primaryIssue,
     nextAction: hintedAction || defaultAction(primaryIssue),
     blockers,
+    gaps,
     warnings,
     unknowns,
     satisfied,
