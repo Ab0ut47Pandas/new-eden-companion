@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `ABY-01`
-- Last completed: `ACT-03`
+- Current work item: `ABY-02`
+- Last completed: `ABY-01`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -70,7 +70,7 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Phase F — Abyssals as the first complete vertical slice
 
-- [ ] **ABY-01 — Current filament/tier/weather knowledge model.** Verify and encode tier naming, filament families/weather effects, entry formats/consumption, and why each weather matters.
+- [x] **ABY-01 — Current filament/tier/weather knowledge model.** Verify and encode tier naming, filament families/weather effects, entry formats/consumption, and why each weather matters. PR #47.
 - [ ] **ABY-02 — Abyssal acquisition/supply graph.** Explain how required filaments and consumables are obtained, including explicit non-manufacturable boundaries where applicable.
 - [ ] **ABY-03 — First-run briefing.** Build a T0/T1 beginner briefing with ship/fit/supplies, activation steps, timer, room flow, failure conditions, and safe practice guidance.
 - [ ] **ABY-04 — Loot teaching.** Explain Bioadaptive Cache versus optional side nodes, no ordinary wreck-loot expectation, major loot families, red-loot cash-out behavior, and keep/sell/use guidance.
