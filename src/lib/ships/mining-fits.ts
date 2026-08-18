@@ -127,6 +127,12 @@ function procurerOre(group: OreGroup, deepCore = false): FitTemplate {
 function covetorOre(group: OreGroup, deepCore = false): FitTemplate {
   const id = `mining-${group.key}-covetor`;
   const miner = deepCore ? "Modulated Deep Core Strip Miner II" : "Modulated Strip Miner II";
+  const rigs = deepCore
+    ? ["Medium Deep Core Mining Optimization I", "Medium Processor Overclocking Unit I"]
+    : ["Medium Processor Overclocking Unit I", "2× Medium Core Defense Field Extender I"];
+  const eftRigs = deepCore
+    ? "Medium Deep Core Mining Optimization I\nMedium Processor Overclocking Unit I"
+    : "Medium Processor Overclocking Unit I\nMedium Core Defense Field Extender I\nMedium Core Defense Field Extender I";
   return sourcedFit({
     id,
     shipName: "Covetor",
@@ -139,9 +145,7 @@ function covetorOre(group: OreGroup, deepCore = false): FitTemplate {
       { slot: "High", items: [`2× ${miner} + ${group.crystal}`] },
       { slot: "Mid", items: ["Multispectrum Shield Hardener II"] },
       { slot: "Low", items: ["2× Mining Laser Upgrade II", "Elara Restrained Mining Laser Upgrade"] },
-      { slot: "Rigs", items: deepCore
-        ? ["Medium Deep Core Mining Optimization I", "Medium Processor Overclocking Unit I", "Medium Core Defense Field Extender I"]
-        : ["Medium Processor Overclocking Unit I", "2× Medium Core Defense Field Extender I"] },
+      { slot: "Rigs", items: rigs },
       { slot: "Drones", items: ["5× Hobgoblin I"] },
     ],
     supplies: [`${group.crystal} ×4 or more`, "Hauling/compression support recommended"],
@@ -151,10 +155,10 @@ function covetorOre(group: OreGroup, deepCore = false): FitTemplate {
     ] : []),
   }, {
     validation: deepCore
-      ? "The deep-core module/crystal/rig combination follows current Mercoxit module rules; Covetor is the barge yield specialist and is best used with support."
+      ? "The deep-core rig and processor rig exactly use the Covetor's 400 calibration budget; the third rig slot is intentionally left empty. Covetor remains the yield-oriented barge and is best used with support."
       : `The low/rig layout follows the established Covetor yield archetype, updated to the current grouped Type A II crystal for ${group.ores}.`,
     sourceUrl: deepCore ? BARGE_SOURCE : (group.sourceUrl ?? BARGE_SOURCE),
-    eft: `[Covetor, ${group.title} - Yield Type A]\nMining Laser Upgrade II\nMining Laser Upgrade II\nElara Restrained Mining Laser Upgrade\n\nMultispectrum Shield Hardener II\n\n${miner}, ${group.crystal}\n${miner}, ${group.crystal}\n\n${deepCore ? "Medium Deep Core Mining Optimization I\n" : ""}Medium Processor Overclocking Unit I\nMedium Core Defense Field Extender I${deepCore ? "" : "\nMedium Core Defense Field Extender I"}\n\nHobgoblin I x5\n\n${group.crystal} x4`,
+    eft: `[Covetor, ${group.title} - Yield Type A]\nMining Laser Upgrade II\nMining Laser Upgrade II\nElara Restrained Mining Laser Upgrade\n\nMultispectrum Shield Hardener II\n\n${miner}, ${group.crystal}\n${miner}, ${group.crystal}\n\n${eftRigs}\n\nHobgoblin I x5\n\n${group.crystal} x4`,
   });
 }
 
