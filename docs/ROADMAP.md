@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `ABY-02`
-- Last completed: `ABY-01`
+- Current work item: `ABY-03`
+- Last completed: `ABY-02`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -41,7 +41,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **GRF-03 — Recursive dependency expansion.** Recursively expand manufacturable materials across every manufacturing blueprint alternative with deterministic ordering, active-path cycle detection, configurable depth protection, and explicit terminal states for non-manufacturable, cycle, depth-limit, and unknown-type boundaries. PR #22.
 - [x] **GRF-04 — Non-manufacturing source boundaries.** Explicitly distinguish ordinary-blueprint availability from no-ordinary-blueprint and unknown-type boundaries; resolve evidence-backed SDE non-manufacturing activities plus cited curated NPC-seeded, loot/drop, LP/faction, exploration, PI, reaction, salvage, market, and other source categories while preserving unsupported sources as unknown. Recursive terminal leaves now carry the source resolution. PR #23.
 - [x] **GRF-05 — Reverse-use queries.** Answer “What is this used for?” from the installed SDE by following material -> blueprint/activity -> product relationships in reverse, including product-producing uses of blueprint types themselves, deterministic ordering, and unresolved-placeholder preservation without inventing unsupported purposes. PR #24.
-- [x] **GRF-06 — Item search and identity.** Search types by name/category/group and distinguish published, unpublished, blueprint, material, ship, module, skill, commodity, and unresolved placeholder records. PR #25.
+- [x] **GRF-06 — Item search and identity.** Search types by name/category/group and distinguish published/unpublished, blueprint, material, ship, module, skill, commodity, and unresolved placeholder records. PR #25.
 - [x] **GRF-07 — Item explorer UI.** Add a user-facing item page with `How do I get this?` and `What is this used for?` entry points and recursively clickable dependencies. PR #26.
 
 ## Phase C — Overlay the actual player
@@ -71,7 +71,7 @@ This file is the persistent implementation state for the new-player progression 
 ## Phase F — Abyssals as the first complete vertical slice
 
 - [x] **ABY-01 — Current filament/tier/weather knowledge model.** Verify and encode tier naming, filament families/weather effects, entry formats/consumption, and why each weather matters. PR #47.
-- [ ] **ABY-02 — Abyssal acquisition/supply graph.** Explain how required filaments and consumables are obtained, including explicit non-manufacturable boundaries where applicable.
+- [x] **ABY-02 — Abyssal acquisition/supply graph.** Explain how required filaments and consumables are obtained, including explicit non-manufacturable boundaries where applicable. PR #48.
 - [ ] **ABY-03 — First-run briefing.** Build a T0/T1 beginner briefing with ship/fit/supplies, activation steps, timer, room flow, failure conditions, and safe practice guidance.
 - [ ] **ABY-04 — Loot teaching.** Explain Bioadaptive Cache versus optional side nodes, no ordinary wreck-loot expectation, major loot families, red-loot cash-out behavior, and keep/sell/use guidance.
 - [ ] **ABY-05 — Tier progression readiness.** Gate higher tiers on fit/skills/replacement capacity plus explicit experience milestones; finding a higher-tier filament must not automatically imply readiness.
