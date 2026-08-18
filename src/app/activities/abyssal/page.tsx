@@ -1,6 +1,7 @@
 import { ArrowLeft, ExternalLink, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
+import { AbyssalLootGuide } from "@/components/abyssal-loot-guide";
 import { ActivityBriefing } from "@/components/activity-briefing";
 import { ActivityCheatSheet } from "@/components/activity-cheat-sheet";
 import {
@@ -37,7 +38,7 @@ export default async function AbyssalActivityPage({ searchParams }: AbyssalActiv
         <section className={styles.hero}>
           <div className={styles.eyebrow}>First complete activity slice</div>
           <h1>Abyssal first-run guide</h1>
-          <p>Choose a vetted T0/T1 starter fit. NEC keeps the exact fit, matching filament weather, supplies, activation steps, three-pocket flow, timer, and failure conditions in one briefing.</p>
+          <p>Choose a vetted T0/T1 starter fit. NEC keeps the exact fit, matching filament weather, supplies, activation steps, three-pocket flow, timer, failure conditions, and loot teaching in one guide.</p>
         </section>
 
         <div className={styles.notice}>
@@ -81,6 +82,10 @@ export default async function AbyssalActivityPage({ searchParams }: AbyssalActiv
 
         <section className={styles.section}>
           <ActivityBriefing briefing={firstRun.briefing} />
+        </section>
+
+        <section className={styles.section}>
+          <AbyssalLootGuide tier={selected.tier} />
         </section>
 
         <section className={styles.section}>
