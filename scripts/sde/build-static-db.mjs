@@ -105,7 +105,7 @@ function createSchema(db) {
 
     CREATE TABLE types (
       type_id INTEGER PRIMARY KEY,
-      group_id INTEGER NOT NULL,
+      group_id INTEGER,
       name TEXT,
       description TEXT,
       published INTEGER,
@@ -115,6 +115,7 @@ function createSchema(db) {
       mass REAL,
       portion_size INTEGER,
       base_price REAL,
+      is_placeholder INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (group_id) REFERENCES groups(group_id)
     );
 
@@ -183,6 +184,7 @@ function createSchema(db) {
     );
 
     CREATE INDEX idx_types_group ON types(group_id);
+    CREATE INDEX idx_types_placeholder ON types(is_placeholder);
     CREATE INDEX idx_type_materials_material ON type_materials(material_type_id);
     CREATE INDEX idx_blueprint_products_product ON blueprint_products(product_type_id);
     CREATE INDEX idx_blueprint_materials_material ON blueprint_materials(material_type_id);
@@ -199,8 +201,13 @@ function prepareStatements(db) {
     type: db.prepare(`
       INSERT INTO types (
         type_id, group_id, name, description, published, market_group_id,
-        volume, packaged_volume, mass, portion_size, base_price
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        volume, packaged_volume, mass, portion_size, base_price, is_placeholder
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+    `),
+    placeholderType: db.prepare(`
+      INSERT INTO types (type_id, group_id, name, description, published, market_group_id, volume, packaged_volume, mass, portion_size, base_price, is_placeholder)
+      VALUES (?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1)
+      ON CONFLICT(type_id) DO NOTHING
     `),
     typeMaterial: db.prepare("INSERT INTO type_materials (type_id, material_type_id, quantity) VALUES (?, ?, ?)"),
     blueprint: db.prepare("INSERT INTO blueprints (blueprint_type_id, max_production_limit) VALUES (?, ?)"),
@@ -210,6 +217,11 @@ function prepareStatements(db) {
     blueprintSkill: db.prepare("INSERT INTO blueprint_skills (blueprint_type_id, activity, skill_type_id, level) VALUES (?, ?, ?, ?)"),
     typeSkill: db.prepare("INSERT INTO type_skill_requirements (type_id, skill_type_id, level, requirement_slot) VALUES (?, ?, ?, ?)"),
   };
+}
+
+function ensureTypeReference(statements, counts, typeId) {
+  const result = statements.placeholderType.run(typeId);
+  if (Number(result.changes) > 0) counts.placeholderTypes += 1;
 }
 
 async function importCategories(sourceDir, statements, counts) {
@@ -261,6 +273,7 @@ async function importTypeMaterials(sourceDir, statements, counts) {
     const record = recordObject(rawRecord);
     const typeId = recordKey(record, "typeID");
     if (typeId === null) throw new Error("typeMaterials record has no type ID");
+    ensureTypeReference(statements, counts, typeId);
     const materials = Array.isArray(rawRecord._value)
       ? rawRecord._value
       : Array.isArray(record.materials)
@@ -270,6 +283,7 @@ async function importTypeMaterials(sourceDir, statements, counts) {
       const materialTypeId = integer(material.materialTypeID ?? material.materialTypeId ?? material.typeID ?? material.typeId);
       const quantity = integer(material.quantity);
       if (materialTypeId === null || quantity === null) throw new Error("type material is missing type ID or quantity");
+      ensureTypeReference(statements, counts, materialTypeId);
       statements.typeMaterial.run(typeId, materialTypeId, quantity);
       counts.typeMaterials += 1;
     }
@@ -281,6 +295,7 @@ async function importBlueprints(sourceDir, statements, counts) {
     const record = recordObject(rawRecord);
     const blueprintTypeId = recordKey(record, "blueprintTypeID", "blueprintTypeId");
     if (blueprintTypeId === null) throw new Error("blueprint has no blueprint type ID");
+    ensureTypeReference(statements, counts, blueprintTypeId);
     statements.blueprint.run(blueprintTypeId, integer(record.maxProductionLimit));
     counts.blueprints += 1;
 
@@ -294,6 +309,7 @@ async function importBlueprints(sourceDir, statements, counts) {
         const typeId = integer(material.typeID ?? material.typeId);
         const quantity = integer(material.quantity);
         if (typeId === null || quantity === null) throw new Error(`${activityName} material is missing type ID or quantity`);
+        ensureTypeReference(statements, counts, typeId);
         statements.material.run(blueprintTypeId, activityName, typeId, quantity);
         counts.blueprintMaterials += 1;
       }
@@ -302,6 +318,7 @@ async function importBlueprints(sourceDir, statements, counts) {
         const typeId = integer(product.typeID ?? product.typeId);
         const quantity = integer(product.quantity);
         if (typeId === null || quantity === null) throw new Error(`${activityName} product is missing type ID or quantity`);
+        ensureTypeReference(statements, counts, typeId);
         statements.product.run(blueprintTypeId, activityName, typeId, quantity, number(product.probability));
         counts.blueprintProducts += 1;
       }
@@ -310,6 +327,7 @@ async function importBlueprints(sourceDir, statements, counts) {
         const typeId = integer(skill.typeID ?? skill.typeId);
         const level = integer(skill.level);
         if (typeId === null || level === null) throw new Error(`${activityName} skill is missing type ID or level`);
+        ensureTypeReference(statements, counts, typeId);
         statements.blueprintSkill.run(blueprintTypeId, activityName, typeId, level);
         counts.blueprintSkills += 1;
       }
@@ -337,11 +355,13 @@ async function importSkillRequirements(sourceDir, statements, counts) {
     const record = recordObject(rawRecord);
     const typeId = recordKey(record, "typeID");
     if (typeId === null) throw new Error("typeDogma record has no type ID");
+    ensureTypeReference(statements, counts, typeId);
     const attributes = dogmaAttributeMap(record);
     for (let slot = 0; slot < REQUIRED_SKILL_ATTRIBUTES.length; slot += 1) {
       const skillTypeId = integer(attributes.get(REQUIRED_SKILL_ATTRIBUTES[slot]));
       if (skillTypeId === null || skillTypeId <= 0) continue;
       const level = integer(attributes.get(REQUIRED_LEVEL_ATTRIBUTES[slot])) ?? 0;
+      ensureTypeReference(statements, counts, skillTypeId);
       statements.typeSkill.run(typeId, skillTypeId, level, slot + 1);
       counts.typeSkillRequirements += 1;
     }
@@ -385,6 +405,7 @@ export async function buildStaticDatabase({ sourceDir, outputPath, buildNumber, 
     categories: 0,
     groups: 0,
     types: 0,
+    placeholderTypes: 0,
     typeMaterials: 0,
     blueprints: 0,
     activities: 0,
@@ -413,6 +434,7 @@ export async function buildStaticDatabase({ sourceDir, outputPath, buildNumber, 
       await importBlueprints(resolvedSource, statements, counts);
       await importSkillRequirements(resolvedSource, statements, counts);
 
+      statements.meta.run("placeholder_types", String(counts.placeholderTypes));
       db.exec("COMMIT;");
     } catch (error) {
       db.exec("ROLLBACK;");
