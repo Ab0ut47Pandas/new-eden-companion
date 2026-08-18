@@ -6,6 +6,11 @@ import {
   type ManufacturingMaterialRequirement,
   type ManufacturingTypeRef,
 } from "./manufacturing-query";
+import {
+  resolveAcquisitionSources,
+  type AcquisitionSourceResolution,
+  type CuratedAcquisitionSource,
+} from "./source-boundaries";
 
 export type RecursiveManufacturingState =
   | "manufacturable"
@@ -33,10 +38,12 @@ export interface RecursiveManufacturingNode {
   depth: number;
   state: RecursiveManufacturingState;
   alternatives: RecursiveManufacturingAlternative[];
+  sourceResolution?: AcquisitionSourceResolution;
 }
 
 export interface RecursiveManufacturingOptions {
   maxDepth?: number;
+  curatedSources?: readonly CuratedAcquisitionSource[];
 }
 
 type TypeRow = {
@@ -79,6 +86,7 @@ export function expandManufacturingDependencies(
   options: RecursiveManufacturingOptions = {},
 ): RecursiveManufacturingNode {
   const maxDepth = normalizeMaxDepth(options.maxDepth);
+  const curatedSources = options.curatedSources ?? [];
 
   function expand(typeId: number, depth: number, path: ReadonlySet<number>, knownItem?: ManufacturingTypeRef): RecursiveManufacturingNode {
     const item = knownItem ?? queryTypeRef(db, typeId);
@@ -92,7 +100,14 @@ export function expandManufacturingDependencies(
 
     const dependencies = queryManufacturingDependenciesForProduct(db, typeId);
     if (dependencies.length === 0) {
-      return { item, typeId, depth, state: "not-manufacturable", alternatives: [] };
+      return {
+        item,
+        typeId,
+        depth,
+        state: "not-manufacturable",
+        alternatives: [],
+        sourceResolution: resolveAcquisitionSources(db, typeId, curatedSources),
+      };
     }
 
     if (depth >= maxDepth) {
