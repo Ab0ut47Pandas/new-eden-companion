@@ -1,0 +1,66 @@
+name: windows-release-smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/windows-release-smoke.yml"
+      - ".github/workflows/release.yml"
+      - "scripts/sde/**"
+      - "scripts/package-windows.ps1"
+      - "scripts/package-policy.ps1"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  package-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build and validate current CCP static database
+        run: npm run sde:current
+      - name: Verify static database checksum and metadata
+        shell: pwsh
+        run: |
+          $checksumLine = (Get-Content -LiteralPath static/eve-static.db.sha256 -Raw).Trim()
+          $expected = ($checksumLine -split '\s+')[0].ToLowerInvariant()
+          if ($expected -notmatch '^[0-9a-f]{64}$') { throw "Static DB checksum file is invalid." }
+          $actual = (Get-FileHash -LiteralPath static/eve-static.db -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Static DB checksum mismatch: expected $expected, got $actual." }
+          $metadata = Get-Content -Raw -LiteralPath static/eve-static.metadata.json | ConvertFrom-Json
+          if (-not $metadata.sdeBuild) { throw "Static DB metadata is missing the CCP SDE build." }
+          Write-Host "Validated CCP SDE build $($metadata.sdeBuild), SHA-256 $actual"
+      - name: Build portable Windows package
+        run: npm run package:windows
+      - name: Inspect package output
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem -Path dist -Filter '*.zip' | Select-Object -First 1
+          if (-not $zip) { throw "Packaging produced no ZIP." }
+          $extract = Join-Path $env:RUNNER_TEMP 'nec-package-smoke'
+          if (Test-Path $extract) { Remove-Item -Recurse -Force $extract }
+          Expand-Archive -LiteralPath $zip.FullName -DestinationPath $extract -Force
+          $staticDb = Get-ChildItem -Path $extract -Recurse -File -Filter 'eve-static.db'
+          if ($staticDb.Count -ne 1) { throw "Expected exactly one bundled eve-static.db; found $($staticDb.Count)." }
+          $privateDb = Get-ChildItem -Path $extract -Recurse -File | Where-Object { $_.FullName -match '[\\/]data[\\/].*\.(db|sqlite|sqlite3)$' }
+          if ($privateDb) { throw "Portable ZIP contains a private data database." }
+          Write-Host "Package contains static DB: $($staticDb[0].FullName)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-smoke
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            dist/*.zip
+            dist/*.sha256
+            static/eve-static.metadata.json
+            static/eve-static.db.sha256
