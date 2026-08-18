@@ -6,6 +6,11 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth/session-store";
 import { validAccessToken } from "@/lib/auth/sso";
 import {
+  evaluateAffordability,
+  loadCharacterAffordability,
+  type AffordabilityIndex,
+} from "@/lib/player/affordability";
+import {
   coverageForRequirement,
   loadCharacterAssetCoverage,
   type AssetCoverageIndex,
@@ -41,6 +46,7 @@ interface ItemDetailPageProps {
 }
 
 interface ViewerPlayerState {
+  affordability: AffordabilityIndex;
   assetCoverage: AssetCoverageIndex;
   skillReadiness: SkillReadinessIndex;
   blueprintOwnership: BlueprintOwnershipIndex;
@@ -63,6 +69,11 @@ function timeLabel(seconds: number | null): string {
   return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}h base time`;
 }
 
+function iskLabel(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return "Unknown";
+  return `${Math.round(value).toLocaleString()} ISK`;
+}
+
 async function viewerPlayerState(): Promise<ViewerPlayerState | null> {
   const sessionId = (await cookies()).get("eve_session")?.value;
   if (!sessionId) return null;
@@ -71,15 +82,20 @@ async function viewerPlayerState(): Promise<ViewerPlayerState | null> {
     const session = getSession(sessionId);
     if (!session) return null;
     const token = await validAccessToken(session);
-    const [assetCoverage, skillReadiness, blueprintOwnership] = await Promise.all([
+    const [affordability, assetCoverage, skillReadiness, blueprintOwnership] = await Promise.all([
+      loadCharacterAffordability(session.characterId, token),
       loadCharacterAssetCoverage(session.characterId, token),
       loadCharacterSkillReadiness(session.characterId, token),
       loadCharacterBlueprintOwnership(session.characterId, token),
     ]);
-    return { assetCoverage, skillReadiness, blueprintOwnership };
+    return { affordability, assetCoverage, skillReadiness, blueprintOwnership };
   } catch (error) {
     console.warn("Unable to prepare player overlays for Item Explorer", error);
     return {
+      affordability: {
+        wallet: { visibility: "unavailable", liquidIsk: null },
+        market: { visibility: "unavailable", prices: new Map() },
+      },
       assetCoverage: { visibility: "unavailable", reason: "esi-unavailable", byType: new Map() },
       skillReadiness: { visibility: "unavailable", reason: "esi-unavailable", bySkill: new Map() },
       blueprintOwnership: { visibility: "unavailable", reason: "esi-unavailable", byType: new Map() },
@@ -95,6 +111,30 @@ function AssetCoverageBadge({ coverage, typeId, requiredQuantity }: { coverage: 
   if (result.status === "partial") return <span className={styles.warnPill}>owned {result.totalQuantity.toLocaleString()} · missing {result.missingQuantity.toLocaleString()}</span>;
   if (result.status === "location-unknown") return <span className={styles.warnPill}>own {result.totalQuantity.toLocaleString()} · location/access unknown</span>;
   return <span className={styles.warnPill}>missing {requiredQuantity.toLocaleString()}</span>;
+}
+
+function AffordabilityBadge({
+  affordability,
+  coverage,
+  typeId,
+  requiredQuantity,
+}: {
+  affordability: AffordabilityIndex | null;
+  coverage: AssetCoverageIndex | null;
+  typeId: number;
+  requiredQuantity: number;
+}) {
+  if (!affordability || !coverage) return null;
+  const assetResult = coverageForRequirement(coverage, typeId, requiredQuantity);
+  if (assetResult.status === "unavailable" || assetResult.status === "location-unknown" || assetResult.status === "owned") return null;
+
+  const result = evaluateAffordability(affordability, typeId, assetResult.missingQuantity);
+  if (result.status === "wallet-unavailable") return <span className={styles.mutedPill}>wallet unavailable</span>;
+  if (result.status === "price-unavailable") return <span className={styles.mutedPill}>market reference unavailable</span>;
+  if (result.status === "not-affordable") return <span className={styles.warnPill}>est. {iskLabel(result.estimatedCost)} · exceeds liquid ISK</span>;
+  if (result.status === "reserve-breach") return <span className={styles.warnPill}>est. {iskLabel(result.estimatedCost)} · crosses reserve</span>;
+  if (result.status === "available") return <span className={styles.mutedPill}>est. {iskLabel(result.estimatedCost)} · liquid ISK covers</span>;
+  return null;
 }
 
 function SkillReadinessBadge({ readiness, skillTypeId, requiredLevel }: { readiness: SkillReadinessIndex | null; skillTypeId: number; requiredLevel: number }) {
@@ -156,12 +196,14 @@ function SourceBoundary({ node }: { node: RecursiveManufacturingNode }) {
 
 function DependencyNode({
   node,
+  affordability,
   assetCoverage,
   skillReadiness,
   blueprintOwnership,
   root = false,
 }: {
   node: RecursiveManufacturingNode;
+  affordability: AffordabilityIndex | null;
   assetCoverage: AssetCoverageIndex | null;
   skillReadiness: SkillReadinessIndex | null;
   blueprintOwnership: BlueprintOwnershipIndex | null;
@@ -216,8 +258,9 @@ function DependencyNode({
                           <span><Link className={styles.itemLink} href={`/items/${material.requirement.typeId}`}>{itemLabel(material.requirement.typeId, material.requirement.name)}</Link></span>
                           <span className={styles.treeNote}>× {material.requirement.quantity}</span>
                           {!material.requirement.isPlaceholder && <AssetCoverageBadge coverage={assetCoverage} typeId={material.requirement.typeId} requiredQuantity={material.requirement.quantity} />}
+                          {!material.requirement.isPlaceholder && <AffordabilityBadge affordability={affordability} coverage={assetCoverage} typeId={material.requirement.typeId} requiredQuantity={material.requirement.quantity} />}
                         </div>
-                        <DependencyNode node={material.dependency} assetCoverage={assetCoverage} skillReadiness={skillReadiness} blueprintOwnership={blueprintOwnership} />
+                        <DependencyNode node={material.dependency} affordability={affordability} assetCoverage={assetCoverage} skillReadiness={skillReadiness} blueprintOwnership={blueprintOwnership} />
                       </li>
                     ))}
                   </ul>
@@ -276,9 +319,11 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const visibleUses = reverseUses.slice(0, 100);
   const description = cleanDescription(staticType.description);
   const playerState = await viewerPlayerState();
+  const affordability = playerState?.affordability ?? null;
   const assetCoverage = playerState?.assetCoverage ?? null;
   const skillReadiness = playerState?.skillReadiness ?? null;
   const blueprintOwnership = playerState?.blueprintOwnership ?? null;
+  const itemAffordability = affordability ? evaluateAffordability(affordability, typeId, 1) : null;
   const ownBlueprint = identity.kinds.includes("blueprint") && blueprintOwnership
     ? blueprintOwnershipForType(blueprintOwnership, typeId)
     : null;
@@ -339,6 +384,28 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             {playerState === null && <p className={styles.description}>Connect a character to compare these requirements with your trained skills.</p>}
             {skillReadiness?.visibility === "unavailable" && <p className={styles.description}>Skill visibility is unavailable right now; NEC will not treat that as untrained.</p>}
           </article>
+
+          <article className={styles.infoCard}>
+            <h3>Wallet & market reference</h3>
+            {playerState === null ? (
+              <p className={styles.description}>Connect a character to compare a market reference with your liquid ISK.</p>
+            ) : (
+              <>
+                <div className={styles.infoRows}>
+                  <div className={styles.infoRow}><span>Liquid ISK</span><strong>{iskLabel(affordability?.wallet.liquidIsk ?? null)}</strong></div>
+                  <div className={styles.infoRow}><span>ESI average reference</span><strong>{iskLabel(itemAffordability?.unitPrice ?? null)}</strong></div>
+                  <div className={styles.infoRow}><span>1-unit estimate</span><strong>{iskLabel(itemAffordability?.estimatedCost ?? null)}</strong></div>
+                  <div className={styles.infoRow}><span>After 1 unit</span><strong>{iskLabel(itemAffordability?.remainingAfterPurchase ?? null)}</strong></div>
+                  <div className={styles.infoRow}><span>Replacement reserve</span><strong>Not applied yet</strong></div>
+                </div>
+                {itemAffordability?.status === "available" && <p className={styles.description}>Liquid ISK covers this reference estimate. That does not yet mean NEC recommends the purchase or considers the loss affordable.</p>}
+                {itemAffordability?.status === "not-affordable" && <p className={styles.description}>This reference estimate exceeds the visible liquid wallet balance.</p>}
+                {itemAffordability?.status === "wallet-unavailable" && <p className={styles.description}>Wallet visibility is unavailable; NEC will not treat that as zero ISK.</p>}
+                {itemAffordability?.status === "price-unavailable" && <p className={styles.description}>CCP's public market feed has no usable average-price reference for this type.</p>}
+                <p className={styles.description}>The ESI average is a reference estimate, not a live sell-order quote. Local/hub order-book pricing belongs to the later market valuation phase.</p>
+              </>
+            )}
+          </article>
         </div>
 
         <section className={styles.section} id="how-to-get">
@@ -347,13 +414,13 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             <p>Manufacturing dependencies expand four levels inline. Open any dependency to continue deeper.</p>
           </div>
           {playerState === null ? (
-            <div className={styles.notice}>Connect an EVE character to compare material, skill, and blueprint requirements against your character.</div>
-          ) : assetCoverage?.visibility === "unavailable" || skillReadiness?.visibility === "unavailable" || blueprintOwnership?.visibility === "unavailable" ? (
-            <div className={styles.notice}>Character connected, but part of the player overlay is unavailable right now. NEC preserves that as unknown rather than assuming zero assets, skills, or blueprints.</div>
+            <div className={styles.notice}>Connect an EVE character to compare material, skill, blueprint, wallet, and market-reference requirements against your character.</div>
+          ) : assetCoverage?.visibility === "unavailable" || skillReadiness?.visibility === "unavailable" || blueprintOwnership?.visibility === "unavailable" || affordability?.wallet.visibility === "unavailable" || affordability?.market.visibility === "unavailable" ? (
+            <div className={styles.notice}>Character connected, but part of the player overlay is unavailable right now. NEC preserves that as unknown rather than assuming zero assets, skills, blueprints, ISK, or market value.</div>
           ) : (
-            <div className={styles.notice}>Player overlay active. Material quantities, trained skills, and owned blueprint records come from ESI; uncertain asset roots are not assumed immediately usable.</div>
+            <div className={styles.notice}>Player overlay active. Material quantities, trained skills, blueprints, and liquid wallet come from ESI. Market amounts are average-price references only; uncertain asset roots are not assumed immediately usable.</div>
           )}
-          <DependencyNode node={dependencyTree} assetCoverage={assetCoverage} skillReadiness={skillReadiness} blueprintOwnership={blueprintOwnership} root />
+          <DependencyNode node={dependencyTree} affordability={affordability} assetCoverage={assetCoverage} skillReadiness={skillReadiness} blueprintOwnership={blueprintOwnership} root />
         </section>
 
         <section className={styles.section} id="used-for">
