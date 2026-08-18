@@ -74,8 +74,12 @@ function validateCuratedSource(source: CuratedAcquisitionSource): void {
 }
 
 function querySdeBuild(db: DatabaseSync): string | null {
-  const row = db.prepare("SELECT value FROM sde_meta WHERE key = 'sde_build'").get() as MetaRow | undefined;
-  return row?.value ?? null;
+  try {
+    const row = db.prepare("SELECT value FROM sde_meta WHERE key = 'sde_build'").get() as MetaRow | undefined;
+    return row?.value ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function typeExists(db: DatabaseSync, typeId: number): boolean {
