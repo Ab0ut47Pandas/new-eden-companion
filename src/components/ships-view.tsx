@@ -25,13 +25,18 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { DashboardData } from "@/lib/dashboard/model";
 import { ABYSSAL_FIT_METADATA, ABYSSAL_TASKS } from "@/lib/ships/abyssal-fits";
+import { MINING_FIT_METADATA, MINING_TASKS } from "@/lib/ships/mining-fits";
 import type { ShipCatalogResponse } from "@/lib/ships/model";
 import { rankShips } from "@/lib/ships/ranking";
 import { recommendFits, SHIP_TASKS, type FitRecommendation, type ShipTaskRole } from "@/lib/ships/task-planner";
 
 const ROMAN = ["0", "I", "II", "III", "IV", "V"];
 const ROLES: ShipTaskRole[] = ["Combat", "Mining", "Exploration", "Hauling", "Fleet support"];
-const TASKS = [...SHIP_TASKS.filter((task) => !task.id.startsWith("abyssal-")), ...ABYSSAL_TASKS];
+const TASKS = [
+  ...SHIP_TASKS.filter((task) => !task.id.startsWith("abyssal-") && task.role !== "Mining"),
+  ...ABYSSAL_TASKS,
+  ...MINING_TASKS,
+];
 
 function roleIcon(role: ShipTaskRole) {
   if (role === "Mining") return <Pickaxe size={17} />;
@@ -57,10 +62,10 @@ function fitChecklist(fit: FitRecommendation): string {
 function FitCard({ fit, position }: { fit: FitRecommendation; position: number }) {
   const [copied, setCopied] = useState(false);
   const blocked = fit.status === "Train hull first" || fit.status === "Hull ready; fit blocked";
-  const abyssalMetadata = ABYSSAL_FIT_METADATA[fit.id];
+  const sourcedMetadata = ABYSSAL_FIT_METADATA[fit.id] ?? MINING_FIT_METADATA[fit.id];
 
   async function copy() {
-    await navigator.clipboard.writeText(abyssalMetadata?.eft ?? fitChecklist(fit));
+    await navigator.clipboard.writeText(sourcedMetadata?.eft ?? fitChecklist(fit));
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1_800);
   }
@@ -95,18 +100,18 @@ function FitCard({ fit, position }: { fit: FitRecommendation; position: number }
       )}
 
       <details className="fit-loadout" open={position === 1}>
-        <summary><span><ClipboardCheck size={15} />{abyssalMetadata ? "Vetted loadout" : "Loadout template"}</span><ChevronDown size={15} /></summary>
+        <summary><span><ClipboardCheck size={15} />{sourcedMetadata ? "Vetted loadout" : "Loadout template"}</span><ChevronDown size={15} /></summary>
         <div>
           {fit.loadout.map((section) => <section key={section.slot}><strong>{section.slot}</strong><ul>{section.items.map((item) => <li key={item}>{item}</li>)}</ul></section>)}
           <section className="fit-supplies"><strong>Bring</strong><ul>{fit.supplies.map((item) => <li key={item}>{item}</li>)}</ul></section>
-          {abyssalMetadata && (
+          {sourcedMetadata && (
             <section className="fit-supplies">
               <strong>Why this fit is here</strong>
-              <ul><li>{abyssalMetadata.validation} <a href={abyssalMetadata.sourceUrl} target="_blank" rel="noreferrer">Source <ExternalLink size={12} /></a></li></ul>
+              <ul><li>{sourcedMetadata.validation} <a href={sourcedMetadata.sourceUrl} target="_blank" rel="noreferrer">Source <ExternalLink size={12} /></a></li></ul>
             </section>
           )}
         </div>
-        <button type="button" onClick={copy}>{copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}{copied ? "Copied" : abyssalMetadata ? "Copy EVE fit" : "Copy checklist"}</button>
+        <button type="button" onClick={copy}>{copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}{copied ? "Copied" : sourcedMetadata ? "Copy EVE fit" : "Copy checklist"}</button>
       </details>
 
       <details className="fit-training">
@@ -196,7 +201,7 @@ export function ShipsView({ data, connected }: { data: DashboardData; connected:
           <div className="fit-answer-heading"><div><div className="eyebrow">Best trained answers</div><h2>Ship and loadout recommendations</h2></div><span><ShieldCheck size={14} /> Ranked for this character and task</span></div>
           <section className="task-fit-grid">{fits.map((fit, index) => <FitCard fit={fit} position={index + 1} key={fit.id} />)}</section>
 
-          <div className="fit-verification-note"><Info size={15} /><span><strong>Vetted Abyssal fits are source-backed exact loadouts.</strong> Their cards include the community source and copy an EVE-format fit. Other activity cards remain starter templates. In every case, simulate the exact fit with your character before spending ISK; Abyssal survival also depends on weather, room knowledge, piloting, heat, implants/boosters, and the twenty-minute timer.</span></div>
+          <div className="fit-verification-note"><Info size={15} /><span><strong>Vetted Abyssal and mining fits are source-backed exact loadouts.</strong> Their cards include the source and copy an EVE-format fit. Always simulate the exact fit with your character before spending ISK. Mining yield and safety also depend on boosts, site rules, residue policy, local threats, and using the crystal family that matches the resource.</span></div>
 
           <details className="panel all-hulls-panel">
             <summary><span><div className="eyebrow">Reference library</div><h2>Browse all {allHulls.length} hulls</h2><small>This section answers only “can I board it?”—not whether it is good for a task.</small></span><ChevronDown size={17} /></summary>
