@@ -4,6 +4,13 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
+import {
+  queryManufacturingDependenciesForProduct,
+  type ManufacturingDependency,
+} from "../acquisition/manufacturing-query";
+
+export type { ManufacturingDependency } from "../acquisition/manufacturing-query";
+
 export interface StaticDatabaseMetadata {
   schemaVersion: number;
   sdeBuild: number;
@@ -161,4 +168,8 @@ export function getManufacturingBlueprintsForProduct(productTypeId: number): Man
     quantity: row.quantity,
     timeSeconds: row.time_seconds,
   }));
+}
+
+export function getManufacturingDependenciesForProduct(productTypeId: number): ManufacturingDependency[] {
+  return queryManufacturingDependenciesForProduct(getDatabase(), productTypeId);
 }
