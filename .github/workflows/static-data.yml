@@ -25,6 +25,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Show CCP current SDE metadata
+        run: curl --fail --silent --show-error https://developers.eveonline.com/static-data/tranquility/latest.jsonl
       - name: Build current CCP SDE database
         run: npm run sde:current
       - name: Verify checksum
