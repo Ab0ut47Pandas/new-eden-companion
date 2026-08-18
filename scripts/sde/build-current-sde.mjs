@@ -25,6 +25,18 @@ export function parseLatestBuild(text) {
   throw new Error("CCP latest.jsonl did not contain a numeric sde build record.");
 }
 
+export function parseOutputDirectoryArgument(args) {
+  let outputDir = null;
+  for (let index = 0; index < args.length; index++) {
+    if (args[index] !== "--output-dir") throw new Error(`Unknown argument: ${args[index]}`);
+    const value = args[index + 1];
+    if (!value) throw new Error("--output-dir requires a path.");
+    outputDir = path.resolve(value);
+    index++;
+  }
+  return outputDir;
+}
+
 function sha256(filename) {
   const hash = createHash("sha256");
   hash.update(readFileSync(filename));
@@ -136,7 +148,8 @@ export async function buildCurrentSde({ outputDir = path.join(process.cwd(), "st
 
 if (process.argv[1] && path.resolve(process.argv[1]) === new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, (match) => match.slice(1))) {
   try {
-    const result = await buildCurrentSde();
+    const outputDir = parseOutputDirectoryArgument(process.argv.slice(2));
+    const result = await buildCurrentSde(outputDir ? { outputDir } : undefined);
     console.log(`Built and validated CCP SDE ${result.build}: ${result.outputPath}`);
     console.log(`Metadata: ${result.metadataPath}`);
     console.log(`Checksum: ${result.checksumPath}`);
