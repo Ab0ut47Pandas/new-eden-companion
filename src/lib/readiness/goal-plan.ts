@@ -174,31 +174,3 @@ export function buildProgressionPlan(goal: ProgressionGoal, nodes: readonly Prog
 
   return { goal, status, steps, nextSteps, unknownSteps, completedSteps };
 }
-
-export interface ActivityGoalPlanInput {
-  goalId: string;
-  goalTitle: string;
-  targetActivityId: string;
-  prerequisiteActivityIds: readonly string[];
-  activityStates: Readonly<Record<string, ProgressionNodeState>>;
-  activityTitles?: Readonly<Record<string, string>>;
-  activityWhy?: Readonly<Record<string, string>>;
-}
-
-export function buildActivityGoalPlan(input: ActivityGoalPlanInput): ProgressionPlan {
-  const chain = [...new Set([...input.prerequisiteActivityIds, input.targetActivityId])];
-  const nodes: ProgressionPlanNode[] = chain.map((activityId, index) => ({
-    id: `activity:${activityId}`,
-    kind: "activity",
-    title: input.activityTitles?.[activityId] ?? activityId,
-    why: input.activityWhy?.[activityId] ?? (activityId === input.targetActivityId ? "This is the selected activity goal." : "This activity is an explicit prerequisite of the selected goal."),
-    state: input.activityStates[activityId] ?? "unknown",
-    dependsOn: index === 0 ? [] : [`activity:${chain[index - 1]}`],
-    target: { activityId },
-  }));
-
-  return buildProgressionPlan(
-    { id: input.goalId, kind: "activity", title: input.goalTitle, targetNodeId: `activity:${input.targetActivityId}` },
-    nodes,
-  );
-}
