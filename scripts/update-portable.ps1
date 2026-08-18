@@ -88,10 +88,80 @@ function Start-Companion([string]$Root) {
   return $process.Id
 }
 
+function Get-Port3000Listeners {
+  try {
+    return @(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue)
+  } catch {
+    return @()
+  }
+}
+
+function Wait-ForPort3000Clear([int]$TimeoutMilliseconds = 10000) {
+  $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
+  while ([DateTime]::UtcNow -lt $deadline) {
+    if ((Get-Port3000Listeners).Count -eq 0) { return $true }
+    Start-Sleep -Milliseconds 250
+  }
+  return (Get-Port3000Listeners).Count -eq 0
+}
+
+function Get-CompanionVersionOnPort3000 {
+  try {
+    $result = Invoke-RestMethod -Uri "http://localhost:3000/api/update?local=1" -TimeoutSec 2
+    $version = [string]$result.currentVersion
+    if ($version -match '^\d+\.\d+\.\d+$') { return $version }
+  } catch {}
+  return $null
+}
+
+function Test-ProcessBelongsToPackage([int]$ProcessId, [string]$Root) {
+  try {
+    $process = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction Stop
+    if (-not $process) { return $false }
+    $rootPrefix = [System.IO.Path]::GetFullPath($Root).TrimEnd('\') + '\'
+    if ($process.ExecutablePath) {
+      $exePath = [System.IO.Path]::GetFullPath([string]$process.ExecutablePath)
+      if ($exePath.StartsWith($rootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+    if ($process.CommandLine -and ([string]$process.CommandLine).IndexOf($Root, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+      return $true
+    }
+  } catch {}
+  return $false
+}
+
+function Clear-OldCompanionListener([string]$OldVersion) {
+  $listeners = @(Get-Port3000Listeners)
+  if ($listeners.Count -eq 0) {
+    Write-UpdateLog "Port 3000 is clear after the old server shutdown."
+    return
+  }
+
+  $observedVersion = Get-CompanionVersionOnPort3000
+  $listenerPids = @($listeners | ForEach-Object { $_.OwningProcess } | Where-Object { $_ } | Sort-Object -Unique)
+  $verified = $observedVersion -eq $OldVersion
+  if (-not $verified) {
+    $verified = $listenerPids.Count -gt 0 -and @($listenerPids | Where-Object { -not (Test-ProcessBelongsToPackage $_ $PackageRoot) }).Count -eq 0
+  }
+
+  if (-not $verified) {
+    $versionText = if ($observedVersion) { " New Eden Companion $observedVersion responded there." } else { " The listener did not identify itself as New Eden Companion." }
+    throw "Port 3000 remained occupied after the old server shutdown.$versionText Refusing to stop an unverified process."
+  }
+
+  Write-UpdateLog "A stale New Eden Companion $OldVersion listener remains on port 3000; stopping owning process(es): $($listenerPids -join ', ')."
+  foreach ($listenerPid in $listenerPids) {
+    Stop-Process -Id $listenerPid -Force -ErrorAction Stop
+  }
+  if (-not (Wait-ForPort3000Clear 10000)) {
+    throw "The old New Eden Companion listener did not release port 3000 after it was stopped."
+  }
+  Write-UpdateLog "Port 3000 is clear for the updated server."
+}
+
 function Stop-Port3000 {
   try {
-    $listeners = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
-    foreach ($listener in @($listeners)) {
+    foreach ($listener in @(Get-Port3000Listeners)) {
       if ($listener.OwningProcess) {
         Stop-Process -Id $listener.OwningProcess -Force -ErrorAction SilentlyContinue
       }
@@ -99,13 +169,33 @@ function Stop-Port3000 {
   } catch {}
 }
 
-function Wait-ForExpectedServer([string]$Version) {
-  for ($attempt = 0; $attempt -lt 60; $attempt++) {
+function Wait-ForExpectedServer([string]$Version, [int]$TimeoutSeconds = 75) {
+  $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+  $lastObservedVersion = $null
+  $lastError = $null
+
+  while ([DateTime]::UtcNow -lt $deadline) {
     try {
       $result = Invoke-RestMethod -Uri "http://localhost:3000/api/update?local=1" -TimeoutSec 2
-      if ($result.currentVersion -eq $Version) { return $true }
-    } catch {}
+      $observedVersion = [string]$result.currentVersion
+      if ($observedVersion -and $observedVersion -ne $lastObservedVersion) {
+        Write-UpdateLog "Post-update health check sees New Eden Companion $observedVersion."
+        $lastObservedVersion = $observedVersion
+      }
+      if ($observedVersion -eq $Version) { return $true }
+      $lastError = $null
+    } catch {
+      $lastError = $_.Exception.Message
+    }
     Start-Sleep -Seconds 1
+  }
+
+  if ($lastObservedVersion) {
+    Write-UpdateLog "Post-update health check timed out while seeing version $lastObservedVersion instead of $Version."
+  } elseif ($lastError) {
+    Write-UpdateLog "Post-update health check timed out; last request error: $lastError"
+  } else {
+    Write-UpdateLog "Post-update health check timed out without a response from port 3000."
   }
   return $false
 }
@@ -138,7 +228,8 @@ try {
     Write-UpdateLog "The old server did not stop on its own; stopping it now."
     Stop-Process -Id $ServerPid -Force
   }
-  Start-Sleep -Seconds 2
+  Start-Sleep -Seconds 1
+  Clear-OldCompanionListener $CurrentVersion
 
   $headers = @{
     Accept = "application/vnd.github+json"
@@ -226,8 +317,8 @@ try {
   }
 
   $launcherPid = Start-Companion $PackageRoot
-  if (-not (Wait-ForExpectedServer $ExpectedVersion)) {
-    throw "The updated server did not become healthy within one minute."
+  if (-not (Wait-ForExpectedServer $ExpectedVersion 75)) {
+    throw "The updated server did not become healthy within 75 seconds."
   }
 
   Write-UpdateLog "Update to $ExpectedVersion completed successfully."

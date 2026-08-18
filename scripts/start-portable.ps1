@@ -1,13 +1,17 @@
 [CmdletBinding()]
-param()
+param(
+  [switch]$NoBrowser
+)
 
 $ErrorActionPreference = "Stop"
 $packageRoot = Split-Path -Parent $PSScriptRoot
 $localUrl = "http://localhost:3000"
+$probeUrl = "http://127.0.0.1:3000"
 $nodePath = Join-Path $packageRoot "runtime\node.exe"
 $serverPath = Join-Path $packageRoot "server.js"
 $envPath = Join-Path $packageRoot ".env.local"
 $exampleEnvPath = Join-Path $packageRoot ".env.example"
+$packageJsonPath = Join-Path $packageRoot "package.json"
 
 function Write-Stage([string]$Message) {
   Write-Host ""
@@ -46,12 +50,59 @@ function New-AuthSecret {
   return -join ($secretBytes | ForEach-Object { $_.ToString("x2") })
 }
 
+function Get-Port3000Listeners {
+  try {
+    return @(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue)
+  } catch {
+    return @()
+  }
+}
+
+function Wait-ForPort3000Clear([int]$TimeoutMilliseconds = 10000) {
+  $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
+  while ([DateTime]::UtcNow -lt $deadline) {
+    if ((Get-Port3000Listeners).Count -eq 0) { return $true }
+    Start-Sleep -Milliseconds 250
+  }
+  return (Get-Port3000Listeners).Count -eq 0
+}
+
+function Get-RunningCompanionVersion {
+  try {
+    $result = Invoke-RestMethod -Uri "$probeUrl/api/update?local=1" -TimeoutSec 2
+    $version = [string]$result.currentVersion
+    if ($version -match '^\d+\.\d+\.\d+$') { return $version }
+  } catch {}
+  return $null
+}
+
 function Test-CompanionPage {
   try {
-    $response = Invoke-WebRequest -Uri $localUrl -UseBasicParsing -TimeoutSec 2
+    $response = Invoke-WebRequest -Uri $probeUrl -UseBasicParsing -TimeoutSec 2
     return $response.StatusCode -eq 200 -and $response.Content -match "New Eden"
   } catch {
     return $false
+  }
+}
+
+function Stop-VerifiedCompanionListener([string]$RunningVersion, [string]$ExpectedVersion) {
+  $listeners = @(Get-Port3000Listeners)
+  if ($listeners.Count -eq 0) { return }
+
+  Write-Host "New Eden Companion $RunningVersion is still using port 3000." -ForegroundColor Yellow
+  Write-Host "This package is $ExpectedVersion, so the stale companion process will be stopped before launching the new copy." -ForegroundColor Yellow
+
+  $listenerProcessIds = @($listeners | ForEach-Object { $_.OwningProcess } | Where-Object { $_ -and $_ -ne $PID } | Sort-Object -Unique)
+  if ($listenerProcessIds.Count -eq 0) {
+    throw "A stale New Eden Companion listener was detected, but Windows did not expose a stoppable process ID."
+  }
+
+  foreach ($listenerPid in $listenerProcessIds) {
+    Stop-Process -Id $listenerPid -Force -ErrorAction Stop
+  }
+
+  if (-not (Wait-ForPort3000Clear 10000)) {
+    throw "The older New Eden Companion instance did not release port 3000 after it was stopped."
   }
 }
 
@@ -62,7 +113,11 @@ Write-Host "Keep this window open while you use the companion. Press Ctrl+C to s
 Write-Stage "Checking the package"
 if (-not (Test-Path -LiteralPath $nodePath)) { throw "The bundled Node.js runtime is missing. Download the Windows package again." }
 if (-not (Test-Path -LiteralPath $serverPath)) { throw "The companion server is missing. Download the Windows package again." }
-Write-Host "The self-contained Windows runtime is ready."
+if (-not (Test-Path -LiteralPath $packageJsonPath)) { throw "package.json is missing from the portable package." }
+$packageJson = Get-Content -Raw -LiteralPath $packageJsonPath | ConvertFrom-Json
+$packageVersion = [string]$packageJson.version
+if ($packageVersion -notmatch '^\d+\.\d+\.\d+$') { throw "The portable package reports an invalid version: $packageVersion" }
+Write-Host "The self-contained Windows runtime is ready (version $packageVersion)."
 
 Write-Stage "Preparing private settings"
 if (-not (Test-Path -LiteralPath $envPath)) {
@@ -94,30 +149,41 @@ if (-not $clientId) {
   }
 }
 
-if (Test-CompanionPage) {
-  Write-Host "The companion is already running. Opening it now."
-  Start-Process $localUrl
-  exit 0
+$runningVersion = Get-RunningCompanionVersion
+if ($runningVersion) {
+  if ($runningVersion -eq $packageVersion) {
+    Write-Host "New Eden Companion $packageVersion is already running."
+    if (-not $NoBrowser) { Start-Process $localUrl }
+    exit 0
+  }
+  Stop-VerifiedCompanionListener $runningVersion $packageVersion
+} elseif (Test-CompanionPage) {
+  throw "Another New Eden Companion instance is already using port 3000, but its version could not be verified. Close that copy and try again."
 }
 
-$portInUse = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
-if ($portInUse) {
+$portInUse = @(Get-Port3000Listeners)
+if ($portInUse.Count -gt 0) {
   throw "Port 3000 is already being used by another app. Close that app, then run New Eden Companion again."
 }
 
 Write-Stage "Launching"
-Write-Host "Your browser will open automatically. Keep this window open."
-$browserJob = Start-Job -ArgumentList $localUrl -ScriptBlock {
-  param($Url)
-  for ($attempt = 0; $attempt -lt 45; $attempt++) {
-    try {
-      $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2
-      if ($response.StatusCode -eq 200) {
-        Start-Process $Url
-        return
-      }
-    } catch {}
-    Start-Sleep -Seconds 1
+if ($NoBrowser) {
+  Write-Host "Launching without opening a browser."
+  $browserJob = $null
+} else {
+  Write-Host "Your browser will open automatically. Keep this window open."
+  $browserJob = Start-Job -ArgumentList $localUrl -ScriptBlock {
+    param($Url)
+    for ($attempt = 0; $attempt -lt 45; $attempt++) {
+      try {
+        $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2
+        if ($response.StatusCode -eq 200) {
+          Start-Process $Url
+          return
+        }
+      } catch {}
+      Start-Sleep -Seconds 1
+    }
   }
 }
 
@@ -129,5 +195,7 @@ try {
   & $nodePath "--env-file-if-exists=$envPath" $serverPath
   exit $LASTEXITCODE
 } finally {
-  Remove-Job -Job $browserJob -Force -ErrorAction SilentlyContinue
+  if ($browserJob) {
+    Remove-Job -Job $browserJob -Force -ErrorAction SilentlyContinue
+  }
 }
