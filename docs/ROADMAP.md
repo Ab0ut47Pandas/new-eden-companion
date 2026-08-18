@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `PLY-03`
-- Last completed: `PLY-02`
+- Current work item: `PLY-04`
+- Last completed: `PLY-03`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -48,7 +48,7 @@ This file is the persistent implementation state for the new-player progression 
 
 - [x] **PLY-01 — Asset coverage overlay.** Compare dependency quantities against the character's ESI-visible assets and clearly mark owned, partially owned, missing, inaccessible/unknown-location, and unresolved quantities. PR #27.
 - [x] **PLY-02 — Skill readiness overlay.** Compare required item/activity skills against the character's trained skills and expose blockers without inventing training ETA when the required data is unavailable. PR #28.
-- [ ] **PLY-03 — Blueprint ownership overlay.** Use ESI-visible blueprint data where available to distinguish owned BPO/BPC, runs, research state, and “must obtain blueprint.”
+- [x] **PLY-03 — Blueprint ownership overlay.** Use ESI-visible blueprint data where available to distinguish owned BPO/BPC, runs, research state, and “must obtain blueprint.” PR #29.
 - [ ] **PLY-04 — Wallet/market affordability overlay.** Distinguish purchase price from affordability and retain enough reserve/replacement context for later readiness rules.
 - [ ] **PLY-05 — Saved goals/plans.** Let the user save an item/activity goal locally and persist checklist/progress state separately from the replaceable static DB.
 
