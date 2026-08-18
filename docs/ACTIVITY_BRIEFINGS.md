@@ -47,3 +47,13 @@ ACT-02 derives `ActivityCheatSheetView` from the complete ACT-01 briefing instea
 The cheat sheet carries the existing readiness headline and next corrective action but does not recalculate readiness. Explanatory overview, motivation, and progression-unlock sections stay in the full briefing so the compact view remains scannable.
 
 `ActivityCheatSheet` renders static checklist boxes as a manual reference. It does not infer that a step is complete and does not claim live combat/client telemetry. A future UI may let the user mark items locally, but game-state completion must never be fabricated from unavailable client data.
+
+## Post-activity debrief
+
+ACT-03 adds a conservative interpretation layer for newly acquired item deltas. The debrief can classify an item as `use-next`, `keep`, `sell`, or `unknown`, but only from explicit evidence supplied by goal/acquisition/market adapters.
+
+Direct active item goals can be matched immediately by type ID. Other goal relationships such as required manufacturing inputs, activity supplies, or other supported uses are passed in as evidence with a visible `why`. If that evidence includes an established next action, `use-next` outranks a generic keep recommendation.
+
+A sell recommendation is never inferred merely because NEC failed to find a goal relationship. `sell` requires explicit sale evidence from a caller that actually knows enough to justify liquidation. Without goal relevance or sale evidence, the result remains `unknown`.
+
+This boundary intentionally leaves broader asset usefulness and market valuation to the later ECO roadmap items. ACT-03 provides the debrief decision vocabulary and evidence contract without prematurely inventing those systems.
