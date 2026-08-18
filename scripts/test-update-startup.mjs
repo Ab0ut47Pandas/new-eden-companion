@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { closeSync, existsSync, openSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -13,7 +13,7 @@ const updaterSource = path.join(packageRoot, "scripts", "update-portable.ps1");
 const windowsRoot = process.env.SystemRoot ?? "C:\\Windows";
 const powershell = path.join(windowsRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
 const readyPath = path.join(tmpdir(), `new-eden-companion-updater-smoke-${process.pid}.ready`);
-const logPath = path.join(tmpdir(), `new-eden-companion-updater-smoke-${process.pid}.log`);
+const logPath = path.join(tmpdir(), "New-Eden-Companion-update.log");
 
 rmSync(readyPath, { force: true });
 rmSync(logPath, { force: true });
@@ -47,7 +47,6 @@ try {
   });
   if (!sleeper.pid) throw new Error("Could not start the dummy server process.");
 
-  const logHandle = openSync(logPath, "a");
   updater = spawn(powershell, [
     "-NoLogo",
     "-NoProfile",
@@ -70,10 +69,9 @@ try {
   ], {
     cwd: packageRoot,
     detached: true,
-    stdio: ["ignore", logHandle, logHandle],
+    stdio: "ignore",
     windowsHide: true,
   });
-  closeSync(logHandle);
   if (!updater.pid) throw new Error("Windows did not return an updater PID.");
 
   const startedAt = Date.now();
