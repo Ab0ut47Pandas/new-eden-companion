@@ -37,7 +37,7 @@ describe("resource-specific mining fits", () => {
     expect(allEft).not.toContain("Type C");
   });
 
-  it("keeps Mercoxit on deep-core equipment", () => {
+  it("keeps Mercoxit on deep-core equipment and within Covetor calibration", () => {
     for (const id of ["mining-mercoxit-procurer", "mining-mercoxit-covetor"]) {
       const eft = MINING_FIT_METADATA[id].eft;
       expect(eft).toContain("Modulated Deep Core Strip Miner II, Mercoxit Asteroid Mining Crystal Type A II");
@@ -47,6 +47,14 @@ describe("resource-specific mining fits", () => {
         expect.objectContaining({ name: "Mercoxit Ore Processing", required: 4 }),
       ]));
     }
+
+    const covetor = fitById("mining-mercoxit-covetor");
+    const rigs = covetor.loadout.find((section) => section.slot === "Rigs")?.items;
+    expect(rigs).toEqual([
+      "Medium Deep Core Mining Optimization I",
+      "Medium Processor Overclocking Unit I",
+    ]);
+    expect(MINING_FIT_METADATA[covetor.id].eft).not.toContain("Medium Core Defense Field Extender I");
   });
 
   it("uses scoops on small gas ships and never pretends mining upgrades improve gas", () => {
