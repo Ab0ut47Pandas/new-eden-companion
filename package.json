@@ -1,6 +1,6 @@
 {
   "name": "new-eden-companion",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "description": "A local-first, explainable EVE Online decision companion powered by ESI.",
   "engines": {
@@ -22,7 +22,7 @@
     "lucide-react": "1.31.0",
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@types/node": "24.10.1",
