@@ -1,5 +1,3 @@
-import "server-only";
-
 import { esiPaginated } from "@/lib/esi/client";
 import type { EsiAsset } from "@/lib/esi/types";
 
