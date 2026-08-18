@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `ABY-05`
-- Last completed: `ABY-04`
+- Current work item: `ABY-06`
+- Last completed: `ABY-05`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -74,7 +74,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **ABY-02 — Abyssal acquisition/supply graph.** Explain how required filaments and consumables are obtained, including explicit non-manufacturable boundaries where applicable. PR #48.
 - [x] **ABY-03 — First-run briefing.** Build a T0/T1 beginner briefing with ship/fit/supplies, activation steps, timer, room flow, failure conditions, and safe practice guidance. PR #49.
 - [x] **ABY-04 — Loot teaching.** Explain Bioadaptive Cache versus optional side nodes, no ordinary wreck-loot expectation, major loot families, red-loot cash-out behavior, and keep/sell/use guidance. PR #50.
-- [ ] **ABY-05 — Tier progression readiness.** Gate higher tiers on fit/skills/replacement capacity plus explicit experience milestones; finding a higher-tier filament must not automatically imply readiness.
+- [x] **ABY-05 — Tier progression readiness.** Gate higher tiers on fit/skills/replacement capacity plus explicit experience milestones; finding a higher-tier filament must not automatically imply readiness. PR #51.
 - [ ] **ABY-06 — Integrate existing vetted Abyssal fits.** Connect the existing fit library to the briefing/readiness system and preserve each fit's validated tier limits.
 
 ## Phase G — Economy, assets, location, and “what should I keep?”
