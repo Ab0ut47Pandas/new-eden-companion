@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `RDY-02`
-- Last completed: `RDY-01`
+- Current work item: `RDY-03`
+- Last completed: `RDY-02`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -55,7 +55,7 @@ This file is the persistent implementation state for the new-player progression 
 ## Phase D — Progression and readiness engine
 
 - [x] **RDY-01 — Standard readiness dimensions.** Define stable skills, ship/fit, supplies, ISK, replacement-capacity, location/access, experience, and knowledge/preparation dimensions; keep hard technical eligibility separate from broader readiness and preserve unknown/not-assessed states without fake overall percentages. PR #37.
-- [ ] **RDY-02 — Replacement-capacity model.** Calculate ship/fit/supply risk relative to liquid ISK and configurable reserve; distinguish `can purchase` from `can afford to lose`.
+- [x] **RDY-02 — Replacement-capacity model.** Calculate post-purchase risk budget from liquid ISK, immediate acquisition cost, explicit cash reserve, replacement exposure, and caller-supplied replacement count; keep `can purchase` separate from `can afford to lose` and leave loss affordability unknown when no policy is supplied. PR #38.
 - [ ] **RDY-03 — Activity prerequisite graph.** Let activities declare hard requirements, soft recommendations, prerequisite learning milestones, supplies, ship constraints, and optional side-activity status.
 - [ ] **RDY-04 — Local experience milestones.** Track explicit user-confirmed milestones (first successful run, practiced lower tier, first manufacture, etc.) without pretending ESI exposes gameplay it does not.
 - [ ] **RDY-05 — Readiness explanation engine.** Produce deterministic “ready / nearly ready / not recommended” output with primary blockers, warnings, and next corrective action; every conclusion must expose why.
