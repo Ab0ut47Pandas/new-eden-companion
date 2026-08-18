@@ -19,8 +19,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `PLY-05`
-- Last completed: `PLY-04`
+- Current work item: `RDY-01`
+- Last completed: `PLY-05`
 - Last updated: 2026-08-18
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
@@ -50,7 +50,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **PLY-02 — Skill readiness overlay.** Compare required item/activity skills against the character's trained skills and expose blockers without inventing training ETA when the required data is unavailable. PR #28.
 - [x] **PLY-03 — Blueprint ownership overlay.** Use ESI-visible blueprint data where available to distinguish owned BPO/BPC, runs, research state, and “must obtain blueprint.” PR #29.
 - [x] **PLY-04 — Wallet/market affordability overlay.** Compare CCP ESI average-price references with the character's liquid wallet, show estimated cost for missing material quantities, preserve unavailable data as unknown, and keep reserve/replacement-capacity evaluation distinct for the later readiness model. PR #35.
-- [ ] **PLY-05 — Saved goals/plans.** Let the user save an item/activity goal locally and persist checklist/progress state separately from the replaceable static DB.
+- [x] **PLY-05 — Saved goals/plans.** Persist per-character item/activity goals and custom checklist progress in the mutable private app database, with cross-character ownership checks and explicit separation from replaceable CCP static data. PR #36.
 
 ## Phase D — Progression and readiness engine
 
