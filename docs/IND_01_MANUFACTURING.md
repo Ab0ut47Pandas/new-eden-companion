@@ -14,7 +14,7 @@ For an ordinary manufacturing product selected from the installed CCP SDE, NEC c
 
 - identify the manufacturing blueprint alternative(s), output quantity, base time, materials and activity skills;
 - read ESI-visible BPO/BPC ownership and licensed BPC runs;
-- allocate a requested job across a BPO, one BPC, or multiple BPCs at the selected input location;
+- allocate a requested production plan to a BPO, one BPC, or across multiple BPCs at the selected input location;
 - use the allocated owned blueprint's Material Efficiency for the planning material quantity when that allocation is established;
 - compare required materials with quantities at the selected input location and with quantities owned elsewhere;
 - distinguish `ready here`, `move from elsewhere`, `acquire`, and `unknown` material state;
@@ -22,6 +22,8 @@ For an ordinary manufacturing product selected from the installed CCP SDE, NEC c
 - show visible active/paused industry-job context;
 - ask the player to explicitly confirm whether the selected location offers the Manufacturing service;
 - return one concrete next action before showing lower-priority details.
+
+If a requested production plan spans multiple BPC instances, the allocations represent **separate EVE manufacturing jobs per blueprint copy**, not one combined job. The planner may total those allocations for preparation purposes, but the EVE Industry window remains authoritative for installing each job.
 
 ## Location rule
 
@@ -73,7 +75,7 @@ Before treating the slice as player-validated, exercise at least:
 1. Search for a simple T1 product or ship and open its manufacturing plan.
 2. Change the run count and confirm output/material quantities recalculate sensibly.
 3. Test a product whose blueprint is owned and confirm BPO/BPC state matches EVE.
-4. If a BPC is used, confirm licensed-run handling matches the copy visible in EVE.
+4. If a BPC is used, confirm licensed-run handling matches the copy visible in EVE; if the plan spans multiple copies, confirm NEC makes clear those are separate EVE jobs.
 5. Compare at least one material's `at input`, `anywhere visible`, and required quantities with EVE inventory.
 6. Move/select a different candidate input location and confirm NEC does not count material elsewhere as ready at that location.
 7. Compare required activity skills with the character sheet/Industry window.
