@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { TradeRunPlannerView } from "@/components/trade-run-planner-view";
+import { TradeRunDiscoveryView } from "@/components/trade-run-discovery-view";
 import { getSession } from "@/lib/auth/session-store";
 import { validAccessToken } from "@/lib/auth/sso";
 import { demoDashboard } from "@/lib/dashboard/demo";
@@ -25,9 +25,9 @@ export default async function TradeRunPage() {
         });
       }
     } catch (error) {
-      console.warn("Unable to build live trade-run planner; falling back to demo data", error);
+      console.warn("Unable to build live trade-run discovery; falling back to demo data", error);
     }
   }
 
-  return <TradeRunPlannerView data={dashboard} connected={dashboard.mode === "live"} />;
+  return <TradeRunDiscoveryView data={dashboard} connected={dashboard.mode === "live"} />;
 }
