@@ -15,6 +15,10 @@ import {
 } from "../acquisition/recursive-manufacturing";
 import { queryReverseUsesForType, type ReverseUse } from "../acquisition/reverse-use";
 import {
+  queryBlueprintScienceProfile,
+  type BlueprintScienceProfile,
+} from "../industry/blueprint-activity-query";
+import {
   queryStaticItemIdentity,
   searchStaticItems as querySearchStaticItems,
   type StaticItemIdentity,
@@ -24,6 +28,14 @@ import {
 export type { ManufacturingDependency } from "../acquisition/manufacturing-query";
 export type { RecursiveManufacturingNode, RecursiveManufacturingOptions } from "../acquisition/recursive-manufacturing";
 export type { ReverseUse } from "../acquisition/reverse-use";
+export type {
+  BlueprintActivityMaterial,
+  BlueprintActivitySkill,
+  BlueprintActivityTypeRef,
+  BlueprintScienceActivity,
+  BlueprintScienceActivityKind,
+  BlueprintScienceProfile,
+} from "../industry/blueprint-activity-query";
 export type { StaticItemIdentity, StaticItemKind, StaticItemSearchOptions } from "./item-search";
 
 export interface StaticDatabaseMetadata {
@@ -209,4 +221,8 @@ export function getManufacturingBlueprintsForProduct(productTypeId: number): Man
 
 export function getManufacturingDependenciesForProduct(productTypeId: number): ManufacturingDependency[] {
   return queryManufacturingDependenciesForProduct(getDatabase(), productTypeId);
+}
+
+export function getBlueprintScienceProfile(blueprintTypeId: number): BlueprintScienceProfile | null {
+  return queryBlueprintScienceProfile(getDatabase(), blueprintTypeId);
 }
