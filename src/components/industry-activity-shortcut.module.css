@@ -1,8 +1,14 @@
-.shortcut {
+.group {
   position: fixed;
   left: 955px;
   bottom: 18px;
   z-index: 45;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.shortcut {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -26,9 +32,11 @@
   border-color: #c297ff;
 }
 
-@media (max-width: 1150px) {
-  .shortcut {
+@media (max-width: 1280px) {
+  .group {
     left: 16px;
     bottom: 112px;
+    max-width: calc(100vw - 32px);
+    flex-wrap: wrap;
   }
 }
