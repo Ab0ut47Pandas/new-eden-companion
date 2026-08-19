@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import type { DashboardData } from "@/lib/dashboard/model";
 import { buildAssetCleanupView, type AssetCleanupDecision, type AssetCleanupInput } from "@/lib/economy/asset-cleanup";
+import type { EsiBlueprint } from "@/lib/esi/types";
 
 import styles from "./asset-cleanup-view.module.css";
 
@@ -17,9 +18,56 @@ const GROUPS: ReadonlyArray<{ id: AssetCleanupDecision["disposition"]; label: st
 
 const FITTED_FLAG = /^(HiSlot|MedSlot|LoSlot|RigSlot|SubSystemSlot|ServiceSlot)/i;
 
-function fallbackCleanup(data: DashboardData): AssetCleanupDecision[] {
+function cleanupDecisions(data: DashboardData, blueprints: readonly EsiBlueprint[]): AssetCleanupDecision[] {
+  if (data.assets.cleanup?.length) return data.assets.cleanup;
+
   const shipItems = new Map(data.character.shipContents.map((item) => [item.itemId, item]));
+  const blueprintByItem = new Map(blueprints.map((blueprint) => [blueprint.item_id, blueprint]));
   const inputs: AssetCleanupInput[] = data.assets.topItems.map((item) => {
+    const blueprint = blueprintByItem.get(item.itemId);
+    if (blueprint) {
+      if (blueprint.runs === -1 && (blueprint.material_efficiency > 0 || blueprint.time_efficiency > 0)) {
+        return {
+          itemId: item.itemId,
+          typeId: item.typeId,
+          name: item.name,
+          quantity: item.quantity,
+          location: item.location,
+          estimatedValueIsk: item.estimatedValue,
+          intrinsicPreservation: [{
+            kind: "researched-bpo",
+            reason: `ESI reports this blueprint original with ME ${blueprint.material_efficiency} and TE ${blueprint.time_efficiency}; active-goal relevance is not required to preserve researched blueprint work.`,
+          }],
+        };
+      }
+      if (blueprint.runs > 0) {
+        return {
+          itemId: item.itemId,
+          typeId: item.typeId,
+          name: item.name,
+          quantity: item.quantity,
+          location: item.location,
+          estimatedValueIsk: item.estimatedValue,
+          intrinsicPreservation: [{
+            kind: "useful-bpc",
+            reason: `ESI reports ${blueprint.runs} remaining blueprint-copy run${blueprint.runs === 1 ? "" : "s"}; NEC preserves useful copies even when no active goal references them.`,
+          }],
+        };
+      }
+      return {
+        itemId: item.itemId,
+        typeId: item.typeId,
+        name: item.name,
+        quantity: item.quantity,
+        location: item.location,
+        estimatedValueIsk: item.estimatedValue,
+        intrinsicPreservation: [{
+          kind: "replaceability-uncertain",
+          reason: "ESI identifies this as owned blueprint inventory, but NEC does not have enough evidence here to classify it as disposable or safely replaceable.",
+        }],
+      };
+    }
+
     const shipItem = shipItems.get(item.itemId);
     if (shipItem && FITTED_FLAG.test(shipItem.locationFlag)) {
       return {
@@ -61,8 +109,8 @@ function isk(value: number | null): string {
   return `${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 }).format(value)} ISK`;
 }
 
-export function AssetCleanupView({ data }: { data: DashboardData }) {
-  const decisions = data.assets.cleanup?.length ? data.assets.cleanup : fallbackCleanup(data);
+export function AssetCleanupView({ data, blueprints = [] }: { data: DashboardData; blueprints?: readonly EsiBlueprint[] }) {
+  const decisions = cleanupDecisions(data, blueprints);
 
   return (
     <main className={styles.page}>
@@ -108,7 +156,7 @@ export function AssetCleanupView({ data }: { data: DashboardData }) {
       </div>
 
       <footer className={styles.footer}>
-        <CircleHelp size={17} /><span>Only the dashboard's top asset records are shown here today. Missing source/rarity/blueprint/market evidence stays conservative by design rather than being guessed.</span>
+        <CircleHelp size={17} /><span>Only the dashboard&apos;s top asset records are shown here today. Missing source/rarity/blueprint/market evidence stays conservative by design rather than being guessed.</span>
       </footer>
     </main>
   );
