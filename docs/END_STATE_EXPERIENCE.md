@@ -36,6 +36,45 @@ This suggestion should:
 - allow the user to dismiss/not-interest an activity so “try something new” does not repeatedly nag them with the same suggestion;
 - link directly into that activity’s beginner briefing/readiness page.
 
+## NEC Campaigns — an alternate questing layer
+
+NEC should provide an optional **campaign/quest-style progression experience** for players who want clearer structure than the normal EVE sandbox provides. These are NEC-authored guides built from real EVE activities; they must never pretend to be CCP missions or promise in-game rewards that EVE does not actually provide.
+
+A campaign should:
+
+- be organized into clear campaigns, chapters, quests, and small objectives with visible progress;
+- turn real sandbox activities into coherent sequences, for example `obtain a scanning frigate -> fit it -> scan signatures -> complete a data site -> interpret the loot -> choose the next exploration step`;
+- prefer short, immediately understandable objectives over large vague goals such as “get into exploration”;
+- use ESI-observable completion where reliable and allow explicit manual confirmation where ESI cannot prove the action occurred;
+- show **why the objective matters**, what skill or game concept it teaches, and what the next objective unlocks;
+- use the readiness/acquisition/fitting systems to make each objective actionable: `Can I do this?`, `What do I need?`, `Where do I get it?`, and `Give me the fit/checklist` should be one click away;
+- provide alternate branches or substitutions when a character cannot or does not want to complete the default objective;
+- include meaningful NEC-side progress markers, milestones, chapter completion, and summaries without fabricating ISK/items/SP as rewards;
+- call out genuine EVE rewards when the underlying activity really awards them and distinguish those from NEC progression milestones;
+- allow campaigns to cover multiple styles of play rather than becoming another linear PvE mission grind;
+- preserve user progress locally per character and let users pause, resume, abandon, or restart a campaign without corrupting EVE state.
+
+The intended feeling is closer to a readable RPG quest log layered over EVE: **one concrete thing to do, a reason to do it, help completing it, visible progress, and a satisfying next step.**
+
+## Story Guide mode — detailed guides for EVE narrative content
+
+NEC should provide unusually detailed, player-readable guides for EVE's real narrative/story content, beginning with currently supported Epic Arcs and expanding only where the underlying content can be sourced and maintained reliably.
+
+For each supported story arc, NEC should provide:
+
+- a spoiler-light overview: what the story is about, who it is for, approximate scope when a trustworthy source exists, starting agent/location, access/standing requirements, replay/cooldown rules, and important consequences;
+- a **character-specific preflight**: whether the character appears able to start it, suitable ships/fits within their skills, supplies, expected travel/security-space concerns, replacement-capacity warnings, and known blockers;
+- a chapter/mission navigator showing current guide position and the next concrete action without requiring the player to read the entire walkthrough at once;
+- an optional **full walkthrough** for players who want exact instructions, clearly separated from spoiler-light mode;
+- mission-by-mission objectives, travel/setup notes, combat or non-combat preparation, notable triggers, important loot/items, completion conditions, and common failure/confusion points when those facts are sufficiently sourced;
+- explicit branch/choice explanations for branching arcs, including what a choice changes and what cannot be inferred safely;
+- standings, faction, cooldown, cancellation, or other meaningful consequences called out before the user commits when current sources establish them;
+- ship/fitting recommendations that are validated for the specific content rather than generic hull suggestions, with copyable EVE fits when NEC has a vetted fit;
+- direct links from unfamiliar ships, modules, items, NPC concepts, or mechanics into NEC explanations rather than assuming the player already knows EVE terminology;
+- a post-chapter/post-arc summary of what happened, what the player earned/unlocked where known, and sensible follow-on activities.
+
+The guide must not claim NEC knows the character's exact current mission step unless ESI or explicit user input provides enough evidence. Where EVE does not expose mission state, NEC should let the user mark the current chapter/mission/objective manually and keep that local guide state separate from actual EVE mission state.
+
 ## Completion requirement
 
-Before the progression-coach release candidate is considered complete, both **Suggested session** and **Try something new** must be surfaced in the user-facing home/progression experience, have explainable recommendations, preserve unknown data honestly, and pass a real-user usability checkpoint.
+Before the progression-coach release candidate is considered complete, **Suggested session**, **Try something new**, and the initial **NEC Campaign** experience must be surfaced in the user-facing home/progression experience, have explainable recommendations, preserve unknown data honestly, and pass a real-user usability checkpoint. Story Guide mode must ship at least one fully guided current Epic Arc vertical slice with spoiler-light and detailed walkthrough paths so its design is validated against real EVE narrative content rather than remaining a documentation-only concept.
