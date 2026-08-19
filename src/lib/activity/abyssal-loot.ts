@@ -241,5 +241,5 @@ export function teachAbyssalLootItem(input: AbyssalLootTeachingItemInput): Abyss
 }
 
 export function noOrdinaryNpcWreckLootGuidance(): string {
-  return "Combat NPCs do not leave ordinary loot/salvage wrecks or bounties. Focus on the Bioadaptive Cache, then consider Extraction Nodes/SubNodes only where they exist and only if time allows.";
+  return "Combat NPCs do not leave ordinary loot/salvage wrecks or bounties. Treat the Bioadaptive Cache as the main loot source, then consider Extraction Nodes/SubNodes only where they exist and only if time allows.";
 }
