@@ -41,6 +41,32 @@ Example shape, not fixed copy:
 >
 > `View full path` · `Make/source it myself` · `Why?`
 
+## Dynamic prerequisite subgoals
+
+A blocker should not remain a passive red warning when NEC can turn it into an actionable prerequisite goal.
+
+If completing the parent goal requires a capability, ship, activity, standing level, blueprint, tool, facility, or other prerequisite the player does not currently have, NEC should be able to **insert that prerequisite into the active plan as a temporary subgoal** and then continue expanding until the next step is something the player can actually do.
+
+Examples:
+
+- If the goal requires mined materials but the player has no suitable mining ship, the plan may insert `become able to mine the required material` before `mine the material`; that inserted subgoal may itself expand into `obtain/train for a suitable mining ship`, `fit it`, and `prepare basic defensive/operating requirements`.
+- If an acquisition path is blocked by standing/reputation requirements, the plan may insert `raise the required standing` and then identify an evidence-backed activity path for doing so. If that activity requires combat and the character lacks a suitable combat ship, `obtain/prepare a suitable combat ship` becomes another prerequisite subgoal.
+- If manufacturing requires a blueprint the player does not own, the blueprint becomes an acquisition subgoal; if obtaining that blueprint has another prerequisite, expand again.
+- If an activity requires hauling capacity the character does not currently have, a hauling capability may become an intermediate goal rather than leaving the user with a generic “move materials” blocker.
+
+This recursive expansion should behave like a dependency planner rather than a static checklist:
+
+- parent goals remain visible so the player always knows **why** the inserted task exists;
+- inserted subgoals should be labeled as prerequisites for the parent, not presented as unrelated recommendations;
+- NEC should expand only as far as needed to produce an actionable next step by default;
+- deeper prerequisite branches remain collapsed unless the player drills in;
+- use already-owned ships/items/skills first before creating a new acquisition subgoal;
+- when several valid prerequisite routes exist, prefer the route matching the user’s selected planning preference and current capabilities, while allowing alternatives on demand;
+- do not invent a prerequisite route when the acquisition/standing/activity relationship is unknown or insufficiently sourced;
+- when a prerequisite is completed or becomes unnecessary, collapse/remove that branch and advance the parent goal automatically where reliable.
+
+The intended behavior is: **if there is something between the player and the goal, NEC turns that “something” into the next understandable mini-goal until it reaches an action the player can perform now.**
+
 ## Progressive disclosure
 
 Detailed information should be available without being forced on the player.
@@ -97,4 +123,4 @@ The target feeling is: **NEC understands the enormous EVE dependency tree, but g
 
 ## Completion requirement
 
-Before the progression-coach release candidate is considered complete, at least one major user-facing goal flow must demonstrate this progressive-disclosure model end to end: evaluate the character, produce an ordered goal plan, reuse owned resources, expose an independence path, show one obvious next action, and allow the player to drill into the complete reasoning without forcing that detail into the default view. It must pass a real-user usability checkpoint specifically checking whether the player can answer **“What do I do next?”** without reading a wall of text.
+Before the progression-coach release candidate is considered complete, at least one major user-facing goal flow must demonstrate this progressive-disclosure model end to end: evaluate the character, produce an ordered goal plan, dynamically insert actionable prerequisite subgoals, reuse owned resources, expose an independence path, show one obvious next action, and allow the player to drill into the complete reasoning without forcing that detail into the default view. It must pass a real-user usability checkpoint specifically checking whether the player can answer **“What do I do next?”** without reading a wall of text.
