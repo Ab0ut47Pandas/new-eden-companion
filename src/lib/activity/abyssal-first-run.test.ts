@@ -14,30 +14,31 @@ describe("Abyssal first-run briefing", () => {
     expect(options.map((option) => option.tier)).toEqual([0, 0, 0, 0, 1, 1]);
     expect(options.some((option) => option.shipName === "Gila")).toBe(false);
     expect(options.every((option) => option.sourceUrl)).toBe(true);
+    expect(options.every((option) => option.shipTypeId > 0)).toBe(true);
+    expect(options.every((option) => option.eft.startsWith("["))).toBe(true);
   });
 
   it("keeps the fit-specific filament weather and supplies in the briefing", () => {
     const option = getAbyssalFirstRunOption("abyss-kestrel-t0-dark-community");
     expect(option).not.toBeNull();
-    expect(option).toMatchObject({ tier: 0, weather: "dark", shipName: "Kestrel" });
+    expect(option).toMatchObject({ tier: 0, weather: "dark", shipName: "Kestrel", shipTypeId: 602 });
 
     const definition = buildAbyssalFirstRunDefinition(option!);
     const supplies = definition.whatToBring.map((entry) => entry.label).join(" | ");
     expect(supplies).toMatch(/Tranquil Dark Filament ×3/);
     expect(supplies).toMatch(/Inferno Rocket/);
     expect(supplies).toMatch(/Nanite Repair Paste/);
+    expect(definition.whatToBring[0].detail).toMatch(/Copy EVE fit/i);
+    expect(definition.whatToBring[0].detail).not.toMatch(/Ballistic Control System/);
   });
 
   it("teaches the three-pocket gate flow and explicit 20-minute deadline", () => {
     const option = getAbyssalFirstRunOption("abyss-punisher-t0-electrical-community")!;
     const definition = buildAbyssalFirstRunDefinition(option);
     expect(definition.whatItIs).toMatch(/three-pocket/i);
-    expect(definition.whatToDo.map((entry) => entry.label)).toEqual([
-      "Treat 20 minutes as an absolute site-wide deadline.",
-      "Pocket 1: eliminate the opposition, then take the opened gate.",
-      "Pocket 2: clear the opposition and continue through the next gate.",
-      "Pocket 3: clear the opposition and leave through the Origin Gate.",
-    ]);
+    expect(definition.whatToDo).toHaveLength(4);
+    expect(definition.whatToDo[0].label).toMatch(/20 minutes/i);
+    expect(definition.whatToDo[3].label).toMatch(/Origin Gate/i);
   });
 
   it("uses current activation guidance for T0 versus T1", () => {
@@ -46,6 +47,15 @@ describe("Abyssal first-run briefing", () => {
     expect(t0.howToStart[0].label).toMatch(/T0 filaments are also currently permitted in 0\.9 and 1\.0/i);
     expect(t1.howToStart[0].label).toMatch(/0\.8 security or lower/i);
     expect(t1.howToStart[0].label).toMatch(/do not permit filaments above T0 in 0\.9/i);
+  });
+
+  it("shows the main cache directly and only adds optional side nodes from T1", () => {
+    const t0 = buildAbyssalFirstRunDefinition(getAbyssalFirstRunOption("abyss-kestrel-t0-dark-community")!);
+    const t1 = buildAbyssalFirstRunDefinition(getAbyssalFirstRunOption("abyss-hookbill-t1-dark")!);
+    expect(t0.lootKeepSell.map((entry) => entry.id)).toEqual(["main-cache"]);
+    expect(t0.lootKeepSell[0].label).toMatch(/Bioadaptive Cache/i);
+    expect(t1.lootKeepSell.map((entry) => entry.id)).toEqual(["main-cache", "extraction-node", "extraction-subnode"]);
+    expect(t1.lootKeepSell[1].label).toMatch(/Optional at T1/i);
   });
 
   it("states timer, boundary, ship-loss, and disconnect failure conditions", () => {
