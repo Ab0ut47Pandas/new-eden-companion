@@ -59,6 +59,17 @@ function finding(
   return { id, dimension, requirement, state, summary, why };
 }
 
+function stateSummary(
+  state: ReadinessFindingState,
+  labels: { met: string; unmet: string; unknown: string; caution?: string; notApplicable?: string },
+): string {
+  if (state === "met") return labels.met;
+  if (state === "unmet") return labels.unmet;
+  if (state === "unknown") return labels.unknown;
+  if (state === "caution") return labels.caution ?? labels.unknown;
+  return labels.notApplicable ?? labels.met;
+}
+
 export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): AbyssalTierReadinessResult {
   if (!Number.isInteger(input.tier) || input.tier < 0 || input.tier > 6) throw new Error("Abyssal tier must be T0 through T6.");
   validateState(input.entryFormatEligible, "Entry eligibility");
@@ -79,7 +90,11 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
       "ship-fit",
       "hard",
       input.entryFormatEligible,
-      `Selected hull/entry format is valid for T${tier}`,
+      stateSummary(input.entryFormatEligible, {
+        met: `Selected hull and entry format are valid for T${tier}`,
+        unmet: `Selected hull or entry format cannot enter T${tier}`,
+        unknown: `Entry eligibility has not been verified for T${tier}`,
+      }),
       "Abyssal entry has real hull/trace restrictions. This finding represents technical entry eligibility only; it does not claim the fit can survive the site.",
     ),
     finding(
@@ -87,7 +102,11 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
       "ship-fit",
       "soft",
       input.fitSuitability,
-      `Selected fit is validated for T${tier}`,
+      stateSummary(input.fitSuitability, {
+        met: `Selected fit is validated for T${tier}`,
+        unmet: `Selected fit is not validated for T${tier}`,
+        unknown: `Fit suitability has not been established for T${tier}`,
+      }),
       "Being able to enter the trace is not the same as using a fit that NEC has validated for this tier and weather.",
     ),
     finding(
@@ -95,7 +114,12 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
       "skills",
       "soft",
       input.skillReadiness,
-      `Fit-required skills are ready for T${tier}`,
+      stateSummary(input.skillReadiness, {
+        met: `Your character meets the selected fit's required skills for T${tier}`,
+        unmet: `Your character is missing required skills for the selected T${tier} fit`,
+        unknown: `Your character's required skills have not been verified for the selected T${tier} fit`,
+        caution: `Your character's skills need review for the selected T${tier} fit`,
+      }),
       "The selected fit's required skills and meaningful support-skill floor must be evaluated separately from hull ownership.",
     ),
     finding(
@@ -103,7 +127,11 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
       "supplies",
       "soft",
       input.suppliesReady,
-      `Required filaments, charges, drones, and consumables are ready for T${tier}`,
+      stateSummary(input.suppliesReady, {
+        met: `Required filaments, charges, drones, and consumables are available for T${tier}`,
+        unmet: `Required supplies are missing for T${tier}`,
+        unknown: `Owned supplies have not been verified for T${tier}`,
+      }),
       "The run should not be recommended when the selected fit's required supplies are missing or their availability is unknown.",
     ),
     finding(
@@ -111,7 +139,12 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
       "replacement-capacity",
       "soft",
       input.replacementCapacity,
-      `Replacement capacity is acceptable for the selected T${tier} exposure`,
+      stateSummary(input.replacementCapacity, {
+        met: `Replacement capacity is acceptable for the selected T${tier} exposure`,
+        unmet: `Replacement capacity is too low for the selected T${tier} exposure`,
+        unknown: `Replacement capacity has not been assessed for the selected T${tier} exposure`,
+        caution: `Replacement capacity is marginal for the selected T${tier} exposure`,
+      }),
       "Abyssal ship loss can be total. Immediate purchase ability is not enough; NEC keeps loss/replacement capacity as a separate readiness dimension.",
     ),
     finding(
@@ -121,7 +154,11 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
       priorExperience,
       priorTier === null
         ? "No prior-tier experience is required for T0"
-        : `Prior T${priorTier} experience milestone is confirmed`,
+        : stateSummary(priorExperience, {
+            met: `Prior T${priorTier} experience milestone is confirmed`,
+            unmet: `Prior T${priorTier} experience milestone is not complete`,
+            unknown: `Prior T${priorTier} experience has not been confirmed`,
+          }),
       priorTier === null
         ? "T0 is the first Abyssal tier, so no lower-tier experience milestone applies."
         : `Higher-tier progression uses the player's explicit “${abyssalExperienceMilestoneLabel(priorTier)}” milestone. NEC does not infer experience from ESI, loot, or filament ownership.`,
@@ -131,7 +168,11 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
       "supplies",
       "context",
       input.filamentAvailable,
-      `A T${tier} filament is available`,
+      stateSummary(input.filamentAvailable, {
+        met: `A T${tier} filament is available`,
+        unmet: `A T${tier} filament is not available`,
+        unknown: `T${tier} filament ownership has not been verified`,
+      }),
       "Filament possession establishes supply availability only. Finding or buying a higher-tier filament does not satisfy fit, skill, replacement-capacity, or experience readiness.",
     ),
   ];
@@ -141,7 +182,7 @@ export function buildAbyssalTierReadiness(input: AbyssalTierReadinessInput): Aby
     actionHints: [
       { findingId: `abyss:t${tier}:entry-format`, action: "Choose a hull and entry format that are technically permitted for this Abyssal run." },
       { findingId: `abyss:t${tier}:fit`, action: `Choose a vetted fit whose validated tier includes T${tier}.` },
-      { findingId: `abyss:t${tier}:skills`, action: "Train or verify the selected fit's required skills before advancing." },
+      { findingId: `abyss:t${tier}:skills`, action: input.skillReadiness === "unknown" ? "Connect or refresh your character so NEC can check the selected fit's required skills." : "Train the missing required skills before using this fit." },
       { findingId: `abyss:t${tier}:supplies`, action: "Load the selected fit's required filaments, ammunition, drones, and consumables." },
       { findingId: `abyss:t${tier}:replacement`, action: "Reduce the ship exposure or build enough reserve/replacement capacity before risking this tier." },
       { findingId: `abyss:t${tier}:experience`, action: priorTier === null ? "Review the T0 first-run briefing." : `Complete and explicitly confirm the T${priorTier} experience milestone before advancing.` },
