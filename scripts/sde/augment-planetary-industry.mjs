@@ -54,7 +54,12 @@ function keyedEntries(value) {
 
 function referencedTypeId(record, ...keys) {
   const value = nestedObject(record);
-  const candidates = [value?._key, ...keys.map((key) => value?.[key])];
+  const candidates = [
+    value,
+    value?._key,
+    value?._value,
+    ...keys.map((key) => value?.[key]),
+  ];
   for (const candidate of candidates) {
     const parsed = integer(candidate);
     if (parsed !== null && parsed > 0) return parsed;
