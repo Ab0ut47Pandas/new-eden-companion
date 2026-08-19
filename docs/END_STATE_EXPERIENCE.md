@@ -36,6 +36,48 @@ This suggestion should:
 - allow the user to dismiss/not-interest an activity so “try something new” does not repeatedly nag them with the same suggestion;
 - link directly into that activity’s beginner briefing/readiness page.
 
+## Build and fitting ownership awareness
+
+Whenever NEC recommends a ship fit, industrial build, campaign loadout, consumable package, or other shopping/build list, it must first account for what the character already owns through the ESI-visible asset/fitting/cargo data that is actually available.
+
+The build experience should:
+
+- show an immediate coverage summary such as **Owned 11/16 · Missing 5** rather than presenting the full fit as a shopping list;
+- mark each required hull/module/rig/charge/drone/material/supply as `owned`, `partially owned`, `missing`, `allocated/in use`, `inaccessible or unknown location`, or `unknown` where the available data supports that distinction;
+- count exact quantities for stackable ammunition, charges, drones, materials, consumables, and other quantity-sensitive requirements;
+- avoid telling the player to buy something NEC can establish they already own;
+- produce a **Buy missing only** list from the uncovered remainder, not from the original recipe/fit;
+- make owned items clickable so the user can see where NEC believes the item is and why it counted toward coverage when location data is available;
+- avoid silently treating an item fitted to another active/planned ship as disposable inventory when NEC can establish that allocation;
+- preserve uncertainty when ESI does not expose enough information to establish whether an item is practically accessible;
+- reuse the same ownership overlay for fittings, manufacturing plans, campaigns, story-guide preflights, suggested sessions, and ordinary item acquisition so the behavior is consistent everywhere.
+
+The desired feeling is: **“You already have most of this. Here is exactly what is still missing.”**
+
+## Independence / make-it-yourself planning
+
+NEC should actively teach players how to become more self-sufficient instead of treating the market as the default answer to every missing item.
+
+For a required item or complete fit/build, NEC should be able to offer planning preferences such as **Independent**, **Balanced**, and **Buy-first**. The exact labels may change, but the underlying behavior should remain distinct:
+
+- **Independent:** prefer using owned stock, manufacturing, mining/resource gathering, PI, reactions, salvage, exploration, LP/faction/NPC sources, or other evidence-backed acquisition paths before suggesting a player-market purchase;
+- **Balanced:** compare practical owned/build/source options with buying and allow a mixed plan;
+- **Buy-first:** optimize for getting ready quickly while still reusing anything already owned.
+
+The independence path should:
+
+- recursively use the acquisition graph to answer **“How could I make or obtain this myself?”** all the way down to meaningful source boundaries;
+- consume owned materials/components first and calculate only the remaining quantities at each dependency level;
+- show required blueprint/BPO/BPC state, manufacturing/activity skills, materials, intermediate products, facilities or activity types when current data can establish them;
+- distinguish `can manufacture`, `can source another way`, `must obtain prerequisite`, `market is one option`, and `unknown` rather than flattening every missing item into `buy`;
+- explicitly explain when an item **cannot normally be manufactured** and show the supported source instead of fabricating a blueprint path;
+- let a player expand or collapse the dependency tree so someone who wants full self-sufficiency can go deep without forcing that complexity on everyone;
+- show where the player is already independent, for example **“You can manufacture 14 of 17 required components with your current skills/blueprints/materials”** when the evidence supports that statement;
+- use the same self-sufficiency preference inside NEC Campaigns so progression can deliberately teach mining, refining, industry, PI, exploration, salvage, hauling, and market use as connected systems rather than isolated dashboards;
+- explain tradeoffs without moralizing: making something yourself may take longer or cost more than buying it, while buying may be the sensible choice when the user values time over independence.
+
+NEC should never promise literal total self-sufficiency where EVE's item-source rules make that impossible. The goal is to teach the player **how much of the chain they can control themselves, what they still depend on others/the market for, and how to expand that independence over time.**
+
 ## NEC Campaigns — an alternate questing layer
 
 NEC should provide an optional **campaign/quest-style progression experience** for players who want clearer structure than the normal EVE sandbox provides. These are NEC-authored guides built from real EVE activities; they must never pretend to be CCP missions or promise in-game rewards that EVE does not actually provide.
@@ -77,4 +119,4 @@ The guide must not claim NEC knows the character's exact current mission step un
 
 ## Completion requirement
 
-Before the progression-coach release candidate is considered complete, **Suggested session**, **Try something new**, and the initial **NEC Campaign** experience must be surfaced in the user-facing home/progression experience, have explainable recommendations, preserve unknown data honestly, and pass a real-user usability checkpoint. Story Guide mode must ship at least one fully guided current Epic Arc vertical slice with spoiler-light and detailed walkthrough paths so its design is validated against real EVE narrative content rather than remaining a documentation-only concept.
+Before the progression-coach release candidate is considered complete, **Suggested session**, **Try something new**, the initial **NEC Campaign** experience, **owned-part-aware build planning**, and the **independence/self-sufficiency planning mode** must be surfaced in the user-facing progression experience, have explainable recommendations, preserve unknown data honestly, and pass a real-user usability checkpoint. Story Guide mode must ship at least one fully guided current Epic Arc vertical slice with spoiler-light and detailed walkthrough paths so its design is validated against real EVE narrative content rather than remaining a documentation-only concept.
