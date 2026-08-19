@@ -10,19 +10,21 @@ This file is the persistent implementation state for the new-player progression 
 4. Do one bounded work item per run. Large systems are split into smaller checklist items below.
 5. Use an `agent/...` branch and normal PR/CI workflow. Do not merge failing CI.
 6. For EVE mechanics, SDE, ESI, scopes, or other facts that can change, verify the current authoritative source before encoding behavior. Prefer CCP primary sources for game/API facts.
-7. Do not silently invent acquisition sources, readiness rules, fitting mechanics, or tactical claims. If a fact cannot be established, preserve the unknown explicitly.
+7. Do not silently invent acquisition sources, readiness rules, fitting mechanics, tactical claims, mission state, narrative consequences, or rewards. If a fact cannot be established, preserve the unknown explicitly.
 8. Update this roadmap at the end of every completed work item. Mark an item `[x]` only after its implementation is merged to `main` and record the PR/commit when practical.
 9. If blocked, leave the item unchecked and add a short `BLOCKED:` note describing exactly what prevents completion. Do not mark it done.
 10. Do not bump/release the application merely because infrastructure changed. Version/release only when a roadmap item explicitly requires a user-facing release.
 11. Preserve private user/session data. Static/rebuildable EVE data must remain separable from `data/eve-companion.db`.
-12. When all checklist items are complete, stop making code changes and report that the roadmap is complete.
+12. Treat `docs/END_STATE_EXPERIENCE.md` as mandatory release criteria. Do not consider `REL-01` complete until those workflows are implemented and manually user-tested.
+13. When all checklist items are complete, stop making code changes and report that the roadmap is complete.
 
 ## Current state
 
-- Current work item: `ECO-02`
-- Last completed: `ECO-01`
-- Last updated: 2026-08-18
+- Current work item: `ECO-03`
+- Last completed: `ECO-02`
+- Last updated: 2026-08-19
 - Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. Development resumed after user confirmation.
+- Mandatory end-state experience: tracked in `docs/END_STATE_EXPERIENCE.md`; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, and their final installed-app checkpoint must ship before `REL-01`.
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
 ---
@@ -81,7 +83,7 @@ This file is the persistent implementation state for the new-player progression 
 ## Phase G — Economy, assets, location, and “what should I keep?”
 
 - [x] **ECO-01 — Asset usefulness classifier.** Relate owned items to saved goals, active activities, fitting recommendations, and manufacturing dependencies before recommending keep/sell. Evidence-first classifier added in PR #56; unknown usefulness remains unknown rather than becoming an automatic sell recommendation.
-- [ ] **ECO-02 — Market valuation service.** Establish current market data source/caching and calculate local/nearby-hub value with timestamps and data-quality caveats.
+- [x] **ECO-02 — Market valuation service.** Establish current market data source/caching and calculate local/nearby-hub value with timestamps and data-quality caveats. PR #58 uses CCP ESI regional market orders, five-minute cache alignment, visible-depth valuation, explicit location/hub scopes, and unknown/partial results instead of extrapolated prices.
 - [ ] **ECO-03 — Sell-here-vs-haul decision support.** Compare price improvement against jumps, volume, risk, and user-configurable hauling tolerance; explain the recommendation.
 - [ ] **ECO-04 — Stockpile recommendations.** Identify materials/supplies useful to active goals and distinguish deliberate stockpile from random clutter.
 - [ ] **ECO-05 — Location-aware opportunities.** Use character/location plus universe data to surface nearby relevant activities/assets/services while respecting ESI visibility limitations.
@@ -117,12 +119,19 @@ This file is the persistent implementation state for the new-player progression 
 - [ ] **UX-02 — Global “Why?” affordance.** Readiness, keep/sell, fit classification, tactical warnings, and progression recommendations must expose their underlying evidence/rules.
 - [ ] **UX-03 — Unknown/limited-data UX.** Standardize wording for unavailable ESI data, stale market data, unresolved SDE placeholders, unsupported mechanics, and user confirmation requirements.
 - [ ] **UX-04 — First-run onboarding.** Explain what NEC can/cannot see, connect character, establish approximate goals/preferences, and offer `I don't know what to do` immediately.
+- [ ] **UX-05 — Suggested session.** Compose a short user-facing, explainable plan for what the connected character can realistically do right now, including preparation when appropriate and honest unknowns rather than generic recommendations.
+- [ ] **UX-06 — Try something new.** Suggest a plausible different activity, respect local `tried`/`not interested` feedback and readiness constraints, and never pretend ESI exposes complete play history.
+- [ ] **CMP-01 — NEC Campaign foundation.** Define optional campaign/chapter/objective models and per-character local progress with explicit ESI-observed, user-confirmed, and unknown completion evidence; never fabricate in-game rewards or quest state.
+- [ ] **CMP-02 — NEC Campaign vertical slice.** Ship one coherent quest-style progression campaign made of real EVE activities with small objectives, readiness/acquisition/fitting help, manual completion where required, and meaningful NEC-local milestones.
+- [ ] **STY-01 — Story Guide framework.** Add spoiler-light overview, chapter/mission navigation, optional detailed walkthrough, character-specific preflight, sourced branches/consequences, fit guidance, and local manual guide state for real EVE narrative content.
+- [ ] **STY-02 — Guided Epic Arc vertical slice.** Ship at least one fully guided current Epic Arc using verified current sources, without inventing mission state, branches, consequences, or rewards that ESI/authoritative sources do not establish.
 - [ ] **QA-01 — Cross-system regression suite.** Golden tests for representative beginner progression chains, acquisition graphs, readiness states, asset decisions, Abyssal flow, PI/industry paths, and fits.
 - [ ] **QA-02 — Security/privacy review.** Re-review SSO scopes, token/session storage, external requests, static DB updates, market sources, telemetry assumptions, and data retention after the new systems land.
-- [ ] **REL-01 — Progression-coach release candidate.** Package the validated static DB, perform clean-install/update/rollback tests on Windows, document limitations, and publish the first release where the progression coach is a coherent user-facing product.
+- [ ] **QA-03 — Mandatory end-state installed-app test.** Manually validate Suggested session, Try something new feedback, NEC Campaign progression/manual completion, Story Guide/Epic Arc navigation, honest unknown state, and persistence across restart as specified in `docs/END_STATE_EXPERIENCE.md`.
+- [ ] **REL-01 — Progression-coach release candidate.** Package the validated static DB, perform clean-install/update/rollback tests on Windows, document limitations, and publish the first release where the progression coach is a coherent user-facing product. `REL-01` cannot complete until every mandatory end-state item and QA-03 are complete.
 
 ---
 
 ## Completion rule
 
-The roadmap is complete when every checkbox above is `[x]`, CI is green on the merged implementation, the release candidate has passed clean-install/update tests, and no `BLOCKED:` notes remain unresolved.
+The roadmap is complete when every checkbox above is `[x]`, every requirement in `docs/END_STATE_EXPERIENCE.md` is implemented, QA-03 has passed in the installed app, CI is green on the merged implementation, the release candidate has passed clean-install/update tests, and no `BLOCKED:` notes remain unresolved.

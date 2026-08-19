@@ -84,6 +84,42 @@ export async function esiPaginated<T>(
   return results.flat();
 }
 
+export async function esiPaginatedPublic<T>(
+  route: string,
+  options: {
+    query?: EsiOptions["query"];
+    revalidate?: number;
+    maxPages?: number;
+  } = {},
+): Promise<T[]> {
+  const first = await esiResponse(route, {
+    query: { ...options.query, page: 1 },
+    revalidate: options.revalidate,
+  });
+  const firstPage = (await first.json()) as T[];
+  const reportedPages = Number(first.headers.get("X-Pages") ?? "1");
+  const maxPages = options.maxPages ?? 50;
+  if (!Number.isSafeInteger(reportedPages) || reportedPages <= 0) {
+    throw new Error(`ESI ${route} returned an invalid X-Pages header`);
+  }
+  if (reportedPages > maxPages) {
+    throw new Error(`ESI ${route} requires ${reportedPages} pages, exceeding the configured ${maxPages}-page safety limit`);
+  }
+  if (reportedPages <= 1) return firstPage;
+
+  const results: T[][] = [firstPage];
+  for (let start = 2; start <= reportedPages; start += 4) {
+    const batch = Array.from({ length: Math.min(4, reportedPages - start + 1) }, (_, index) =>
+      esi<T[]>(route, {
+        query: { ...options.query, page: start + index },
+        revalidate: options.revalidate,
+      }),
+    );
+    results.push(...(await Promise.all(batch)));
+  }
+  return results.flat();
+}
+
 export async function resolveNames(ids: number[]): Promise<Map<number, string>> {
   const unique = [...new Set(ids)].filter(Number.isSafeInteger);
   const names = new Map<number, string>();
