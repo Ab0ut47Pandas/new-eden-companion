@@ -88,7 +88,7 @@ export default function ExplorationActivityPage() {
               </article>
             ))}
           </div>
-          <div className={styles.notice}>Special sites can break the ordinary expectations. Timers, NPCs, explosive containers, suspect effects, mines, or other mechanics may apply. If the site is unfamiliar, NEC&apos;s correct answer is "check first," not a confident guess.</div>
+          <div className={styles.notice}>Special sites can break the ordinary expectations. Timers, NPCs, explosive containers, suspect effects, mines, or other mechanics may apply. If the site is unfamiliar, NEC&apos;s correct answer is &quot;check first,&quot; not a confident guess.</div>
         </section>
 
         <section className={styles.section}>
