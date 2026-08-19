@@ -12,10 +12,13 @@ export interface AbyssalFirstRunOption {
   tier: AbyssalFirstRunTier;
   weather: AbyssalFirstRunWeather;
   shipName: string;
+  shipTypeId: number;
   fitName: string;
   summary: string;
   loadout: FitTemplate["loadout"];
   supplies: string[];
+  skills: FitTemplate["skills"];
+  eft: string;
   sourceUrl: string | null;
   validation: string | null;
 }
@@ -45,10 +48,13 @@ function toOption(profile: VettedAbyssalFitProfile & { primaryTier: AbyssalFirst
     tier: profile.primaryTier,
     weather: profile.weather,
     shipName: profile.fit.shipName,
+    shipTypeId: profile.shipTypeId,
     fitName: profile.fit.name,
     summary: profile.fit.summary,
     loadout: profile.fit.loadout,
     supplies: [...profile.fit.supplies],
+    skills: [...profile.fit.skills],
+    eft: profile.metadata.eft,
     sourceUrl: profile.metadata.sourceUrl,
     validation: `${profile.metadata.validation} ${profile.validationNote}`,
   };
@@ -79,10 +85,39 @@ function securityGuidance(tier: AbyssalFirstRunTier): string {
     : "Activate in 0.8 security or lower. Current rules do not permit filaments above T0 in 0.9 security systems.";
 }
 
+function lootGuidance(tier: AbyssalFirstRunTier) {
+  const entries = [
+    {
+      id: "main-cache",
+      label: "Main loot: destroy and loot the Triglavian Bioadaptive Cache.",
+      detail: "This is the main loot container in each pocket. Prioritize it over optional side loot when time is tight.",
+      tone: "recommended" as const,
+    },
+  ];
+
+  if (tier >= 1) {
+    entries.push(
+      {
+        id: "extraction-node",
+        label: "Optional at T1+: Triglavian Extraction Node.",
+        detail: "This is bonus side loot. Skip it if reaching it would cost too much time or put the run at risk.",
+        tone: "info" as const,
+      },
+      {
+        id: "extraction-subnode",
+        label: "Optional at T1+: Triglavian Extraction SubNode.",
+        detail: "This is bonus side loot and is not guaranteed to contain loot. The main Bioadaptive Cache comes first.",
+        tone: "info" as const,
+      },
+    );
+  }
+
+  return entries;
+}
+
 export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): ActivityBriefingDefinition {
   const tier = tierName(option.tier);
   const weather = weatherName(option.weather);
-  const loadoutSummary = option.loadout.map((slot) => `${slot.slot}: ${slot.items.join(", ")}`).join(" | ");
 
   return {
     id: `abyssal-first-run:${option.id}`,
@@ -93,15 +128,15 @@ export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): A
     whatToBring: [
       {
         id: "selected-fit",
-        label: `${option.shipName}: ${option.fitName}`,
-        detail: loadoutSummary,
+        label: `Use the ${option.shipName} fitting selected above.`,
+        detail: "If you already have this exact fit, you do not need to read a raw module list here. Otherwise use Copy EVE fit above and import it in EVE.",
         why: option.validation ?? "This fit is part of NEC's vetted low-tier Abyssal catalog.",
         tone: "required",
       },
       ...option.supplies.map((supply, index) => ({
         id: `supply-${index + 1}`,
         label: supply,
-        detail: "Carry the fit-specific supply amount before activating the trace.",
+        detail: "Bring this before activating the trace.",
         tone: "required" as const,
       })),
     ],
@@ -114,8 +149,8 @@ export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): A
       },
       {
         id: "fleet",
-        label: "Use the frigate cooperative-trace workflow: be in a fleet and carry three matching filaments.",
-        detail: "The selected starter options are frigates. Cooperative frigate traces use matching filaments of the same type and tier and allow up to three frigates.",
+        label: "For this frigate run, be in a fleet and carry three matching filaments.",
+        detail: "Frigate cooperative traces allow up to three frigates and consume one matching filament per possible frigate slot, so this starter workflow uses three.",
         tone: "required",
       },
       {
@@ -134,31 +169,24 @@ export function buildAbyssalFirstRunDefinition(option: AbyssalFirstRunOption): A
       },
       {
         id: "room-one",
-        label: "Pocket 1: eliminate the opposition, then take the opened gate.",
+        label: "Pocket 1: eliminate the opposition, loot the main cache when safe, then take the opened gate.",
         detail: "Do not drift outside the pocket boundary while fighting or looting.",
         tone: "required",
       },
       {
         id: "room-two",
-        label: "Pocket 2: clear the opposition and continue through the next gate.",
+        label: "Pocket 2: clear the opposition, take worthwhile loot if time allows, and continue.",
         detail: "Keep enough time in reserve for the final pocket rather than treating each room as an isolated fight.",
         tone: "required",
       },
       {
         id: "room-three",
-        label: "Pocket 3: clear the opposition and leave through the Origin Gate.",
+        label: "Pocket 3: clear the opposition, loot, and leave through the Origin Gate before the timer expires.",
         detail: "The Origin Gate is the normal exit back to the point of entry.",
         tone: "required",
       },
     ],
-    lootKeepSell: [
-      {
-        id: "loot-with-time",
-        label: "Take caches only when doing so will not compromise the timer or your survival.",
-        detail: "Use the detailed loot guide on this activity page for Bioadaptive Cache, optional side-node, red-loot, and keep/sell guidance. Unfamiliar drops remain unknown unless NEC has evidence for a use or sale path.",
-        tone: "recommended",
-      },
-    ],
+    lootKeepSell: lootGuidance(option.tier),
     failureConditions: [
       {
         id: "timeout",
