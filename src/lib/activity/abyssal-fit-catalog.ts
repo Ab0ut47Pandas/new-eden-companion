@@ -6,6 +6,7 @@ import type { AbyssalTier, AbyssalWeatherId, AbyssalEntryHullClass } from "./aby
 
 export interface VettedAbyssalFitRule {
   fitId: string;
+  shipTypeId: number;
   primaryTier: AbyssalTier;
   validatedTiers: readonly AbyssalTier[];
   weather: AbyssalWeatherId;
@@ -33,6 +34,7 @@ export interface VettedAbyssalFitReadinessInput {
 export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   {
     fitId: "abyss-kestrel-t0-dark-community",
+    shipTypeId: 602,
     primaryTier: 0,
     validatedTiers: [0],
     weather: "dark",
@@ -42,6 +44,7 @@ export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   },
   {
     fitId: "abyss-punisher-t0-electrical-community",
+    shipTypeId: 597,
     primaryTier: 0,
     validatedTiers: [0],
     weather: "electrical",
@@ -51,6 +54,7 @@ export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   },
   {
     fitId: "abyss-rifter-t0-electrical-community",
+    shipTypeId: 587,
     primaryTier: 0,
     validatedTiers: [0],
     weather: "electrical",
@@ -60,6 +64,7 @@ export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   },
   {
     fitId: "abyss-tristan-t0-electrical-a2o",
+    shipTypeId: 593,
     primaryTier: 0,
     validatedTiers: [0],
     weather: "electrical",
@@ -69,6 +74,7 @@ export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   },
   {
     fitId: "abyss-hookbill-t1-dark",
+    shipTypeId: 17619,
     primaryTier: 1,
     validatedTiers: [1],
     weather: "dark",
@@ -78,6 +84,7 @@ export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   },
   {
     fitId: "abyss-worm-t1-electrical-a2o",
+    shipTypeId: 17930,
     primaryTier: 1,
     validatedTiers: [1],
     weather: "electrical",
@@ -87,6 +94,7 @@ export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   },
   {
     fitId: "abyss-gila-t3-gamma-passive",
+    shipTypeId: 17715,
     primaryTier: 3,
     validatedTiers: [2, 3],
     weather: "gamma",
@@ -96,6 +104,7 @@ export const VETTED_ABYSSAL_FIT_RULES: readonly VettedAbyssalFitRule[] = [
   },
   {
     fitId: "abyss-gila-t4-electrical-active",
+    shipTypeId: 17715,
     primaryTier: 4,
     validatedTiers: [4],
     weather: "electrical",
@@ -171,6 +180,7 @@ export function validateVettedAbyssalFitCatalog(): void {
   for (const profile of profiles) {
     if (ids.has(profile.fitId)) throw new Error(`Duplicate vetted Abyssal fit rule: ${profile.fitId}`);
     ids.add(profile.fitId);
+    if (!Number.isInteger(profile.shipTypeId) || profile.shipTypeId <= 0) throw new Error(`Missing ship type ID for ${profile.fitId}.`);
     if (!profile.validatedTiers.includes(profile.primaryTier)) {
       throw new Error(`Primary tier T${profile.primaryTier} is outside validated tiers for ${profile.fitId}.`);
     }
