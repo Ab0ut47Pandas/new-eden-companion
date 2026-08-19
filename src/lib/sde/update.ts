@@ -14,13 +14,15 @@ import {
 import { installStaticDatabaseCandidate } from "./update-core";
 
 export const CCP_LATEST_SDE_URL = "https://developers.eveonline.com/static-data/tranquility/latest.jsonl";
-const SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION = 1;
+export const SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION = 2;
 
 export type StaticDatabaseFreshnessState = "missing" | "outdated" | "current" | "ahead";
 
 export interface StaticDatabaseFreshness {
   installedBuild: number | null;
+  installedSchemaVersion: number | null;
   availableBuild: number;
+  supportedSchemaVersion: number;
   state: StaticDatabaseFreshnessState;
   updateAvailable: boolean;
 }
@@ -58,18 +60,29 @@ export async function getAvailableStaticDatabaseBuild(): Promise<number> {
 
 export async function getStaticDatabaseFreshness(): Promise<StaticDatabaseFreshness> {
   const availableBuild = await getAvailableStaticDatabaseBuild();
-  const installedBuild = staticDatabaseAvailable() ? getStaticDatabaseMetadata().sdeBuild : null;
+  const installed = staticDatabaseAvailable() ? getStaticDatabaseMetadata() : null;
+  const installedBuild = installed?.sdeBuild ?? null;
+  const installedSchemaVersion = installed?.schemaVersion ?? null;
+  const base = {
+    installedBuild,
+    installedSchemaVersion,
+    availableBuild,
+    supportedSchemaVersion: SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION,
+  };
 
-  if (installedBuild === null) {
-    return { installedBuild, availableBuild, state: "missing", updateAvailable: true };
+  if (installedBuild === null || installedSchemaVersion === null) {
+    return { ...base, state: "missing", updateAvailable: true };
+  }
+  if (installedSchemaVersion !== SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION) {
+    return { ...base, state: "outdated", updateAvailable: true };
   }
   if (installedBuild < availableBuild) {
-    return { installedBuild, availableBuild, state: "outdated", updateAvailable: true };
+    return { ...base, state: "outdated", updateAvailable: true };
   }
   if (installedBuild > availableBuild) {
-    return { installedBuild, availableBuild, state: "ahead", updateAvailable: false };
+    return { ...base, state: "ahead", updateAvailable: false };
   }
-  return { installedBuild, availableBuild, state: "current", updateAvailable: false };
+  return { ...base, state: "current", updateAvailable: false };
 }
 
 function runCurrentSdeBuilder(outputDir: string): Promise<void> {
@@ -144,12 +157,17 @@ export async function updateStaticDatabase(): Promise<StaticDatabaseUpdateResult
         if (installed.sdeBuild !== candidateBuild) {
           throw new Error(`Static database reopened as build ${installed.sdeBuild}, expected ${candidateBuild}.`);
         }
+        if (installed.schemaVersion !== SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION) {
+          throw new Error(`Static database reopened as schema ${installed.schemaVersion}, expected ${SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION}.`);
+        }
       },
     });
 
     return {
       installedBuild: candidateBuild,
+      installedSchemaVersion: SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION,
       availableBuild: candidateBuild,
+      supportedSchemaVersion: SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION,
       state: "current",
       updateAvailable: false,
       updated: true,
