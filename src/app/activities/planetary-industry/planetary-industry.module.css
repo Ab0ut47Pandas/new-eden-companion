@@ -1,0 +1,122 @@
+.page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 64px;
+}
+
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.header h1,
+.card h2,
+.card h3 {
+  margin: 0;
+}
+
+.header p,
+.card p {
+  color: var(--muted-foreground, #a8b0bd);
+}
+
+.back,
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.action {
+  padding: 10px 14px;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  border-radius: 10px;
+}
+
+.notice,
+.card {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.46);
+}
+
+.notice {
+  padding: 18px;
+  margin: 20px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  padding: 20px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+
+.pill,
+.ok,
+.warning,
+.unknown,
+.info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  font-size: 0.84rem;
+}
+
+.ok { border-color: rgba(74, 222, 128, 0.45); }
+.warning { border-color: rgba(251, 191, 36, 0.55); }
+.unknown { border-color: rgba(192, 132, 252, 0.5); }
+.info { border-color: rgba(96, 165, 250, 0.45); }
+
+.attentionList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attentionItem {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.35);
+}
+
+.attentionItem strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.small {
+  font-size: 0.86rem;
+  color: var(--muted-foreground, #a8b0bd);
+}
+
+.boundary {
+  margin-top: 24px;
+  padding: 18px;
+  border-left: 3px solid rgba(96, 165, 250, 0.55);
+  background: rgba(30, 41, 59, 0.34);
+}
+
+@media (max-width: 720px) {
+  .page { width: min(100% - 20px, 1180px); padding-top: 20px; }
+  .header { flex-direction: column; }
+}

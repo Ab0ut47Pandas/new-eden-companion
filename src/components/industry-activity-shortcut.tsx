@@ -1,4 +1,4 @@
-import { Atom, BookCopy, Factory } from "lucide-react";
+import { Atom, BookCopy, Factory, Orbit } from "lucide-react";
 import Link from "next/link";
 
 import styles from "./industry-activity-shortcut.module.css";
@@ -14,6 +14,9 @@ export function IndustryActivityShortcut() {
       </Link>
       <Link className={styles.shortcut} href="/activities/industry/advanced" title="Trace invention and reaction dependencies, source items, materials, skills and chance/facility boundaries">
         <Atom size={16} /> Invention &amp; Reactions
+      </Link>
+      <Link className={styles.shortcut} href="/activities/planetary-industry" title="Inspect ESI-visible PI colonies, extractor timing, routes and attention">
+        <Orbit size={16} /> Planetary Industry
       </Link>
     </div>
   );

@@ -1,4 +1,4 @@
-// Current ESI OAuth catalog reviewed against the live developer portal on 2026-08-13.
+// Current ESI OAuth catalog reviewed against the live developer portal on 2026-08-19.
 // The application can request the full catalog for advanced workflows.
 // Consequential write operations remain confirmation-gated by the
 // local bridge and the operating contract in AGENTS.md.
@@ -80,8 +80,9 @@ export const EVE_SCOPES = [
 ] as const;
 
 // The beginner-friendly profile powers the personal dashboard, preflight,
-// ship/skill guidance, inventory, activity history, and requested EVE UI
-// actions without asking for mail, corporation, fleet, or general write access.
+// ship/skill guidance, inventory, activity history, Planetary Industry state,
+// and requested EVE UI actions without asking for mail, corporation, fleet,
+// or general write access.
 export const RECOMMENDED_EVE_SCOPES = [
   "esi-assets.read_assets.v1",
   "esi-characters.read_blueprints.v1",
@@ -98,6 +99,7 @@ export const RECOMMENDED_EVE_SCOPES = [
   "esi-location.read_online.v1",
   "esi-location.read_ship_type.v1",
   "esi-markets.read_character_orders.v1",
+  "esi-planets.manage_planets.v1",
   "esi-skills.read_skillqueue.v1",
   "esi-skills.read_skills.v1",
   "esi-ui.open_window.v1",
