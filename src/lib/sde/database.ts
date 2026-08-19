@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
+import type { AcquisitionGraph } from "../acquisition/graph";
 import {
   queryManufacturingDependenciesForProduct,
   type ManufacturingDependency,
@@ -14,6 +15,12 @@ import {
   type RecursiveManufacturingOptions,
 } from "../acquisition/recursive-manufacturing";
 import { queryReverseUsesForType, type ReverseUse } from "../acquisition/reverse-use";
+import { buildAdvancedIndustryAcquisitionGraph } from "../industry/advanced-industry-graph";
+import {
+  queryAdvancedIndustryActivitiesForProduct,
+  queryAdvancedIndustryActivitiesForSource,
+  type AdvancedIndustryActivity,
+} from "../industry/advanced-industry-query";
 import {
   queryBlueprintScienceProfile,
   type BlueprintScienceProfile,
@@ -25,9 +32,18 @@ import {
   type StaticItemSearchOptions,
 } from "./item-search";
 
+export type { AcquisitionGraph } from "../acquisition/graph";
 export type { ManufacturingDependency } from "../acquisition/manufacturing-query";
 export type { RecursiveManufacturingNode, RecursiveManufacturingOptions } from "../acquisition/recursive-manufacturing";
 export type { ReverseUse } from "../acquisition/reverse-use";
+export type {
+  AdvancedIndustryActivity,
+  AdvancedIndustryActivityKind,
+  AdvancedIndustryMaterial,
+  AdvancedIndustryProduct,
+  AdvancedIndustrySkill,
+  AdvancedIndustryTypeRef,
+} from "../industry/advanced-industry-query";
 export type {
   BlueprintActivityMaterial,
   BlueprintActivitySkill,
@@ -225,4 +241,16 @@ export function getManufacturingDependenciesForProduct(productTypeId: number): M
 
 export function getBlueprintScienceProfile(blueprintTypeId: number): BlueprintScienceProfile | null {
   return queryBlueprintScienceProfile(getDatabase(), blueprintTypeId);
+}
+
+export function getAdvancedIndustryActivitiesForSource(sourceTypeId: number): AdvancedIndustryActivity[] {
+  return queryAdvancedIndustryActivitiesForSource(getDatabase(), sourceTypeId);
+}
+
+export function getAdvancedIndustryActivitiesForProduct(productTypeId: number): AdvancedIndustryActivity[] {
+  return queryAdvancedIndustryActivitiesForProduct(getDatabase(), productTypeId);
+}
+
+export function getAdvancedIndustryAcquisitionGraph(productTypeId: number): AcquisitionGraph {
+  return buildAdvancedIndustryAcquisitionGraph(getDatabase(), productTypeId);
 }

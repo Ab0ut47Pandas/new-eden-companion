@@ -26,6 +26,20 @@ export interface ManufacturingActivityNode extends AcquisitionNodeBase {
   timeSeconds: number | null;
 }
 
+export interface InventionActivityNode extends AcquisitionNodeBase {
+  kind: "invention-activity";
+  sourceTypeId: number;
+  activity: "invention";
+  timeSeconds: number | null;
+}
+
+export interface ReactionActivityNode extends AcquisitionNodeBase {
+  kind: "reaction-activity";
+  formulaTypeId: number;
+  activity: "reaction";
+  timeSeconds: number | null;
+}
+
 export interface MaterialNode extends AcquisitionNodeBase {
   kind: "material";
   typeId: number;
@@ -51,6 +65,8 @@ export type AcquisitionNode =
   | ItemNode
   | BlueprintNode
   | ManufacturingActivityNode
+  | InventionActivityNode
+  | ReactionActivityNode
   | MaterialNode
   | SkillNode
   | AcquisitionSourceNode;
@@ -68,6 +84,7 @@ export interface UsesBlueprintEdge extends AcquisitionEdgeBase {
 export interface ProducesItemEdge extends AcquisitionEdgeBase {
   kind: "produces-item";
   quantity: number;
+  probability?: number | null;
 }
 
 export interface RequiresMaterialEdge extends AcquisitionEdgeBase {
@@ -91,7 +108,7 @@ export type AcquisitionEdge =
   | RequiresSkillEdge
   | AcquiresFromSourceEdge;
 
-export type AcquisitionOptionKind = "manufacturing" | "source";
+export type AcquisitionOptionKind = "manufacturing" | "invention" | "reaction" | "source";
 
 export interface AcquisitionOption {
   id: AcquisitionOptionId;
@@ -117,6 +134,7 @@ export interface AcquisitionGraphValidationIssue {
     | "missing-option-target"
     | "missing-option-edge"
     | "invalid-quantity"
+    | "invalid-probability"
     | "invalid-skill-level";
   id: string;
   message: string;
@@ -155,6 +173,11 @@ export function validateAcquisitionGraph(graph: AcquisitionGraph): AcquisitionGr
 
     if ((edge.kind === "produces-item" || edge.kind === "requires-material") && (!Number.isFinite(edge.quantity) || edge.quantity <= 0)) {
       issues.push({ code: "invalid-quantity", id: edge.id, message: `Edge ${edge.id} must use a positive finite quantity.` });
+    }
+
+    if (edge.kind === "produces-item" && edge.probability !== undefined && edge.probability !== null
+      && (!Number.isFinite(edge.probability) || edge.probability < 0 || edge.probability > 1)) {
+      issues.push({ code: "invalid-probability", id: edge.id, message: `Edge ${edge.id} has invalid probability ${edge.probability}.` });
     }
 
     if (edge.kind === "requires-skill" && (!Number.isInteger(edge.level) || edge.level < 0 || edge.level > 5)) {
