@@ -89,9 +89,10 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **ECO-05 — Location-aware opportunities.** Use character/location plus universe data to surface nearby relevant activities/assets/services while respecting ESI visibility limitations. PR #61 adds an authenticated nearby-opportunity scan that combines ESI-visible character location/assets with universe route data and known NEC market hubs, preserves inaccessible structure/route state as unknown, and never invents live sites or safety.
 - [ ] **ECO-06 — Asset cleanup view.** Present actionable `keep`, `use soon`, `sell`, `haul`, `unknown`, and `goal-critical` groups with reasons rather than destructive automatic actions.
 
-## Phase H — Mining, industry, PI, exploration, missions
+## Phase H — Mining, industry, hauling, PI, exploration, missions
 
 - [ ] **MIN-01 — Connect existing mining planner to progression/readiness.** Resource targets, fit readiness, supplies, processing skills, and why the resource matters to current goals.
+- [ ] **HAU-01 — Hauling progression/readiness vertical slice.** Make hauling a first-class activity rather than only a supporting dependency: explain what is being moved and why, prefer already-owned suitable ships, evaluate cargo capacity and trip count, ship/fit readiness, route distance/exposure, collateral where applicable, replacement risk and user hauling tolerance from supported evidence; cover own-cargo hauling plus current courier/freelance hauling paths, distinguish cargo efficiency from survivability, and never imply a route is safe.
 - [ ] **IND-01 — Manufacturing planner vertical slice.** Build a selected T1 item/ship from blueprint through materials, facility/skills, owned coverage, and missing inputs.
 - [ ] **IND-02 — Blueprint acquisition/research/copying guidance.** Teach BPO vs BPC, source boundaries, research/copy activities, and show only relationships that can be established from current data/sourced curation.
 - [ ] **IND-03 — Invention/reaction expansion.** Add current invention and reaction dependencies/skills/materials as separate graph activities with alternatives and terminal sources.
