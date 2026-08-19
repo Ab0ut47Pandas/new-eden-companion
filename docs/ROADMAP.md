@@ -15,16 +15,16 @@ This file is the persistent implementation state for the new-player progression 
 9. If blocked, leave the item unchecked and add a short `BLOCKED:` note describing exactly what prevents completion. Do not mark it done.
 10. Do not bump/release the application merely because infrastructure changed. Version/release only when a roadmap item explicitly requires a user-facing release.
 11. Preserve private user/session data. Static/rebuildable EVE data must remain separable from `data/eve-companion.db`.
-12. Treat `docs/END_STATE_EXPERIENCE.md`, `docs/GOAL_EXPERIENCE_REQUIREMENTS.md`, `docs/COMBAT_TRAINING_REQUIREMENTS.md`, and `docs/GOOD_HABITS_REQUIREMENTS.md` as mandatory release criteria. Do not consider `REL-01` complete until their required first-release workflows are implemented and manually user-tested.
+12. Treat `docs/END_STATE_EXPERIENCE.md`, `docs/GOAL_EXPERIENCE_REQUIREMENTS.md`, `docs/COMBAT_TRAINING_REQUIREMENTS.md`, `docs/GOOD_HABITS_REQUIREMENTS.md`, and `docs/ASSET_PRESERVATION_REQUIREMENTS.md` as mandatory release criteria. Do not consider `REL-01` complete until their required first-release workflows are implemented and manually user-tested where specified.
 13. When all checklist items are complete, stop making code changes and report that the roadmap is complete.
 
 ## Current state
 
-- Current work item: `ECO-06`
-- Last completed: `ECO-05`
+- Current work item: `MIN-01`
+- Last completed: `ECO-06`
 - Last updated: 2026-08-19
 - Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. Development resumed after user confirmation.
-- Mandatory end-state experience: tracked in the four requirement documents above; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, ownership-aware/self-sufficiency goal planning, goal-first progressive disclosure, Combat School, good-habits coaching, and their installed-app checkpoints must ship before `REL-01`.
+- Mandatory end-state experience: tracked in the requirement documents above; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, ownership-aware/self-sufficiency goal planning, goal-first progressive disclosure, Combat School, good-habits coaching, conservative asset preservation, and their installed-app checkpoints must ship before `REL-01`.
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
 ---
@@ -85,9 +85,9 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **ECO-01 — Asset usefulness classifier.** Relate owned items to saved goals, active activities, fitting recommendations, and manufacturing dependencies before recommending keep/sell. Evidence-first classifier added in PR #56; unknown usefulness remains unknown rather than becoming an automatic sell recommendation.
 - [x] **ECO-02 — Market valuation service.** Establish current market data source/caching and calculate local/nearby-hub value with timestamps and data-quality caveats. PR #58 uses CCP ESI regional market orders, five-minute cache alignment, visible-depth valuation, explicit location/hub scopes, and unknown/partial results instead of extrapolated prices.
 - [x] **ECO-03 — Sell-here-vs-haul decision support.** Compare price improvement against jumps, volume, risk, and user-configurable hauling tolerance; explain the recommendation. PR #59 adds an explainable policy-driven decision model with explicit unknown/conditional outcomes and no safety guarantee.
-- [x] **ECO-04 — Stockpile recommendations.** Identify materials/supplies useful to active goals and distinguish deliberate stockpile from random clutter. PR #60 adds evidence-backed stockpile targets, quantified shortfall/reserve/excess-to-known-need math only when target quantities are supplied, and explicit unassigned/unknown handling instead of treating unexplained inventory as junk.
+- [x] **ECO-04 — Stockpile recommendations.** Identify materials/supplies useful to active goals and distinguish deliberate stockpile from random clutter. PR #60 adds evidence-backed stockpile targets and quantified shortfall/reserve/excess-to-known-need math only when target quantities are supplied. PR #62 adds the durable intrinsic-preservation rule in `docs/ASSET_PRESERVATION_REQUIREMENTS.md`: researched/useful blueprints, fitted or allocated items, supported hard-to-reacquire/limited-source items, and uncertain rarity/source/replaceability remain Keep/Review independent of active-goal use; Sell requires positive replaceability/liquidity evidence after every protection and uncertainty check.
 - [x] **ECO-05 — Location-aware opportunities.** Use character/location plus universe data to surface nearby relevant activities/assets/services while respecting ESI visibility limitations. PR #61 adds an authenticated nearby-opportunity scan that combines ESI-visible character location/assets with universe route data and known NEC market hubs, preserves inaccessible structure/route state as unknown, and never invents live sites or safety.
-- [ ] **ECO-06 — Asset cleanup view.** Present actionable `keep`, `use soon`, `sell`, `haul`, `unknown`, and `goal-critical` groups with reasons rather than destructive automatic actions.
+- [x] **ECO-06 — Asset cleanup view.** Present actionable `keep`, `use soon`, `sell`, `haul`, `unknown`, and `goal-critical` groups with reasons rather than destructive automatic actions. PR #62 adds the evidence-first cleanup page, ESI-visible blueprint-state preservation, fitted/allocated protection, conservative Review handling for unresolved rarity/source/replaceability, and a positive-evidence threshold before Sell or Haul appears.
 
 ## Phase H — Mining, industry, PI, exploration, missions
 
@@ -141,4 +141,4 @@ Advanced post-release direction: extend Combat School into a readable small-gang
 
 ## Completion rule
 
-The roadmap is complete when every checkbox above is `[x]`, every mandatory first-release requirement in `docs/END_STATE_EXPERIENCE.md`, `docs/GOAL_EXPERIENCE_REQUIREMENTS.md`, `docs/COMBAT_TRAINING_REQUIREMENTS.md`, and `docs/GOOD_HABITS_REQUIREMENTS.md` is implemented, QA-03 has passed in the installed app, CI is green on the merged implementation, the release candidate has passed clean-install/update tests, and no `BLOCKED:` notes remain unresolved.
+The roadmap is complete when every checkbox above is `[x]`, every mandatory first-release requirement in `docs/END_STATE_EXPERIENCE.md`, `docs/GOAL_EXPERIENCE_REQUIREMENTS.md`, `docs/COMBAT_TRAINING_REQUIREMENTS.md`, `docs/GOOD_HABITS_REQUIREMENTS.md`, and `docs/ASSET_PRESERVATION_REQUIREMENTS.md` is implemented, QA-03 has passed in the installed app, CI is green on the merged implementation, the release candidate has passed clean-install/update tests, and no `BLOCKED:` notes remain unresolved.

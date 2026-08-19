@@ -1,3 +1,5 @@
+import type { AssetCleanupDecision } from "@/lib/economy/asset-cleanup";
+
 export type AdvicePriority = "now" | "next" | "watch";
 
 export interface AdviceCard {
@@ -102,6 +104,7 @@ export interface DashboardData {
     estimatedValue: number;
     locations: AssetLocationView[];
     topItems: AssetItemView[];
+    cleanup?: AssetCleanupDecision[];
     truncated: boolean;
   };
   skills: {
