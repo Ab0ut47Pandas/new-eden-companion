@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 import { AbyssalFitCatalog } from "@/components/abyssal-fit-catalog";
@@ -68,26 +68,21 @@ export default async function AbyssalActivityPage({ searchParams }: AbyssalActiv
             {options.map((option) => {
               const active = option.id === selected.id;
               return (
-                <article className={styles.infoCard} key={option.id}>
+                <Link
+                  aria-current={active ? "page" : undefined}
+                  className={styles.resultCard}
+                  href={`/activities/abyssal?fit=${encodeURIComponent(option.id)}`}
+                  key={option.id}
+                >
                   <div className={styles.resultTop}>
                     <span className={styles.kindPill}>T{option.tier}</span>
                     <span className={styles.pill}>{option.weather}</span>
                     {active ? <span className={styles.mutedPill}>selected</span> : null}
                   </div>
                   <h3>{option.shipName}</h3>
-                  <p className={styles.description}>{option.fitName}</p>
-                  <p className={styles.description}>{option.summary}</p>
-                  <div className={styles.alternatives}>
-                    <Link className={styles.secondaryLink} href={`/activities/abyssal?fit=${encodeURIComponent(option.id)}`}>
-                      {active ? "Selected briefing" : "Use this briefing"}
-                    </Link>
-                    {option.sourceUrl ? (
-                      <a className={styles.secondaryLink} href={option.sourceUrl} target="_blank" rel="noreferrer">
-                        Fit source <ExternalLink size={12} />
-                      </a>
-                    ) : null}
-                  </div>
-                </article>
+                  <p>{option.fitName}</p>
+                  <p>{option.summary}</p>
+                </Link>
               );
             })}
           </div>
