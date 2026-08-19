@@ -146,7 +146,7 @@ export class GoalStore {
     const rows = this.database.prepare(`
       SELECT * FROM saved_goals
       WHERE character_id = ?
-      ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END, updated_at DESC, created_at DESC
+      ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END, updated_at DESC, created_at DESC, rowid DESC
     `).all(characterId) as unknown as GoalRow[];
     return rows.map((row) => this.inflateGoal(row));
   }
