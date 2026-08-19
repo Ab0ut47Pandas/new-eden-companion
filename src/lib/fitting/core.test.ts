@@ -65,14 +65,6 @@ describe("FIT-02 deterministic fitting core", () => {
       shieldHp: 450,
       armorHp: 450,
       structureHp: 350,
-      shieldEmResist: 0,
-      shieldThermalResist: 0.2,
-      shieldKineticResist: 0.4,
-      shieldExplosiveResist: 0.5,
-      armorEmResist: 0.6,
-      armorThermalResist: 0.35,
-      armorKineticResist: 0.25,
-      armorExplosiveResist: 0.1,
       capacitorCapacity: 250,
       capacitorRechargeTime: 125,
       capacitorStable: 1,
@@ -80,6 +72,14 @@ describe("FIT-02 deterministic fitting core", () => {
       droneBandwidth: 0,
       droneBay: 0,
     });
+    expect(result.metrics.shieldEmResist).toBeCloseTo(0, 12);
+    expect(result.metrics.shieldThermalResist).toBeCloseTo(0.2, 12);
+    expect(result.metrics.shieldKineticResist).toBeCloseTo(0.4, 12);
+    expect(result.metrics.shieldExplosiveResist).toBeCloseTo(0.5, 12);
+    expect(result.metrics.armorEmResist).toBeCloseTo(0.6, 12);
+    expect(result.metrics.armorThermalResist).toBeCloseTo(0.35, 12);
+    expect(result.metrics.armorKineticResist).toBeCloseTo(0.25, 12);
+    expect(result.metrics.armorExplosiveResist).toBeCloseTo(0.1, 12);
     expect(result.metrics.ehp).toBeCloseTo(1809.74442, 5);
     expect(result.unknownMetrics.weaponDps).toContain("No supported weapon profile");
     expect(result.unknownMetrics.optimalRange).toBeDefined();
