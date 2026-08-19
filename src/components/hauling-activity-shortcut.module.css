@@ -1,6 +1,6 @@
 .shortcut {
   position: fixed;
-  left: 550px;
+  left: 690px;
   bottom: 18px;
   z-index: 45;
   display: inline-flex;
@@ -9,9 +9,9 @@
   min-height: 40px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(108, 183, 217, 0.24);
+  border: 1px solid rgba(226, 184, 93, 0.24);
   background: rgba(10, 20, 25, 0.94);
-  color: #dceff7;
+  color: #f7e8c4;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.26);
   text-decoration: none;
   font-size: 12px;
@@ -21,14 +21,14 @@
 }
 
 .shortcut:hover {
-  color: #081014;
-  background: #6cb7d9;
-  border-color: #6cb7d9;
+  color: #171105;
+  background: #e2b85d;
+  border-color: #e2b85d;
 }
 
 @media (max-width: 900px) {
   .shortcut {
-    left: 16px;
+    left: 154px;
     bottom: 64px;
   }
 }
