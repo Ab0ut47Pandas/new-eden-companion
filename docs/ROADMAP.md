@@ -20,10 +20,10 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `FIT-02`
-- Last completed: `FIT-01`
+- Current work item: `FIT-03`
+- Last completed: `FIT-02`
 - Last updated: 2026-08-20
-- Roadmap reconciliation: FIT-01 was implemented and merged in PR #84 / commit `184abecbb5378aa05c27e7a514ba7cd8bbf3bd5e`; this update advances the first genuinely unimplemented item to FIT-02.
+- Roadmap reconciliation: FIT-02 was implemented and merged in PR #87 / commit `ab6df07ab0677afa4b751ba4e2d53f63835fcf56`; this update advances the first genuinely unimplemented item to FIT-03.
 - Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. HAU-02's installed-app checklist remains outstanding because the user explicitly directed development to continue. IND-01, IND-02, and IND-03 installed-app checkpoints also remain recorded for QA; pending manual checkpoints do not block subsequent implementation by explicit user direction.
 - Mandatory end-state experience: tracked in the requirement documents above; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, ownership-aware/self-sufficiency goal planning, goal-first progressive disclosure, Combat School, good-habits coaching, conservative asset preservation, and their installed-app checkpoints must ship before `REL-01`.
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
@@ -107,7 +107,7 @@ This file is the persistent implementation state for the new-player progression 
 ## Phase I — Fitting and combat intelligence
 
 - [x] **FIT-01 — Fitting-engine scope and validation harness.** Define exact stat coverage and golden-reference tests against current authoritative Dogma/Pyfa-verifiable cases before building UI. PR #84 freezes bounded fitting metric coverage, documents authoritative CCP Dogma/SDE and unknown-state boundaries, adds current-SDE primitive golden references, and provides a reusable comparison harness that separates incorrect values from missing/unknown values; whole-fit Pyfa/client comparisons remain required as FIT-02 subsystems land.
-- [ ] **FIT-02 — Deterministic fitting core.** CPU, powergrid, slots/hardpoints, skills, speed/mass/signature, tank/resists/EHP, capacitor, weapons/drones/application/range as supported by validated formulas/data.
+- [x] **FIT-02 — Deterministic fitting core.** CPU, powergrid, slots/hardpoints, skills, speed/mass/signature, tank/resists/EHP, capacitor, weapons/drones/application/range as supported by validated formulas/data. PR #87 adds a resolved-Dogma deterministic core for resource and legality checks, explicit skill gaps, mobility, HP/resists/EHP, capacitor equilibrium, turret/missile paper damage and range primitives, drone damage/bay/bandwidth, explicit stacking groups, tri-state fit validity, and current-SDE-derived regression fixtures while preserving unsupported effects and target application as unknown.
 - [ ] **FIT-03 — Interactive ship builder.** Hull selection, module/rig/charge/drone manipulation, fit validity, import/export, and real-time deterministic stat updates.
 - [ ] **FIT-04 — Fit identity classifier.** Score brawler, scram-kiter, kiter, sniper, tackle, active/buffer/passive tank, EWAR/neut/logi/other roles from explainable fit facts.
 - [ ] **FIT-05 — Contradiction/weakness rules.** Detect mismatched range plans, mobility/tank conflicts, cap dependence, resist holes, poor tackle compatibility, application problems, and other explainable weaknesses.
