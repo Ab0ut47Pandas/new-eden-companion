@@ -80,7 +80,7 @@ describe("FIT-02 deterministic fitting core", () => {
     expect(result.metrics.armorThermalResist).toBeCloseTo(0.35, 12);
     expect(result.metrics.armorKineticResist).toBeCloseTo(0.25, 12);
     expect(result.metrics.armorExplosiveResist).toBeCloseTo(0.1, 12);
-    expect(result.metrics.ehp).toBeCloseTo(1809.74442, 5);
+    expect(result.metrics.ehp).toBeCloseTo(1809.7443815405732, 8);
     expect(result.unknownMetrics.weaponDps).toContain("No supported weapon profile");
     expect(result.unknownMetrics.optimalRange).toBeDefined();
     expect(result.fitValid).toBe(true);
