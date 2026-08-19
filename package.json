@@ -1,6 +1,6 @@
 {
   "name": "new-eden-companion",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "private": true,
   "description": "A local-first, explainable EVE Online decision companion powered by ESI.",
   "engines": {
