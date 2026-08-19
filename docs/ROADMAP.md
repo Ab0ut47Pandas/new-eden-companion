@@ -20,10 +20,10 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `PI-03`
-- Last completed: `PI-02`
+- Current work item: `EXP-01`
+- Last completed: `PI-03`
 - Last updated: 2026-08-19
-- Roadmap reconciliation: PI-02 was implemented and merged in PR #76 / commit `0e7e40cb31b42100c734471cd821f041503e23bb`; this update advances the first genuinely unimplemented item to PI-03 rather than rebuilding already-merged work.
+- Roadmap reconciliation: PI-03 was implemented and merged in PR #78 / commit `ffec5310b62a8cc61e6daf8a361977cd7e041a14`; this update advances the first genuinely unimplemented item to EXP-01 rather than rebuilding already-merged work.
 - Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. HAU-02's installed-app checklist remains outstanding because the user explicitly directed development to continue. IND-01, IND-02, and IND-03 installed-app checkpoints also remain recorded for QA; pending manual checkpoints do not block subsequent implementation by explicit user direction.
 - Mandatory end-state experience: tracked in the requirement documents above; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, ownership-aware/self-sufficiency goal planning, goal-first progressive disclosure, Combat School, good-habits coaching, conservative asset preservation, and their installed-app checkpoints must ship before `REL-01`.
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
@@ -100,7 +100,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **IND-03 — Invention/reaction expansion.** Add current invention and reaction dependencies/skills/materials as separate graph activities with alternatives and terminal sources. PR #72 adds separate SDE-driven invention/reaction graph activities, probability-aware invention outputs, reaction formula paths, ESI-visible source/material/skill overlays, security-context guidance, and explicit facility/access/unknown boundaries.
 - [x] **PI-01 — Current PI static data/source model.** Verify current SDE/ESI PI schemas, commodities/schematics/resources, required scope, and update the graph with PI production relationships. PR #74 imports current CCP `planetSchematics` JSONL into schema-v3 static data, adds deterministic PI schematic queries and PI acquisition-graph relationships, documents current SDE/ESI PI boundaries and required scope, preserves unresolved references, and leaves unsupported extraction paths unknown.
 - [x] **PI-02 — Colony state/readiness dashboard.** Read ESI-visible colonies/routes/pins/extractors and explain expiration/starvation/storage attention without pretending NEC sees the in-game resource heatmap. PR #76 adds the authenticated Planetary Industry colony dashboard, ESI-visible extractor/route/factory/storage attention modeling, the required `esi-planets.manage_planets.v1` profile scope, and explicit unknown boundaries for live starvation, resource heatmaps, storage fullness, future yield, safety, and client state.
-- [ ] **PI-03 — PI production planner.** Given a commodity goal, recursively show planet/resource/input chains, colony gaps, and a copyable setup/checklist.
+- [x] **PI-03 — PI production planner.** Given a commodity goal, recursively show planet/resource/input chains, colony gaps, and a copyable setup/checklist. PR #78 adds recursive schematic production planning, quantity scaling by whole cycles, depth/cycle protection, ESI-visible colony-gap evidence, progressive disclosure, and a copyable setup checklist while preserving raw/unsupported extraction sources as unknown.
 - [ ] **EXP-01 — Exploration beginner vertical slice.** Scanning/probe preparation, site types, space-risk explanation, first-run briefing, and loot interpretation using current sourced mechanics.
 - [ ] **MIS-01 — Mission/PvE progression vertical slice.** Mission level/hull/fit/supply readiness, damage/tank guidance, upgrade value, and warnings against financially premature hull jumps.
 
