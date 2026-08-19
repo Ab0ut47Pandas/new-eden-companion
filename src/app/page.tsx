@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 import { AbyssalActivityShortcut } from "@/components/abyssal-activity-shortcut";
+import { AssetCleanupShortcut } from "@/components/asset-cleanup-shortcut";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { ItemExplorerShortcut } from "@/components/item-explorer-shortcut";
 import { SkillExportButton } from "@/components/skill-export-button";
@@ -63,6 +64,7 @@ export default async function Home({ searchParams }: HomeProps) {
         liveError={liveError}
       />
       <ItemExplorerShortcut />
+      <AssetCleanupShortcut />
       <AbyssalActivityShortcut />
       <SkillExportButton
         characterName={dashboard.character.name}
