@@ -14,7 +14,7 @@ export interface PlanetarySchematicProduct extends PlanetaryTypeRef {
   quantity: number;
 }
 
-export interface PlanetarySchematicPin extends PlanetaryTypeRef {}
+export type PlanetarySchematicPin = PlanetaryTypeRef;
 
 export interface PlanetarySchematic {
   schematicId: number;
