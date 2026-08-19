@@ -15,16 +15,16 @@ This file is the persistent implementation state for the new-player progression 
 9. If blocked, leave the item unchecked and add a short `BLOCKED:` note describing exactly what prevents completion. Do not mark it done.
 10. Do not bump/release the application merely because infrastructure changed. Version/release only when a roadmap item explicitly requires a user-facing release.
 11. Preserve private user/session data. Static/rebuildable EVE data must remain separable from `data/eve-companion.db`.
-12. Treat `docs/END_STATE_EXPERIENCE.md` as mandatory release criteria. Do not consider `REL-01` complete until those workflows are implemented and manually user-tested.
+12. Treat `docs/END_STATE_EXPERIENCE.md`, `docs/GOAL_EXPERIENCE_REQUIREMENTS.md`, `docs/COMBAT_TRAINING_REQUIREMENTS.md`, and `docs/GOOD_HABITS_REQUIREMENTS.md` as mandatory release criteria. Do not consider `REL-01` complete until their required first-release workflows are implemented and manually user-tested.
 13. When all checklist items are complete, stop making code changes and report that the roadmap is complete.
 
 ## Current state
 
-- Current work item: `ECO-03`
-- Last completed: `ECO-02`
+- Current work item: `ECO-04`
+- Last completed: `ECO-03`
 - Last updated: 2026-08-19
 - Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. Development resumed after user confirmation.
-- Mandatory end-state experience: tracked in `docs/END_STATE_EXPERIENCE.md`; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, and their final installed-app checkpoint must ship before `REL-01`.
+- Mandatory end-state experience: tracked in the four requirement documents above; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, ownership-aware/self-sufficiency goal planning, goal-first progressive disclosure, Combat School, good-habits coaching, and their installed-app checkpoints must ship before `REL-01`.
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
 ---
@@ -84,7 +84,7 @@ This file is the persistent implementation state for the new-player progression 
 
 - [x] **ECO-01 — Asset usefulness classifier.** Relate owned items to saved goals, active activities, fitting recommendations, and manufacturing dependencies before recommending keep/sell. Evidence-first classifier added in PR #56; unknown usefulness remains unknown rather than becoming an automatic sell recommendation.
 - [x] **ECO-02 — Market valuation service.** Establish current market data source/caching and calculate local/nearby-hub value with timestamps and data-quality caveats. PR #58 uses CCP ESI regional market orders, five-minute cache alignment, visible-depth valuation, explicit location/hub scopes, and unknown/partial results instead of extrapolated prices.
-- [ ] **ECO-03 — Sell-here-vs-haul decision support.** Compare price improvement against jumps, volume, risk, and user-configurable hauling tolerance; explain the recommendation.
+- [x] **ECO-03 — Sell-here-vs-haul decision support.** Compare price improvement against jumps, volume, risk, and user-configurable hauling tolerance; explain the recommendation. PR #59 adds an explainable policy-driven decision model with explicit unknown/conditional outcomes and no safety guarantee.
 - [ ] **ECO-04 — Stockpile recommendations.** Identify materials/supplies useful to active goals and distinguish deliberate stockpile from random clutter.
 - [ ] **ECO-05 — Location-aware opportunities.** Use character/location plus universe data to surface nearby relevant activities/assets/services while respecting ESI visibility limitations.
 - [ ] **ECO-06 — Asset cleanup view.** Present actionable `keep`, `use soon`, `sell`, `haul`, `unknown`, and `goal-critical` groups with reasons rather than destructive automatic actions.
@@ -121,17 +121,24 @@ This file is the persistent implementation state for the new-player progression 
 - [ ] **UX-04 — First-run onboarding.** Explain what NEC can/cannot see, connect character, establish approximate goals/preferences, and offer `I don't know what to do` immediately.
 - [ ] **UX-05 — Suggested session.** Compose a short user-facing, explainable plan for what the connected character can realistically do right now, including preparation when appropriate and honest unknowns rather than generic recommendations.
 - [ ] **UX-06 — Try something new.** Suggest a plausible different activity, respect local `tried`/`not interested` feedback and readiness constraints, and never pretend ESI exposes complete play history.
+- [ ] **UX-07 — Goal-first progressive disclosure and dynamic subgoals.** Turn a selected goal into one obvious next action plus a compact 4–6 milestone path, recursively insert missing capabilities such as mining/combat/hauling/blueprint acquisition only as needed, preserve the parent reason, recalculate as reliable state changes, and reveal the full dependency graph only on demand.
+- [ ] **PLN-01 — Owned-part-aware build and fitting plans.** Reuse ESI-visible owned hulls, modules, rigs, charges, drones, materials, supplies, and blueprints first; show compact owned/missing coverage and recommend acquisition only for the uncovered remainder while preserving inaccessible/unknown state.
+- [ ] **PLN-02 — Independence/self-sufficiency planner.** Support Independent/Balanced/Buy-first planning; recursively consume owned inputs, show evidence-backed manufacture/mine/PI/reaction/salvage/exploration/other source paths, required blueprints/skills/facilities where established, and explicit non-manufacturable/unknown boundaries without defaulting everything to market purchase.
+- [ ] **HAB-01 — Good-habits coaching with mining vertical slice.** Prevent headline-metric-only recommendations by exposing performance versus survivability, awareness, escape/recovery, replacement risk, solo-vs-fleet assumptions, and attention requirements; compare at least a performance-oriented and solo-survivability mining plan without promising a safe/ungankable fit.
+- [ ] **CBT-01 — Combat School 1v1 vertical slice.** Use validated fits and the deterministic FIT/PVP engines to teach fit identity, explicit-range matchup advantage, module counters/threats, range/engagement conditions, and valid avoid/disengage outcomes with explainable scored feedback and no fake win percentages. Keep the underlying model compatible with later multi-ship tactical-board expansion.
 - [ ] **CMP-01 — NEC Campaign foundation.** Define optional campaign/chapter/objective models and per-character local progress with explicit ESI-observed, user-confirmed, and unknown completion evidence; never fabricate in-game rewards or quest state.
 - [ ] **CMP-02 — NEC Campaign vertical slice.** Ship one coherent quest-style progression campaign made of real EVE activities with small objectives, readiness/acquisition/fitting help, manual completion where required, and meaningful NEC-local milestones.
-- [ ] **STY-01 — Story Guide framework.** Add spoiler-light overview, chapter/mission navigation, optional detailed walkthrough, character-specific preflight, sourced branches/consequences, fit guidance, and local manual guide state for real EVE narrative content.
+- [ ] **STY-01 — Story Guide framework.** Let the player choose supported real EVE narrative content and provide spoiler-light overview, chapter/mission navigation, optional detailed walkthrough, character-specific preflight, sourced branches/consequences, fit guidance, and local manual guide state.
 - [ ] **STY-02 — Guided Epic Arc vertical slice.** Ship at least one fully guided current Epic Arc using verified current sources, without inventing mission state, branches, consequences, or rewards that ESI/authoritative sources do not establish.
 - [ ] **QA-01 — Cross-system regression suite.** Golden tests for representative beginner progression chains, acquisition graphs, readiness states, asset decisions, Abyssal flow, PI/industry paths, and fits.
 - [ ] **QA-02 — Security/privacy review.** Re-review SSO scopes, token/session storage, external requests, static DB updates, market sources, telemetry assumptions, and data retention after the new systems land.
-- [ ] **QA-03 — Mandatory end-state installed-app test.** Manually validate Suggested session, Try something new feedback, NEC Campaign progression/manual completion, Story Guide/Epic Arc navigation, honest unknown state, and persistence across restart as specified in `docs/END_STATE_EXPERIENCE.md`.
+- [ ] **QA-03 — Mandatory end-state installed-app test.** Manually validate Suggested session, Try something new feedback, ownership-aware/self-sufficient goal planning with dynamic subgoals/progressive disclosure, good-habits coaching, Combat School, NEC Campaign progression/manual completion, Story Guide/Epic Arc navigation, honest unknown state, and persistence across restart as specified by the requirement documents.
 - [ ] **REL-01 — Progression-coach release candidate.** Package the validated static DB, perform clean-install/update/rollback tests on Windows, document limitations, and publish the first release where the progression coach is a coherent user-facing product. `REL-01` cannot complete until every mandatory end-state item and QA-03 are complete.
+
+Advanced post-release direction: extend Combat School into a readable small-gang tactical board supporting scenarios such as 2v2, 4v4, asymmetric engagements, and multi-team fights; let players assign model-supported damage/EWAR/tackle/logistics relationships between ships and grade tactical assignments without pretending there is always one uniquely correct fleet plan. Player-owned Upwell/station progression remains a later optional campaign rather than a first-release blocker.
 
 ---
 
 ## Completion rule
 
-The roadmap is complete when every checkbox above is `[x]`, every requirement in `docs/END_STATE_EXPERIENCE.md` is implemented, QA-03 has passed in the installed app, CI is green on the merged implementation, the release candidate has passed clean-install/update tests, and no `BLOCKED:` notes remain unresolved.
+The roadmap is complete when every checkbox above is `[x]`, every mandatory first-release requirement in `docs/END_STATE_EXPERIENCE.md`, `docs/GOAL_EXPERIENCE_REQUIREMENTS.md`, `docs/COMBAT_TRAINING_REQUIREMENTS.md`, and `docs/GOOD_HABITS_REQUIREMENTS.md` is implemented, QA-03 has passed in the installed app, CI is green on the merged implementation, the release candidate has passed clean-install/update tests, and no `BLOCKED:` notes remain unresolved.
