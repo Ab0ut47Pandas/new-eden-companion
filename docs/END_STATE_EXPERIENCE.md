@@ -36,6 +36,12 @@ This suggestion should:
 - allow the user to dismiss/not-interest an activity so “try something new” does not repeatedly nag them with the same suggestion;
 - link directly into that activity’s beginner briefing/readiness page.
 
+## Goal-first progressive disclosure
+
+NEC should follow the product rules in `docs/GOAL_EXPERIENCE_REQUIREMENTS.md`: evaluate deep dependency chains internally but show the player one obvious next action by default. Goal experiences such as **“I want to fly this ship”** should expose compact readiness/ownership/milestone summaries first, then let the player drill into exact skills, missing items, blueprint/material acquisition, self-sufficiency chains, and the full dependency graph only when requested.
+
+The default experience must answer **“What do I do next?”** without requiring the player to read a wall of text.
+
 ## Build and fitting ownership awareness
 
 Whenever NEC recommends a ship fit, industrial build, campaign loadout, consumable package, or other shopping/build list, it must first account for what the character already owns through the ESI-visible asset/fitting/cargo data that is actually available.
@@ -119,4 +125,4 @@ The guide must not claim NEC knows the character's exact current mission step un
 
 ## Completion requirement
 
-Before the progression-coach release candidate is considered complete, **Suggested session**, **Try something new**, the initial **NEC Campaign** experience, **owned-part-aware build planning**, and the **independence/self-sufficiency planning mode** must be surfaced in the user-facing progression experience, have explainable recommendations, preserve unknown data honestly, and pass a real-user usability checkpoint. Story Guide mode must ship at least one fully guided current Epic Arc vertical slice with spoiler-light and detailed walkthrough paths so its design is validated against real EVE narrative content rather than remaining a documentation-only concept.
+Before the progression-coach release candidate is considered complete, **Suggested session**, **Try something new**, the initial **NEC Campaign** experience, **goal-first progressive disclosure**, **owned-part-aware build planning**, and the **independence/self-sufficiency planning mode** must be surfaced in the user-facing progression experience, have explainable recommendations, preserve unknown data honestly, and pass a real-user usability checkpoint. Story Guide mode must ship at least one fully guided current Epic Arc vertical slice with spoiler-light and detailed walkthrough paths so its design is validated against real EVE narrative content rather than remaining a documentation-only concept.
