@@ -1,7 +1,7 @@
 import type { ReadinessExplanation } from "../readiness/explanation";
 import type { FitTemplate } from "../ships/task-planner";
 import { listVettedAbyssalFits, type VettedAbyssalFitProfile } from "./abyssal-fit-catalog";
-import { buildActivityBriefing, type ActivityBriefingDefinition, type ActivityBriefingView } from "./briefing";
+import { buildActivityBriefing, type ActivityBriefingDefinition, type ActivityBriefingEntry, type ActivityBriefingView } from "./briefing";
 import { buildActivityCheatSheet, type ActivityCheatSheetView } from "./cheat-sheet";
 
 export type AbyssalFirstRunTier = 0 | 1;
@@ -85,13 +85,13 @@ function securityGuidance(tier: AbyssalFirstRunTier): string {
     : "Activate in 0.8 security or lower. Current rules do not permit filaments above T0 in 0.9 security systems.";
 }
 
-function lootGuidance(tier: AbyssalFirstRunTier) {
-  const entries = [
+function lootGuidance(tier: AbyssalFirstRunTier): ActivityBriefingEntry[] {
+  const entries: ActivityBriefingEntry[] = [
     {
       id: "main-cache",
       label: "Main loot: destroy and loot the Triglavian Bioadaptive Cache.",
       detail: "This is the main loot container in each pocket. Prioritize it over optional side loot when time is tight.",
-      tone: "recommended" as const,
+      tone: "recommended",
     },
   ];
 
@@ -101,13 +101,13 @@ function lootGuidance(tier: AbyssalFirstRunTier) {
         id: "extraction-node",
         label: "Optional at T1+: Triglavian Extraction Node.",
         detail: "This is bonus side loot. Skip it if reaching it would cost too much time or put the run at risk.",
-        tone: "info" as const,
+        tone: "info",
       },
       {
         id: "extraction-subnode",
         label: "Optional at T1+: Triglavian Extraction SubNode.",
         detail: "This is bonus side loot and is not guaranteed to contain loot. The main Bioadaptive Cache comes first.",
-        tone: "info" as const,
+        tone: "info",
       },
     );
   }
