@@ -4,6 +4,14 @@
   padding: 32px 0 64px;
 }
 
+.piNav {
+  width: min(1180px, calc(100% - 32px));
+  margin: 20px auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .header {
   display: flex;
   gap: 16px;
@@ -118,5 +126,6 @@
 
 @media (max-width: 720px) {
   .page { width: min(100% - 20px, 1180px); padding-top: 20px; }
+  .piNav { width: min(100% - 20px, 1180px); }
   .header { flex-direction: column; }
 }
