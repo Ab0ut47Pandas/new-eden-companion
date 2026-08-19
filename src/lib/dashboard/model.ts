@@ -104,7 +104,7 @@ export interface DashboardData {
     estimatedValue: number;
     locations: AssetLocationView[];
     topItems: AssetItemView[];
-    cleanup: AssetCleanupDecision[];
+    cleanup?: AssetCleanupDecision[];
     truncated: boolean;
   };
   skills: {
