@@ -84,6 +84,35 @@ export async function esiPaginated<T>(
   return results.flat();
 }
 
+export async function esiPaginatedPublic<T>(
+  route: string,
+  options: {
+    query?: EsiOptions["query"];
+    revalidate?: number;
+    maxPages?: number;
+  } = {},
+): Promise<T[]> {
+  const first = await esiResponse(route, {
+    query: { ...options.query, page: 1 },
+    revalidate: options.revalidate,
+  });
+  const firstPage = (await first.json()) as T[];
+  const pages = Math.min(Number(first.headers.get("X-Pages") ?? "1"), options.maxPages ?? 50);
+  if (pages <= 1) return firstPage;
+
+  const results: T[][] = [firstPage];
+  for (let start = 2; start <= pages; start += 4) {
+    const batch = Array.from({ length: Math.min(4, pages - start + 1) }, (_, index) =>
+      esi<T[]>(route, {
+        query: { ...options.query, page: start + index },
+        revalidate: options.revalidate,
+      }),
+    );
+    results.push(...(await Promise.all(batch)));
+  }
+  return results.flat();
+}
+
 export async function resolveNames(ids: number[]): Promise<Map<number, string>> {
   const unique = [...new Set(ids)].filter(Number.isSafeInteger);
   const names = new Map<number, string>();
