@@ -77,7 +77,7 @@ export const ABYSSAL_LOOT_CONTAINERS: readonly AbyssalLootContainerKnowledge[] =
     role: "optional-side",
     availableFromTier: 1,
     guidance: "Optional side loot found from T1 upward. It can be away from your route, so take it only when time and positioning are comfortable.",
-    timerPriority: "Bonus loot. Skip it when the detour threatens your time margin.",
+    timerPriority: "Bonus loot. Skip side nodes when the detour threatens your time margin.",
   },
   {
     id: "extraction-subnode",
@@ -241,5 +241,5 @@ export function teachAbyssalLootItem(input: AbyssalLootTeachingItemInput): Abyss
 }
 
 export function noOrdinaryNpcWreckLootGuidance(): string {
-  return "Combat NPCs are not your normal loot source here. Focus on the Bioadaptive Cache, then consider Extraction Nodes/SubNodes only where they exist and only if time allows.";
+  return "Combat NPCs do not leave ordinary loot/salvage wrecks or bounties. Focus on the Bioadaptive Cache, then consider Extraction Nodes/SubNodes only where they exist and only if time allows.";
 }
