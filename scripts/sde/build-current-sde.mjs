@@ -6,11 +6,20 @@ import { pipeline } from "node:stream/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
-import { buildStaticDatabase, STATIC_DB_SCHEMA_VERSION } from "./build-static-db.mjs";
+import { buildStaticDatabase, STATIC_DB_SCHEMA_VERSION } from "./build-static-db-v2.mjs";
 
 const LATEST_URL = "https://developers.eveonline.com/static-data/tranquility/latest.jsonl";
 const ARCHIVE_URL = (build) => `https://developers.eveonline.com/static-data/tranquility/eve-online-static-data-${build}-jsonl.zip`;
-const REQUIRED_DATASETS = ["categories.jsonl", "groups.jsonl", "types.jsonl", "typeMaterials.jsonl", "blueprints.jsonl", "typeDogma.jsonl"];
+const REQUIRED_DATASETS = [
+  "categories.jsonl",
+  "groups.jsonl",
+  "types.jsonl",
+  "typeMaterials.jsonl",
+  "blueprints.jsonl",
+  "typeDogma.jsonl",
+  "mapSolarSystems.jsonl",
+  "mapStargates.jsonl",
+];
 
 export function parseLatestBuild(text) {
   for (const rawLine of text.split(/\r?\n/)) {
@@ -92,7 +101,7 @@ function validateDatabase(filename, expectedBuild) {
     if (meta.sde_build !== String(expectedBuild)) throw new Error(`Database build ${meta.sde_build ?? "missing"} does not match expected CCP build ${expectedBuild}.`);
     if (meta.schema_version !== String(STATIC_DB_SCHEMA_VERSION)) throw new Error(`Unexpected static DB schema version ${meta.schema_version ?? "missing"}.`);
     const counts = {};
-    for (const table of ["categories", "groups", "types", "blueprints", "blueprint_products", "type_skill_requirements"]) {
+    for (const table of ["categories", "groups", "types", "blueprints", "blueprint_products", "type_skill_requirements", "solar_systems", "stargates"]) {
       const row = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get();
       counts[table] = Number(row?.count ?? 0);
       if (counts[table] <= 0) throw new Error(`Validation failed: ${table} is empty.`);
