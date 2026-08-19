@@ -97,12 +97,19 @@ export async function esiPaginatedPublic<T>(
     revalidate: options.revalidate,
   });
   const firstPage = (await first.json()) as T[];
-  const pages = Math.min(Number(first.headers.get("X-Pages") ?? "1"), options.maxPages ?? 50);
-  if (pages <= 1) return firstPage;
+  const reportedPages = Number(first.headers.get("X-Pages") ?? "1");
+  const maxPages = options.maxPages ?? 50;
+  if (!Number.isSafeInteger(reportedPages) || reportedPages <= 0) {
+    throw new Error(`ESI ${route} returned an invalid X-Pages header`);
+  }
+  if (reportedPages > maxPages) {
+    throw new Error(`ESI ${route} requires ${reportedPages} pages, exceeding the configured ${maxPages}-page safety limit`);
+  }
+  if (reportedPages <= 1) return firstPage;
 
   const results: T[][] = [firstPage];
-  for (let start = 2; start <= pages; start += 4) {
-    const batch = Array.from({ length: Math.min(4, pages - start + 1) }, (_, index) =>
+  for (let start = 2; start <= reportedPages; start += 4) {
+    const batch = Array.from({ length: Math.min(4, reportedPages - start + 1) }, (_, index) =>
       esi<T[]>(route, {
         query: { ...options.query, page: start + index },
         revalidate: options.revalidate,
