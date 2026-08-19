@@ -1,0 +1,34 @@
+.shortcut {
+  position: fixed;
+  left: 955px;
+  bottom: 18px;
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(194, 151, 255, 0.24);
+  background: rgba(10, 20, 25, 0.94);
+  color: #eadcff;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.26);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(10px);
+}
+
+.shortcut:hover {
+  color: #100819;
+  background: #c297ff;
+  border-color: #c297ff;
+}
+
+@media (max-width: 1150px) {
+  .shortcut {
+    left: 16px;
+    bottom: 112px;
+  }
+}
