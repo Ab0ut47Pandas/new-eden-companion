@@ -20,8 +20,8 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `ECO-04`
-- Last completed: `ECO-03`
+- Current work item: `ECO-05`
+- Last completed: `ECO-04`
 - Last updated: 2026-08-19
 - Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. Development resumed after user confirmation.
 - Mandatory end-state experience: tracked in the four requirement documents above; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, ownership-aware/self-sufficiency goal planning, goal-first progressive disclosure, Combat School, good-habits coaching, and their installed-app checkpoints must ship before `REL-01`.
@@ -85,7 +85,7 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **ECO-01 — Asset usefulness classifier.** Relate owned items to saved goals, active activities, fitting recommendations, and manufacturing dependencies before recommending keep/sell. Evidence-first classifier added in PR #56; unknown usefulness remains unknown rather than becoming an automatic sell recommendation.
 - [x] **ECO-02 — Market valuation service.** Establish current market data source/caching and calculate local/nearby-hub value with timestamps and data-quality caveats. PR #58 uses CCP ESI regional market orders, five-minute cache alignment, visible-depth valuation, explicit location/hub scopes, and unknown/partial results instead of extrapolated prices.
 - [x] **ECO-03 — Sell-here-vs-haul decision support.** Compare price improvement against jumps, volume, risk, and user-configurable hauling tolerance; explain the recommendation. PR #59 adds an explainable policy-driven decision model with explicit unknown/conditional outcomes and no safety guarantee.
-- [ ] **ECO-04 — Stockpile recommendations.** Identify materials/supplies useful to active goals and distinguish deliberate stockpile from random clutter.
+- [x] **ECO-04 — Stockpile recommendations.** Identify materials/supplies useful to active goals and distinguish deliberate stockpile from random clutter. PR #60 adds evidence-backed stockpile targets, quantified shortfall/reserve/excess-to-known-need math only when target quantities are supplied, and explicit unassigned/unknown handling instead of treating unexplained inventory as junk.
 - [ ] **ECO-05 — Location-aware opportunities.** Use character/location plus universe data to surface nearby relevant activities/assets/services while respecting ESI visibility limitations.
 - [ ] **ECO-06 — Asset cleanup view.** Present actionable `keep`, `use soon`, `sell`, `haul`, `unknown`, and `goal-critical` groups with reasons rather than destructive automatic actions.
 
