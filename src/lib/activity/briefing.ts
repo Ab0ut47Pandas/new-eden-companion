@@ -118,6 +118,15 @@ function toneForPrimary(readiness: ReadinessExplanation): ActivityBriefingEntryT
   return "positive";
 }
 
+function primaryDetail(readiness: ReadinessExplanation): string {
+  const issue = readiness.primaryIssue;
+  if (!issue) return readiness.why;
+  if (issue.state === "unknown") return "NEC does not have enough verified character or inventory data to mark this requirement complete yet.";
+  if (issue.state === "unmet") return "This requirement is currently not met.";
+  if (issue.state === "caution") return "This requirement needs review before relying on it.";
+  return readiness.why;
+}
+
 function readinessSection(readiness: ReadinessExplanation | null): ActivityBriefingSection {
   if (!readiness) {
     return {
@@ -140,7 +149,7 @@ function readinessSection(readiness: ReadinessExplanation | null): ActivityBrief
     entries.push({
       id: `readiness-primary-${readiness.primaryIssue.id}`,
       label: readiness.primaryIssue.summary,
-      detail: readiness.why,
+      detail: primaryDetail(readiness),
       why: readiness.primaryIssue.why,
       tone: toneForPrimary(readiness),
     });

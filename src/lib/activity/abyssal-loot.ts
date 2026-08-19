@@ -21,6 +21,7 @@ export type AbyssalLootFamilyId =
 
 export interface AbyssalLootContainerKnowledge {
   id: AbyssalLootContainerId;
+  typeId: number;
   name: string;
   role: "main" | "optional-side";
   availableFromTier: number;
@@ -62,27 +63,30 @@ export interface AbyssalLootTeachingItem {
 export const ABYSSAL_LOOT_CONTAINERS: readonly AbyssalLootContainerKnowledge[] = [
   {
     id: "bioadaptive-cache",
+    typeId: 47951,
     name: "Triglavian Bioadaptive Cache",
     role: "main",
     availableFromTier: 0,
-    guidance: "The Bioadaptive Cache is the main loot container for a pocket and contains the majority of the pocket's loot.",
-    timerPriority: "Prioritize this cache over side loot when time is tight.",
+    guidance: "The main loot container in each pocket. Destroy it, loot the wreck, and prioritize it over side loot when time is tight.",
+    timerPriority: "Main target for loot. Do not sacrifice survival or the 20-minute timer for it.",
   },
   {
     id: "extraction-node",
+    typeId: 49662,
     name: "Triglavian Extraction Node",
     role: "optional-side",
     availableFromTier: 1,
-    guidance: "Extraction Nodes are optional side containers with a more limited loot pool and may be placed away from the conduit.",
-    timerPriority: "Skip side nodes when reaching them would threaten the 20-minute site timer.",
+    guidance: "Optional side loot found from T1 upward. It can be away from your route, so take it only when time and positioning are comfortable.",
+    timerPriority: "Bonus loot. Skip side nodes when the detour threatens your time margin.",
   },
   {
     id: "extraction-subnode",
+    typeId: 49661,
     name: "Triglavian Extraction SubNode",
     role: "optional-side",
     availableFromTier: 1,
-    guidance: "Extraction SubNodes are optional side containers; unlike the main cache, they are not guaranteed to contain loot.",
-    timerPriority: "Treat them as bonus loot, not a reason to risk the run.",
+    guidance: "Optional side loot found from T1 upward. Unlike the main cache, a SubNode is not guaranteed to contain loot.",
+    timerPriority: "Lowest priority of these three. Treat it as a bonus, not a reason to risk the run.",
   },
 ] as const;
 
@@ -175,6 +179,20 @@ export const ABYSSAL_LOOT_SOURCES: readonly AbyssalLootSource[] = [
     supports: ["Bioadaptive Cache identity", "cache description and loot role"],
   },
   {
+    id: "everef-extraction-node",
+    title: "Triglavian Extraction Node — EVE Ref / CCP reference data",
+    url: "https://everef.net/types/49662",
+    verifiedOn: "2026-08-18",
+    supports: ["Extraction Node identity and type ID"],
+  },
+  {
+    id: "everef-extraction-subnode",
+    title: "Triglavian Extraction SubNode — EVE Ref / CCP reference data",
+    url: "https://everef.net/types/49661",
+    verifiedOn: "2026-08-18",
+    supports: ["Extraction SubNode identity and type ID"],
+  },
+  {
     id: "everef-survey-database",
     title: "Triglavian Survey Database — EVE Ref / CCP reference data",
     url: "https://everef.net/types/48121",
@@ -223,5 +241,5 @@ export function teachAbyssalLootItem(input: AbyssalLootTeachingItemInput): Abyss
 }
 
 export function noOrdinaryNpcWreckLootGuidance(): string {
-  return "Abyssal combat NPCs do not leave ordinary loot/salvage wrecks or bounties. Treat the Bioadaptive Cache as the main loot source and Extraction Nodes/SubNodes as optional side loot where present.";
+  return "Combat NPCs do not leave ordinary loot/salvage wrecks or bounties. Treat the Bioadaptive Cache as the main loot source, then consider Extraction Nodes/SubNodes only where they exist and only if time allows.";
 }

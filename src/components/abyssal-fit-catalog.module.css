@@ -60,13 +60,26 @@
   gap: 10px;
 }
 
-.cardTop strong {
-  color: #bec9c7;
-  font-size: 11px;
+.cardTop > div {
+  display: grid;
+  gap: 3px;
+}
+
+.objectType {
+  color: #667780;
+  font: 7px "IBM Plex Mono", monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.shipLink {
+  color: #d7e8e4 !important;
+  font-size: 12px !important;
+  font-weight: 800;
 }
 
 .cardTop p {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   color: #788a91;
   font-size: 9px;
 }
@@ -124,6 +137,14 @@
 
 .card a:hover {
   text-decoration: underline;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 2px;
 }
 
 @media (max-width: 820px) {

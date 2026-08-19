@@ -28,6 +28,14 @@ describe("Abyssal tier readiness", () => {
     expect(result.priorTierMilestoneKey).toBe("abyssal:t1:comfortable-clear");
   });
 
+  it("uses state-aware wording instead of calling an unknown skill check ready", () => {
+    const result = buildAbyssalTierReadiness({ ...readyInput(0), skillReadiness: "unknown" });
+    const skills = result.findings.find((finding) => finding.id === "abyss:t0:skills");
+    expect(skills?.summary).toMatch(/have not been verified/i);
+    expect(skills?.summary).not.toMatch(/are ready/i);
+    expect(result.explanation.nextAction).toMatch(/connect or refresh/i);
+  });
+
   it("does not treat possession of a higher-tier filament as readiness", () => {
     const result = buildAbyssalTierReadiness({
       ...readyInput(2),
