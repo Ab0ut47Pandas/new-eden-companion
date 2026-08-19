@@ -19,6 +19,7 @@ const REQUIRED_DATASETS = [
   "typeDogma.jsonl",
   "mapSolarSystems.jsonl",
   "mapStargates.jsonl",
+  "planetSchematics.jsonl",
 ];
 
 export function parseLatestBuild(text) {
@@ -101,11 +102,25 @@ function validateDatabase(filename, expectedBuild) {
     if (meta.sde_build !== String(expectedBuild)) throw new Error(`Database build ${meta.sde_build ?? "missing"} does not match expected CCP build ${expectedBuild}.`);
     if (meta.schema_version !== String(STATIC_DB_SCHEMA_VERSION)) throw new Error(`Unexpected static DB schema version ${meta.schema_version ?? "missing"}.`);
     const counts = {};
-    for (const table of ["categories", "groups", "types", "blueprints", "blueprint_products", "type_skill_requirements", "solar_systems", "stargates"]) {
+    for (const table of [
+      "categories",
+      "groups",
+      "types",
+      "blueprints",
+      "blueprint_products",
+      "type_skill_requirements",
+      "solar_systems",
+      "stargates",
+      "planet_schematics",
+      "planet_schematic_types",
+    ]) {
       const row = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get();
       counts[table] = Number(row?.count ?? 0);
       if (counts[table] <= 0) throw new Error(`Validation failed: ${table} is empty.`);
     }
+    const outputCount = Number(db.prepare("SELECT COUNT(*) AS count FROM planet_schematic_types WHERE is_input = 0").get()?.count ?? 0);
+    if (outputCount <= 0) throw new Error("Validation failed: Planetary Industry schematics contain no outputs.");
+    counts.planet_schematic_outputs = outputCount;
     return { meta, counts };
   } finally {
     db.close();
