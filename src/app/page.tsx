@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { AbyssalActivityShortcut } from "@/components/abyssal-activity-shortcut";
 import { AssetCleanupShortcut } from "@/components/asset-cleanup-shortcut";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { HaulingActivityShortcut } from "@/components/hauling-activity-shortcut";
 import { ItemExplorerShortcut } from "@/components/item-explorer-shortcut";
 import { SkillExportButton } from "@/components/skill-export-button";
 import { UpdateControl } from "@/components/update-control";
@@ -66,6 +67,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <ItemExplorerShortcut />
       <AssetCleanupShortcut />
       <AbyssalActivityShortcut />
+      <HaulingActivityShortcut />
       <SkillExportButton
         characterName={dashboard.character.name}
         skills={dashboard.skills}
