@@ -50,7 +50,7 @@ describe("trade-run optimizer", () => {
         { price: 170, quantity: 10 },
       ],
     }], {
-      cargoCapacityM3: 10,
+      cargoCapacityM3: 3,
       capitalIsk: 10_000,
       salesTaxRate: 0,
     });
