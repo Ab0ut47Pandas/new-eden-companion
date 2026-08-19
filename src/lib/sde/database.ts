@@ -15,6 +15,11 @@ import {
 } from "../acquisition/recursive-manufacturing";
 import { queryReverseUsesForType, type ReverseUse } from "../acquisition/reverse-use";
 import {
+  queryAdvancedIndustryActivitiesForProduct,
+  queryAdvancedIndustryActivitiesForSource,
+  type AdvancedIndustryActivity,
+} from "../industry/advanced-industry-query";
+import {
   queryBlueprintScienceProfile,
   type BlueprintScienceProfile,
 } from "../industry/blueprint-activity-query";
@@ -28,6 +33,14 @@ import {
 export type { ManufacturingDependency } from "../acquisition/manufacturing-query";
 export type { RecursiveManufacturingNode, RecursiveManufacturingOptions } from "../acquisition/recursive-manufacturing";
 export type { ReverseUse } from "../acquisition/reverse-use";
+export type {
+  AdvancedIndustryActivity,
+  AdvancedIndustryActivityKind,
+  AdvancedIndustryMaterial,
+  AdvancedIndustryProduct,
+  AdvancedIndustrySkill,
+  AdvancedIndustryTypeRef,
+} from "../industry/advanced-industry-query";
 export type {
   BlueprintActivityMaterial,
   BlueprintActivitySkill,
@@ -225,4 +238,12 @@ export function getManufacturingDependenciesForProduct(productTypeId: number): M
 
 export function getBlueprintScienceProfile(blueprintTypeId: number): BlueprintScienceProfile | null {
   return queryBlueprintScienceProfile(getDatabase(), blueprintTypeId);
+}
+
+export function getAdvancedIndustryActivitiesForSource(sourceTypeId: number): AdvancedIndustryActivity[] {
+  return queryAdvancedIndustryActivitiesForSource(getDatabase(), sourceTypeId);
+}
+
+export function getAdvancedIndustryActivitiesForProduct(productTypeId: number): AdvancedIndustryActivity[] {
+  return queryAdvancedIndustryActivitiesForProduct(getDatabase(), productTypeId);
 }
