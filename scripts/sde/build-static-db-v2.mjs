@@ -3,16 +3,24 @@ import { fileURLToPath } from "node:url";
 
 import { buildStaticDatabase as buildBaseStaticDatabase } from "./build-static-db.mjs";
 import {
+  augmentPlanetaryIndustry,
+  PLANETARY_INDUSTRY_DATASETS,
+  PLANETARY_INDUSTRY_SCHEMA_VERSION,
+} from "./augment-planetary-industry.mjs";
+import {
   augmentRouteTopology,
   ROUTE_TOPOLOGY_DATASETS,
-  ROUTE_TOPOLOGY_SCHEMA_VERSION,
 } from "./augment-route-topology.mjs";
 
-export const STATIC_DB_SCHEMA_VERSION = ROUTE_TOPOLOGY_SCHEMA_VERSION;
+export const STATIC_DB_SCHEMA_VERSION = PLANETARY_INDUSTRY_SCHEMA_VERSION;
 
 export async function buildStaticDatabase(options) {
   const result = await buildBaseStaticDatabase(options);
   const topologyCounts = await augmentRouteTopology({
+    sourceDir: options.sourceDir,
+    databasePath: result.outputPath,
+  });
+  const planetaryCounts = await augmentPlanetaryIndustry({
     sourceDir: options.sourceDir,
     databasePath: result.outputPath,
   });
@@ -21,8 +29,10 @@ export async function buildStaticDatabase(options) {
     counts: {
       ...result.counts,
       ...topologyCounts,
+      ...planetaryCounts,
     },
     routeDatasets: ROUTE_TOPOLOGY_DATASETS,
+    planetaryDatasets: PLANETARY_INDUSTRY_DATASETS,
   };
 }
 
@@ -47,7 +57,7 @@ const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
 if (invokedPath && fileURLToPath(import.meta.url) === invokedPath) {
   try {
     const result = await buildStaticDatabase(parseArguments(process.argv.slice(2)));
-    console.log(`Built ${result.outputPath} from CCP SDE ${result.buildNumber} with route topology.`);
+    console.log(`Built ${result.outputPath} from CCP SDE ${result.buildNumber} with route topology and Planetary Industry schematics.`);
     for (const [name, count] of Object.entries(result.counts)) console.log(`${name}: ${count}`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
