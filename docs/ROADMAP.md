@@ -19,11 +19,10 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `TEST CHECKPOINT — Abyssal vertical slice`
-- Last completed: `ABY-06`
+- Current work item: `ECO-02`
+- Last completed: `ECO-01`
 - Last updated: 2026-08-18
-- Next after test: `ECO-01`
-- Test checkpoint: ABY-01 through ABY-06 are complete. Before economy work begins, validate the non-publishing Windows package from PR #52 in the real portable app. Confirm the dashboard Abyssal Guide shortcut, T0/T1 fit switching, briefing/readiness wording, T0 vs T1 loot-container differences, compact cheat sheet, and the full eight-fit validation catalog. Readiness should remain `needs information` where character-specific skill/supply/replacement/experience adapters are not yet attached; it must not claim ready from fit selection alone.
+- Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. Development resumed after user confirmation.
 - Product goal: A local-first EVE Online companion for new players that answers **what should I do next, am I actually ready, how do I start, what do I need, how do I get it, what should I keep/sell, and what did I do wrong?**
 
 ---
@@ -77,11 +76,11 @@ This file is the persistent implementation state for the new-player progression 
 - [x] **ABY-03 — First-run briefing.** Build a T0/T1 beginner briefing with ship/fit/supplies, activation steps, timer, room flow, failure conditions, and safe practice guidance. PR #49.
 - [x] **ABY-04 — Loot teaching.** Explain Bioadaptive Cache versus optional side nodes, no ordinary wreck-loot expectation, major loot families, red-loot cash-out behavior, and keep/sell/use guidance. PR #50.
 - [x] **ABY-05 — Tier progression readiness.** Gate higher tiers on fit/skills/replacement capacity plus explicit experience milestones; finding a higher-tier filament must not automatically imply readiness. PR #51.
-- [x] **ABY-06 — Integrate existing vetted Abyssal fits.** Connect the existing fit library to the briefing/readiness system and preserve each fit's validated tier limits. PR #52. TEST CHECKPOINT: validate the PR #52 Windows smoke package before continuing to ECO-01.
+- [x] **ABY-06 — Integrate existing vetted Abyssal fits.** Connect the existing fit library to the briefing/readiness system and preserve each fit's validated tier limits. PR #52. TEST CHECKPOINT completed after the v0.1.14 usability follow-up.
 
 ## Phase G — Economy, assets, location, and “what should I keep?”
 
-- [ ] **ECO-01 — Asset usefulness classifier.** Relate owned items to saved goals, active activities, fitting recommendations, and manufacturing dependencies before recommending keep/sell.
+- [x] **ECO-01 — Asset usefulness classifier.** Relate owned items to saved goals, active activities, fitting recommendations, and manufacturing dependencies before recommending keep/sell. Evidence-first classifier added in PR #56; unknown usefulness remains unknown rather than becoming an automatic sell recommendation.
 - [ ] **ECO-02 — Market valuation service.** Establish current market data source/caching and calculate local/nearby-hub value with timestamps and data-quality caveats.
 - [ ] **ECO-03 — Sell-here-vs-haul decision support.** Compare price improvement against jumps, volume, risk, and user-configurable hauling tolerance; explain the recommendation.
 - [ ] **ECO-04 — Stockpile recommendations.** Identify materials/supplies useful to active goals and distinguish deliberate stockpile from random clutter.
