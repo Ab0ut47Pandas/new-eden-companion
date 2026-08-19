@@ -14,7 +14,7 @@ export type AcquisitionSourceKind =
 export type AcquisitionSourceEvidence =
   | {
       kind: "sde";
-      dataset: "blueprints";
+      dataset: "blueprints" | "planetSchematics";
       sdeBuild: string | null;
       detail: string;
     }
@@ -94,6 +94,17 @@ function hasManufacturingProduct(db: DatabaseSync, typeId: number): boolean {
   return row?.exists_flag === 1;
 }
 
+function hasPlanetarySchematicOutput(db: DatabaseSync, typeId: number): boolean {
+  try {
+    const row = db
+      .prepare("SELECT 1 AS exists_flag FROM planet_schematic_types WHERE type_id = ? AND is_input = 0 LIMIT 1")
+      .get(typeId) as ExistsRow | undefined;
+    return row?.exists_flag === 1;
+  } catch {
+    return false;
+  }
+}
+
 function queryNonManufacturingBlueprintActivities(db: DatabaseSync, typeId: number): string[] {
   const rows = db
     .prepare(`
@@ -154,6 +165,19 @@ export function resolveAcquisitionSources(
       detail: `blueprint_products records product ${typeId} under activity ${activity}`,
     },
   }));
+
+  if (hasPlanetarySchematicOutput(db, typeId)) {
+    sources.push({
+      sourceKind: "planetary-industry",
+      label: "Planetary Industry schematic",
+      evidence: {
+        kind: "sde",
+        dataset: "planetSchematics",
+        sdeBuild,
+        detail: `planet_schematic_types records type ${typeId} as a schematic output`,
+      },
+    });
+  }
 
   for (const source of curatedSources) {
     if (source.typeId !== typeId) continue;

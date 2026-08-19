@@ -14,7 +14,7 @@ import {
 import { installStaticDatabaseCandidate } from "./update-core";
 
 export const CCP_LATEST_SDE_URL = "https://developers.eveonline.com/static-data/tranquility/latest.jsonl";
-export const SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION = 2;
+export const SUPPORTED_STATIC_DATABASE_SCHEMA_VERSION = 3;
 
 export type StaticDatabaseFreshnessState = "missing" | "outdated" | "current" | "ahead";
 

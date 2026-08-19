@@ -40,6 +40,13 @@ export interface ReactionActivityNode extends AcquisitionNodeBase {
   timeSeconds: number | null;
 }
 
+export interface PlanetaryIndustryActivityNode extends AcquisitionNodeBase {
+  kind: "planetary-industry-activity";
+  schematicId: number;
+  activity: "planetary-industry";
+  cycleTimeSeconds: number;
+}
+
 export interface MaterialNode extends AcquisitionNodeBase {
   kind: "material";
   typeId: number;
@@ -67,6 +74,7 @@ export type AcquisitionNode =
   | ManufacturingActivityNode
   | InventionActivityNode
   | ReactionActivityNode
+  | PlanetaryIndustryActivityNode
   | MaterialNode
   | SkillNode
   | AcquisitionSourceNode;
@@ -108,7 +116,7 @@ export type AcquisitionEdge =
   | RequiresSkillEdge
   | AcquiresFromSourceEdge;
 
-export type AcquisitionOptionKind = "manufacturing" | "invention" | "reaction" | "source";
+export type AcquisitionOptionKind = "manufacturing" | "invention" | "reaction" | "planetary-industry" | "source";
 
 export interface AcquisitionOption {
   id: AcquisitionOptionId;
