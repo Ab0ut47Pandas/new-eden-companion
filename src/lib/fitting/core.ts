@@ -398,11 +398,12 @@ function resolveSkillGaps(
   const gaps: FittingSkillGap[] = [];
   for (const [typeId, requirement] of bySkill) {
     const trained = skills?.levels[typeId];
-    if (!Number.isInteger(trained) || trained < requirement.requiredLevel) {
+    const trainedLevel = typeof trained === "number" && Number.isInteger(trained) ? trained : null;
+    if (trainedLevel === null || trainedLevel < requirement.requiredLevel) {
       gaps.push({
         typeId,
         requiredLevel: requirement.requiredLevel,
-        trainedLevel: Number.isInteger(trained) ? trained : null,
+        trainedLevel,
         sources: [...requirement.sources].sort(),
       });
     }
