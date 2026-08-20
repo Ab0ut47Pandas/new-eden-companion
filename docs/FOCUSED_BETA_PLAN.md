@@ -23,9 +23,9 @@ Everything NEC already knows about skills, ships, fits, assets, acquisition, ind
 
 - Integration branch: `codex/companion-integration`.
 - Repository baseline: package version `0.1.16`.
-- Current focused-beta work item: `BETA-14`.
-- Last completed focused-beta item: `BETA-13`.
-- BETA-13 reconciliation: PR #130 / `d049bdec8ae1894b601b6ee85309f0215893e7d7` adds a shared fail-closed final preflight summary over existing activity checks and optional suitability findings. Known blockers produce `Missing requirements`; unresolved required unknown/manual evidence produces `Cannot verify`; only resolved supported evidence produces `Preflight complete` / `No known blockers`. Non-fatal improvements remain separate, and completion explicitly is not a safety guarantee.
+- Current focused-beta work item: `BETA-15`.
+- Last completed focused-beta item: `BETA-14`.
+- BETA-14 reconciliation: PR #132 / `17c389410fc0d021395235e9a69fd330639cb565` completes the EVE SSO/token-storage review, preserves Authorization Code + PKCE and server-only token handling, hardens callback logging to error-type-only output, removes the unused unverified token-preview helper, records the local `AUTH_SECRET`/host security boundary, and adds regression tests proving representative authorization codes, PKCE verifiers, access/refresh tokens, and session IDs cannot leak into callback logs or browser redirects.
 - BETA-01 baseline warnings remain intentionally open for BETA-18: two recorded lint warnings and the updater whole-project bundle-tracing warning. See `docs/BETA_01_BASELINE.md`.
 - BETA-01 screenshot limitation remains recorded: this automation runtime cannot render NEC; required screenshots must be captured later in a UI-capable environment rather than fabricated.
 
@@ -64,7 +64,7 @@ Everything NEC already knows about skills, ships, fits, assets, acquisition, ind
 
 ## Phase 7 — Validation and security
 
-- [ ] **BETA-14 — SSO/token security review.** Complete the EVE SSO/token-storage review and verify secrets/tokens cannot leak into logs or browser responses.
+- [x] **BETA-14 — SSO/token security review.** Current CCP SSO boundaries reviewed; PKCE/state/session/token handling hardened; sensitive-value regression tests prove representative codes, verifiers, tokens, and session IDs do not appear in callback logs or browser redirect responses. PR #132 / `17c389410fc0d021395235e9a69fd330639cb565`.
 - [ ] **BETA-15 — Portable/degraded-state validation.** Exercise hauling and industry in the portable Windows release and test degraded ESI, market-source, and static-database behavior.
 - [ ] **BETA-16 — End-to-end integration test.** Exercise `Connect/demo → Suggested Session → Goal → Acquire → Fit → Preflight`, including an unknown-data case, owned-part reuse, a non-market acquisition boundary, and relevant persistence.
 - [ ] **BETA-17 — New-player usability checkpoint.** Test with a genuinely new EVE/NEC player and verify important recommendations against supported SDE/ESI/game evidence where applicable.
