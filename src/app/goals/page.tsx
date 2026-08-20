@@ -4,11 +4,12 @@ import Link from "next/link";
 
 import { getSession } from "@/lib/auth/session-store";
 import { validAccessToken } from "@/lib/auth/sso";
+import { buildRequirementAcquisitionPlan, type RequirementAcquisitionPlan } from "@/lib/goals/acquisition-choices";
 import { buildOwnedFirstGoalPlan, type OwnedFirstGoalPlan } from "@/lib/goals/owned-first-plan";
 import { getGoalStore, type SavedGoal } from "@/lib/goals/store";
 import { loadCharacterAssetCoverage } from "@/lib/player/asset-coverage";
 import { loadCharacterSkillReadiness } from "@/lib/player/skill-readiness";
-import { searchStaticItems, staticDatabaseAvailable } from "@/lib/sde/database";
+import { getRecursiveManufacturingDependencies, searchStaticItems, staticDatabaseAvailable } from "@/lib/sde/database";
 
 import {
   addGoalStepAction,
@@ -74,7 +75,7 @@ function requirementSummary(plan: GoalCoveragePlan | null): string {
   return "No structured requirements have been established for this goal yet.";
 }
 
-function GoalCard({ goal, plan }: { goal: SavedGoal; plan: GoalCoveragePlan | null }) {
+function GoalCard({ goal, plan, acquisitionPlans }: { goal: SavedGoal; plan: GoalCoveragePlan | null; acquisitionPlans: readonly RequirementAcquisitionPlan[] }) {
   const semanticKind = semanticGoalKind(goal);
   return (
     <article className={styles.infoCard}>
@@ -105,6 +106,35 @@ function GoalCard({ goal, plan }: { goal: SavedGoal; plan: GoalCoveragePlan | nu
           <ul className={styles.skillList}>
             {plan.unknown.map((entry) => <li key={entry.requirement.id}>Cannot verify - {entry.requirement.title}: {entry.explanation}</li>)}
           </ul>
+        )}
+        {acquisitionPlans.length > 0 && (
+          <div className={styles.alternatives}>
+            <strong>Acquire or train:</strong>
+            <ul className={styles.skillList}>
+              {acquisitionPlans.map((acquisition) => (
+                <li key={acquisition.coverage.requirement.id}>
+                  <strong>{acquisition.coverage.requirement.title}</strong> - because {acquisition.coverage.requirement.reason}
+                  {acquisition.trainingMilestone && (
+                    <div className={styles.description}>
+                      Shortest usable training milestone: level {acquisition.trainingMilestone.shortestUsableLevel} (currently {acquisition.trainingMilestone.trainedLevel}).
+                      {acquisition.trainingMilestone.optionalOptimizationLevels.length > 0
+                        ? ` Optional optimization after that: levels ${acquisition.trainingMilestone.optionalOptimizationLevels.join(", ")}.`
+                        : " No higher optimization level is available."}
+                    </div>
+                  )}
+                  {acquisition.choices.length > 0 && (
+                    <ul className={styles.skillList}>
+                      {acquisition.choices.map((choice, index) => (
+                        <li key={`${choice.kind}:${choice.label}:${index}`}>
+                          {choice.label} - {choice.reason} {choice.provenance.length > 0 ? `Evidence: ${choice.provenance.join("; ")}.` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         {(semanticKind === "activity" || semanticKind === "fitting") && !plan && (
           <p className={styles.description}>NEC will not invent a dependency list from a free-text activity or fitting name. A structured activity or selected/imported fit must supply the actual requirements first.</p>
@@ -183,20 +213,35 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
     : null;
 
   const plans = new Map<string, OwnedFirstGoalPlan>();
+  const acquisitionPlansByGoal = new Map<string, RequirementAcquisitionPlan[]>();
   for (const goal of goals) {
     const semanticKind = semanticGoalKind(goal);
     if (!goal.targetTypeId || (semanticKind !== "ship" && semanticKind !== "skill")) continue;
     const requirements = semanticKind === "ship"
       ? [{ id: `hull:${goal.targetTypeId}`, kind: "hull" as const, title: goal.title, reason: "This hull is the selected ship goal.", typeId: goal.targetTypeId, quantity: 1 }]
       : [{ id: `skill:${goal.targetTypeId}`, kind: "skill" as const, title: goal.title, reason: "This trained skill level is the selected skill goal.", typeId: goal.targetTypeId, requiredLevel: skillGoalLevel(goal) }];
-    plans.set(goal.id, buildOwnedFirstGoalPlan({
+    const plan = buildOwnedFirstGoalPlan({
       goal: { kind: semanticKind, key: goal.targetKey, title: goal.title, typeId: goal.targetTypeId },
       requirements,
       ownedItems,
       trainedSkills,
       ownershipProvenance: assetCoverage?.visibility === "available" ? ["ESI character assets"] : ["ESI character assets unavailable"],
       skillProvenance: skillCoverage?.visibility === "available" ? ["ESI character skills"] : ["ESI character skills unavailable"],
-    }));
+    });
+    plans.set(goal.id, plan);
+
+    const acquisitionPlans = plan.uncovered.map((coverage) => {
+      if (coverage.requirement.kind === "skill") return buildRequirementAcquisitionPlan(coverage);
+      if (!coverage.requirement.typeId || !staticDatabaseAvailable()) return buildRequirementAcquisitionPlan(coverage);
+      const dependency = getRecursiveManufacturingDependencies(coverage.requirement.typeId, { maxDepth: 1 });
+      const sourceResolution = dependency.state === "manufacturable"
+        ? { typeId: coverage.requirement.typeId, manufacturingBoundary: "ordinary-blueprint-available" as const, sourceState: "unknown" as const, sources: [] }
+        : dependency.sourceResolution ?? (dependency.state === "unknown-type"
+          ? { typeId: coverage.requirement.typeId, manufacturingBoundary: "unknown-type" as const, sourceState: "unknown" as const, sources: [] }
+          : null);
+      return buildRequirementAcquisitionPlan(coverage, { sourceResolution });
+    });
+    acquisitionPlansByGoal.set(goal.id, acquisitionPlans);
   }
 
   return (
@@ -298,7 +343,7 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
               {activeGoals.length === 0 ? (
                 <div className={styles.emptyState}><strong>No active goals yet.</strong>Choose an activity, ship, fitting, or skill above.</div>
               ) : (
-                <div className={styles.results}>{activeGoals.map((goal) => <GoalCard goal={goal} plan={plans.get(goal.id) ?? null} key={goal.id} />)}</div>
+                <div className={styles.results}>{activeGoals.map((goal) => <GoalCard goal={goal} plan={plans.get(goal.id) ?? null} acquisitionPlans={acquisitionPlansByGoal.get(goal.id) ?? []} key={goal.id} />)}</div>
               )}
             </section>
 
@@ -308,7 +353,7 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
                   <div><div className={styles.eyebrow}>History</div><h2>Completed goals</h2></div>
                   <p>{completedGoals.length} completed</p>
                 </div>
-                <div className={styles.results}>{completedGoals.map((goal) => <GoalCard goal={goal} plan={plans.get(goal.id) ?? null} key={goal.id} />)}</div>
+                <div className={styles.results}>{completedGoals.map((goal) => <GoalCard goal={goal} plan={plans.get(goal.id) ?? null} acquisitionPlans={acquisitionPlansByGoal.get(goal.id) ?? []} key={goal.id} />)}</div>
               </section>
             )}
           </>
