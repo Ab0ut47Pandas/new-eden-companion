@@ -20,12 +20,13 @@ Existing deeper systems may be reused where they directly support the beta workf
 
 - Integration branch: `codex/companion-integration`
 - Repository baseline: package version `0.1.16`; BETA-01 baseline implementation merged in PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`.
-- Current focused-beta work item: `BETA-06`.
-- Last completed focused-beta item: `BETA-05`.
+- Current focused-beta work item: `BETA-07`.
+- Last completed focused-beta item: `BETA-06`.
+- BETA-06 implementation: short first-run onboarding merged in PR #117 / `08c35e5657be974e3fbbfe8b94c4aa37ba04c76b`; disconnected/new users now see ESI capability/limit guidance, choose connect or explicitly labeled demo data, set local session-length/risk preferences that feed the unified Suggested Session service, and land on the primary recommendation after onboarding. AIR/tutorial completion is not inferred from skills, ships, assets, or wallet state.
 - BETA-05 implementation: standard uncertainty language merged in PR #115 / `18d8375359a8558ab7a3a25bf6ffd8657574934c`; Suggested Session and Activity Briefing now share the exact user-facing states **Ready**, **Probably ready**, **Missing requirements**, **Cannot verify**, and **Live information unavailable**, with fail-closed unknown/live-data wording and existing resolution actions surfaced where available.
 - BETA-04 implementation: recommendation explanations merged in PR #113 / `6e4a746fe27ceb086e119e154f70dbd28107cb47`; Suggested Session now separates reasoning, supported character/evaluator evidence, and provenance in `Why this?`, exposes the actual readiness → goal relevance → preference tie-break ranking rule, includes session/risk preference rationale, and rejects meaningful candidates without supported evidence.
 - BETA-03 implementation: Suggested Session homepage integration merged in PR #111 / `8499c731b4a88167cb5d30d4bb11835b73386187`; the homepage now consumes the BETA-02 service result, renders one primary recommendation plus up to two alternatives, exposes activity/session/risk/next-action details, supports refresh and `Suggest something different`, renders demo data explicitly as demo, and fails closed when required evidence is unavailable.
-- BETA-02 implementation: unified Suggested Session evidence-composition service merged in PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275`; it returns one primary recommendation, up to two alternatives, explicit evidence/provenance/unknowns, qualitative preference-aware ranking, supported owned-ship preference, and fail-closed required-evidence handling for the BETA-03 homepage integration.
+- BETA-02 implementation: unified Suggested Session evidence-composition service merged in PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275`; it returns one primary recommendation, up to two alternatives, explicit evidence/provenance/unknowns, qualitative preference-aware ranking, supported owned/accessibile ship preference, and fail-closed required-evidence handling for the BETA-03 homepage integration.
 - BETA-01 executable baseline: 75 test files / 404 tests pass; typecheck passes; lint passes with 2 recorded warnings; production build passes with the recorded updater bundle-tracing warning; Windows package-policy and updater-startup smoke pass. Full warning inventory is in `docs/BETA_01_BASELINE.md`.
 - BETA-01 screenshot limitation: this automation runtime cannot render NEC because its local container cannot resolve GitHub and the GitHub connector exposes repository/Actions operations but no browser/UI renderer. The limitation and required later screenshot set are recorded in `docs/BETA_01_BASELINE.md`; no screenshots are fabricated.
 - The legacy `docs/ROADMAP.md` remains the historical feature record, but unfinished items there do not supersede this plan while the focused beta is active.
@@ -62,7 +63,7 @@ Never replace uncertainty with fabricated precision.
 
 ## Phase 4 — First-run experience
 
-- [ ] **BETA-06 — Short first-run onboarding.** Explain what NEC can/cannot see, connect a character or choose demo data, ask risk/session-length preferences, and end with an achievable first recommendation.
+- [x] **BETA-06 — Short first-run onboarding.** Explain what NEC can/cannot see, connect a character or choose demo data, ask risk/session-length preferences, and end with an achievable first recommendation. PR #117 / `08c35e5657be974e3fbbfe8b94c4aa37ba04c76b` adds the bounded first-run screen, local preferences, connect/demo flow, explicit ESI/live-state limits, and direct handoff to Suggested Session without introducing new activity categories.
 - [ ] **BETA-07 — Adventure-first intent selection.** Let a new or directionless player choose what sounds fun before asking them to understand EVE careers or fleet roles. Support intents such as combat, exploration, mining, hauling/trade, industry/building, `explore somewhere dangerous`, `play with a friend`, `show me something`, and `give me an adventure`.
 
 AIR/Career status rule:
