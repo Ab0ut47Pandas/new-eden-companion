@@ -130,7 +130,6 @@ describe("evaluateFitWeaknesses", () => {
       "capacitor stability is not established",
       "primary tank layer is not established",
       "range-control dependence is not established",
-      "solo tackle responsibility is not established",
       "target-specific damage application is not established",
       "weapon engagement range is not established",
     ]);
