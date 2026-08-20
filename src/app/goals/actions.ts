@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/auth/session-store";
 import { getGoalStore } from "@/lib/goals/store";
-import { getStaticType } from "@/lib/sde/database";
+import { getStaticItemIdentity } from "@/lib/sde/database";
 
 async function currentCharacterId(): Promise<number> {
   const sessionId = (await cookies()).get("eve_session")?.value;
@@ -41,7 +41,7 @@ export async function saveItemGoalAction(formData: FormData): Promise<void> {
   const typeId = Number(formString(formData, "typeId"));
   const requestedKind = formString(formData, "goalKind");
   if (!Number.isSafeInteger(typeId) || typeId <= 0) throw new Error("Invalid item goal.");
-  const item = getStaticType(typeId);
+  const item = getStaticItemIdentity(typeId);
   if (!item || item.isPlaceholder) throw new Error("This item is not resolved well enough to save as a goal.");
 
   const semanticKind = requestedKind === "ship" || requestedKind === "skill" ? requestedKind : "item";
