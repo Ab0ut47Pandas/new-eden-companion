@@ -19,6 +19,7 @@ import { getConfigurationIssues } from "@/lib/config";
 import { demoDashboard } from "@/lib/dashboard/demo";
 import { buildLiveDashboard } from "@/lib/dashboard/live";
 import {
+  ADVENTURE_INTENT_COOKIE,
   onboardingComplete,
   onboardingPreferences,
   ONBOARDING_COMPLETE_COOKIE,
@@ -71,6 +72,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const preferences = onboardingPreferences({
     sessionLength: cookieStore.get(SESSION_LENGTH_COOKIE)?.value,
     risk: cookieStore.get(SESSION_RISK_COOKIE)?.value,
+    intent: cookieStore.get(ADVENTURE_INTENT_COOKIE)?.value,
   });
   const firstRunComplete = connected || onboardingComplete(cookieStore.get(ONBOARDING_COMPLETE_COOKIE)?.value);
   const suggestedSession = buildDashboardSuggestedSession(dashboard, preferences);
@@ -84,6 +86,7 @@ export default async function Home({ searchParams }: HomeProps) {
           characterName={dashboard.character.name}
           connected={connected}
           dataGapCount={dashboard.dataQuality.unavailable.length}
+          intent={preferences.intent ?? null}
         />
       )}
       <div id="detailed-dashboard">
