@@ -172,14 +172,31 @@ function riskMismatch(candidate: SuggestedSessionCandidate, preference: SessionR
   return Math.abs(order.indexOf(candidate.riskPosture) - order.indexOf(preference));
 }
 
+function preferenceReasons(candidate: SuggestedSessionCandidate, preferences: SuggestedSessionPreferences): string[] {
+  const reasons: string[] = [];
+  if (preferences.sessionLength !== "any") {
+    reasons.push(candidate.sessionLength === preferences.sessionLength
+      ? `Matches your ${preferences.sessionLength} session-length preference.`
+      : `This is a ${candidate.sessionLength} session; you asked for ${preferences.sessionLength}, so closer verified options rank ahead when available.`);
+  }
+  if (preferences.risk !== "any") {
+    reasons.push(candidate.riskPosture === preferences.risk
+      ? `Matches your ${preferences.risk} risk preference.`
+      : `This uses a ${candidate.riskPosture} risk posture; you asked for ${preferences.risk}, so closer verified options rank ahead when available.`);
+  }
+  return reasons;
+}
+
 function toRecommendation(
   candidate: SuggestedSessionCandidate,
   coverage: Map<SuggestedSessionEvidenceKey, SuggestedSessionEvidenceStatus>,
+  preferences: SuggestedSessionPreferences,
 ): SuggestedSessionRecommendation {
   if (!candidate.id.trim()) throw new Error("Suggested Session candidate id must not be empty.");
   if (!candidate.activity.trim()) throw new Error(`Suggested Session candidate ${candidate.id} activity must not be empty.`);
   if (!candidate.title.trim()) throw new Error(`Suggested Session candidate ${candidate.id} title must not be empty.`);
   if (!candidate.nextAction.trim()) throw new Error(`Suggested Session candidate ${candidate.id} nextAction must not be empty.`);
+  if (!candidate.evidence.some((entry) => entry.trim())) throw new Error(`Suggested Session candidate ${candidate.id} requires evidence.`);
   if (!candidate.provenance.length) throw new Error(`Suggested Session candidate ${candidate.id} requires provenance.`);
 
   const missingEvidence = missingRequiredEvidence(candidate, coverage);
@@ -201,6 +218,7 @@ function toRecommendation(
         : "No direct saved-goal match was supplied.",
     candidate.readiness.why,
     ship?.why ?? "",
+    ...preferenceReasons(candidate, preferences),
   ]);
 
   return {
@@ -239,7 +257,7 @@ export function buildSuggestedSession(input: SuggestedSessionInput): SuggestedSe
   const ranked = input.candidates.map((candidate) => {
     if (ids.has(candidate.id)) throw new Error(`Duplicate Suggested Session candidate id: ${candidate.id}`);
     ids.add(candidate.id);
-    return { candidate, recommendation: toRecommendation(candidate, coverage) };
+    return { candidate, recommendation: toRecommendation(candidate, coverage, input.preferences) };
   }).sort((left, right) => {
     const state = STATE_ORDER[left.recommendation.state] - STATE_ORDER[right.recommendation.state];
     if (state !== 0) return state;
