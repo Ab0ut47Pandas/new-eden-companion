@@ -26,22 +26,34 @@ The repository's normal PR `checks` workflow is the executable baseline for this
 - Windows package database-policy smoke
 - Windows detached-updater startup smoke
 
-Results are recorded below after the PR workflow completes; this document is updated with the observed output rather than assuming success from prior commits.
+Observed baseline run: GitHub Actions `checks` run `32348221648` on PR #107.
 
 ### Results
 
-- Tests: pending baseline PR workflow
-- Typecheck: pending baseline PR workflow
-- Lint: pending baseline PR workflow
-- Production build: pending baseline PR workflow
-- Windows package database-policy smoke: pending baseline PR workflow
-- Windows updater-startup smoke: pending baseline PR workflow
+- Tests: **PASS** — 75 test files, 404 tests passed.
+- Typecheck: **PASS** — `tsc --noEmit` completed successfully.
+- Lint: **PASS WITH 2 WARNINGS** — zero errors.
+- Production build: **PASS WITH BASELINE WARNINGS** — Next.js production build completed successfully.
+- Windows package database-policy smoke: **PASS**.
+- Windows updater-startup smoke: **PASS**.
 
 ## Existing warnings / known baseline noise
 
 Warnings are recorded separately from failures so later cleanup does not silently redefine the baseline.
 
-- Pending capture from the baseline PR workflow.
+### Lint warnings
+
+1. `scripts/update-bootstrap.mjs:3:8` — `path` is defined but never used (`@typescript-eslint/no-unused-vars`).
+2. `src/lib/pvp/briefing.ts:1:57` — `MatchupEdge` is defined but never used (`@typescript-eslint/no-unused-vars`).
+
+These are the two focused-beta baseline lint warnings targeted by BETA-18.
+
+### Build/runtime warnings
+
+- Node emits `ExperimentalWarning: SQLite is an experimental feature and might change at any time` during SQLite-backed tests/build page-data collection. This is runtime/toolchain noise, not a test failure.
+- Next.js reports no build cache in the clean CI runner. This is expected CI-environment noise and not a product failure.
+- Next.js prints its standard anonymous telemetry notice in CI.
+- **Updater bundle-tracing warning:** `src/app/api/update/route.ts:102:12` uses dynamic `existsSync(required)` access. Turbopack reports that this causes tracing of the whole project into server output. This is the explicit updater warning targeted by BETA-18 and must not be normalized away.
 
 ## Baseline screenshots
 
@@ -59,6 +71,10 @@ Pages that remain required for the later visual regression baseline when an inst
 - Item Explorer
 - representative existing activity pages (at minimum Abyssal, Mining, Exploration, Missions, Hauling/Trade, Industry/PI where available)
 
+## Baseline route inventory from the successful production build
+
+The build confirms existing routes for the focused-beta integration surface, including `/`, `/goals`, `/fitting`, `/items`, `/items/[typeId]`, Abyssal, Exploration, Hauling/Trade, Industry, Missions, and Planetary Industry pages. Route generation success is not a substitute for visual/manual exercise.
+
 ## Baseline interpretation
 
-BETA-01 is a measurement/checkpoint item. Any existing lint/build/updater warnings discovered here belong to the baseline and should be addressed by their focused-beta cleanup item rather than hidden by changing product behavior during this checkpoint.
+BETA-01 is a measurement/checkpoint item. Existing lint/build/updater warnings belong to the baseline and should be addressed by their focused-beta cleanup item rather than hidden by changing product behavior during this checkpoint.
