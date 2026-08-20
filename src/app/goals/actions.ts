@@ -31,6 +31,11 @@ function fittingKey(title: string): string {
   return `fitting:${normalized || "custom"}`;
 }
 
+function skillLevel(formData: FormData): number {
+  const value = Number(formString(formData, "level"));
+  return Number.isInteger(value) && value >= 1 && value <= 5 ? value : 1;
+}
+
 export async function saveItemGoalAction(formData: FormData): Promise<void> {
   const characterId = await currentCharacterId();
   const typeId = Number(formString(formData, "typeId"));
@@ -43,10 +48,15 @@ export async function saveItemGoalAction(formData: FormData): Promise<void> {
   if (semanticKind === "ship" && !item.kinds.includes("ship")) throw new Error("The selected type is not a resolved ship.");
   if (semanticKind === "skill" && !item.kinds.includes("skill")) throw new Error("The selected type is not a resolved skill.");
 
+  const level = semanticKind === "skill" ? skillLevel(formData) : null;
   getGoalStore().saveGoal({
     characterId,
     kind: "item",
-    targetKey: semanticKind === "item" ? `type:${typeId}` : `${semanticKind}:type:${typeId}`,
+    targetKey: semanticKind === "item"
+      ? `type:${typeId}`
+      : semanticKind === "skill"
+        ? `skill:type:${typeId}:level:${level}`
+        : `ship:type:${typeId}`,
     targetTypeId: typeId,
     title: item.name ?? `Type ${typeId}`,
   });
