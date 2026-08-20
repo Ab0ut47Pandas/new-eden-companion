@@ -1,6 +1,7 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
+import { safeAuthErrorSummary } from "@/lib/auth/security";
 import { exchangeAuthorizationCode, tokenCharacter } from "@/lib/auth/sso";
 import { saveSession } from "@/lib/auth/session-store";
 
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     response.cookies.set("eve_pkce_verifier", "", expiredCookie);
     return response;
   } catch (callbackError) {
-    console.error("EVE SSO callback failed", callbackError);
+    console.error("EVE SSO callback failed", safeAuthErrorSummary(callbackError));
     const destination = new URL("/", request.url);
     destination.searchParams.set("auth", "callback-failed");
     return NextResponse.redirect(destination);
