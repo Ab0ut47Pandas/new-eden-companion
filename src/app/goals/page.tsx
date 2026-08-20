@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth/session-store";
 import { validAccessToken } from "@/lib/auth/sso";
 import { buildRequirementAcquisitionPlan, type RequirementAcquisitionPlan } from "@/lib/goals/acquisition-choices";
+import { buildGoalChecklist } from "@/lib/goals/goal-checklist";
 import { buildOwnedFirstGoalPlan, type OwnedFirstGoalPlan } from "@/lib/goals/owned-first-plan";
 import { getGoalStore, type SavedGoal } from "@/lib/goals/store";
 import { loadCharacterAssetCoverage } from "@/lib/player/asset-coverage";
@@ -19,6 +20,7 @@ import {
   setGoalCompletedAction,
   setGoalStepCompletedAction,
 } from "./actions";
+import { GoalChecklistSummary } from "./goal-checklist-summary";
 import styles from "../items/item-explorer.module.css";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +79,7 @@ function requirementSummary(plan: GoalCoveragePlan | null): string {
 
 function GoalCard({ goal, plan, acquisitionPlans }: { goal: SavedGoal; plan: GoalCoveragePlan | null; acquisitionPlans: readonly RequirementAcquisitionPlan[] }) {
   const semanticKind = semanticGoalKind(goal);
+  const checklist = plan ? buildGoalChecklist(plan, acquisitionPlans) : null;
   return (
     <article className={styles.infoCard}>
       <div className={styles.resultTop}>
@@ -90,60 +93,65 @@ function GoalCard({ goal, plan, acquisitionPlans }: { goal: SavedGoal; plan: Goa
       </h3>
       <p className={styles.description}>{progressLabel(goal)}</p>
 
-      <div className={styles.terminal}>
-        <strong>Owned/trained first:</strong> {requirementSummary(plan)}
-        {plan && plan.covered.length > 0 && (
-          <ul className={styles.skillList}>
-            {plan.covered.map((entry) => <li key={entry.requirement.id}>Covered - {entry.requirement.title}: {entry.explanation}</li>)}
-          </ul>
-        )}
-        {plan && plan.uncovered.length > 0 && (
-          <ul className={styles.skillList}>
-            {plan.uncovered.map((entry) => <li key={entry.requirement.id}>Uncovered - {entry.requirement.title}: {entry.explanation}</li>)}
-          </ul>
-        )}
-        {plan && plan.unknown.length > 0 && (
-          <ul className={styles.skillList}>
-            {plan.unknown.map((entry) => <li key={entry.requirement.id}>Cannot verify - {entry.requirement.title}: {entry.explanation}</li>)}
-          </ul>
-        )}
-        {acquisitionPlans.length > 0 && (
-          <div className={styles.alternatives}>
-            <strong>Acquire or train:</strong>
+      {checklist && <GoalChecklistSummary checklist={checklist} />}
+
+      <details className={styles.terminal}>
+        <summary><strong>Dependency details</strong> - owned/trained coverage, acquisition choices, and evidence</summary>
+        <div className={styles.alternatives}>
+          <strong>Owned/trained first:</strong> {requirementSummary(plan)}
+          {plan && plan.covered.length > 0 && (
             <ul className={styles.skillList}>
-              {acquisitionPlans.map((acquisition) => (
-                <li key={acquisition.coverage.requirement.id}>
-                  <strong>{acquisition.coverage.requirement.title}</strong> - because {acquisition.coverage.requirement.reason}
-                  {acquisition.trainingMilestone && (
-                    <div className={styles.description}>
-                      Shortest usable training milestone: level {acquisition.trainingMilestone.shortestUsableLevel} (currently {acquisition.trainingMilestone.trainedLevel}).
-                      {acquisition.trainingMilestone.optionalOptimizationLevels.length > 0
-                        ? ` Optional optimization after that: levels ${acquisition.trainingMilestone.optionalOptimizationLevels.join(", ")}.`
-                        : " No higher optimization level is available."}
-                    </div>
-                  )}
-                  {acquisition.choices.length > 0 && (
-                    <ul className={styles.skillList}>
-                      {acquisition.choices.map((choice, index) => (
-                        <li key={`${choice.kind}:${choice.label}:${index}`}>
-                          {choice.label} - {choice.reason} {choice.provenance.length > 0 ? `Evidence: ${choice.provenance.join("; ")}.` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
+              {plan.covered.map((entry) => <li key={entry.requirement.id}>Covered - {entry.requirement.title}: {entry.explanation}</li>)}
             </ul>
-          </div>
-        )}
-        {(semanticKind === "activity" || semanticKind === "fitting") && !plan && (
-          <p className={styles.description}>NEC will not invent a dependency list from a free-text activity or fitting name. A structured activity or selected/imported fit must supply the actual requirements first.</p>
-        )}
-      </div>
+          )}
+          {plan && plan.uncovered.length > 0 && (
+            <ul className={styles.skillList}>
+              {plan.uncovered.map((entry) => <li key={entry.requirement.id}>Uncovered - {entry.requirement.title}: {entry.explanation}</li>)}
+            </ul>
+          )}
+          {plan && plan.unknown.length > 0 && (
+            <ul className={styles.skillList}>
+              {plan.unknown.map((entry) => <li key={entry.requirement.id}>Cannot verify - {entry.requirement.title}: {entry.explanation}</li>)}
+            </ul>
+          )}
+          {acquisitionPlans.length > 0 && (
+            <div className={styles.alternatives}>
+              <strong>Acquire or train:</strong>
+              <ul className={styles.skillList}>
+                {acquisitionPlans.map((acquisition) => (
+                  <li key={acquisition.coverage.requirement.id}>
+                    <strong>{acquisition.coverage.requirement.title}</strong> - because {acquisition.coverage.requirement.reason}
+                    {acquisition.trainingMilestone && (
+                      <div className={styles.description}>
+                        Shortest usable training milestone: level {acquisition.trainingMilestone.shortestUsableLevel} (currently {acquisition.trainingMilestone.trainedLevel}).
+                        {acquisition.trainingMilestone.optionalOptimizationLevels.length > 0
+                          ? ` Optional optimization after that: levels ${acquisition.trainingMilestone.optionalOptimizationLevels.join(", ")}.`
+                          : " No higher optimization level is available."}
+                      </div>
+                    )}
+                    {acquisition.choices.length > 0 && (
+                      <ul className={styles.skillList}>
+                        {acquisition.choices.map((choice, index) => (
+                          <li key={`${choice.kind}:${choice.label}:${index}`}>
+                            {choice.label} - {choice.reason} {choice.provenance.length > 0 ? `Evidence: ${choice.provenance.join("; ")}.` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {(semanticKind === "activity" || semanticKind === "fitting") && !plan && (
+            <p className={styles.description}>NEC will not invent a dependency list from a free-text activity or fitting name. A structured activity or selected/imported fit must supply the actual requirements first.</p>
+          )}
+        </div>
+      </details>
 
       <div className={styles.alternatives}>
         {goal.steps.length === 0 ? (
-          <div className={styles.terminal}>Manual checklist steps remain optional. BETA goal planning now keeps owned/trained coverage separate from user-confirmed progress.</div>
+          <div className={styles.terminal}>Manual checklist steps remain optional and separate from NEC's evidence-backed compact path.</div>
         ) : (
           <ul className={styles.skillList}>
             {goal.steps.map((step) => (
@@ -230,9 +238,9 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
     });
     plans.set(goal.id, plan);
 
-    const acquisitionPlans = plan.uncovered.map((coverage) => {
+    const acquisitionPlans = [...plan.unknown, ...plan.uncovered].map((coverage) => {
       if (coverage.requirement.kind === "skill") return buildRequirementAcquisitionPlan(coverage);
-      if (!coverage.requirement.typeId || !staticDatabaseAvailable()) return buildRequirementAcquisitionPlan(coverage);
+      if (coverage.status === "unknown" || !coverage.requirement.typeId || !staticDatabaseAvailable()) return buildRequirementAcquisitionPlan(coverage);
       const dependency = getRecursiveManufacturingDependencies(coverage.requirement.typeId, { maxDepth: 1 });
       const sourceResolution = dependency.state === "manufacturable"
         ? { typeId: coverage.requirement.typeId, manufacturingBoundary: "ordinary-blueprint-available" as const, sourceState: "unknown" as const, sources: [] }
