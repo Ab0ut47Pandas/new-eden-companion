@@ -6,28 +6,38 @@ import { ArrowRight, ChevronRight, RefreshCw, ShieldCheck, Shuffle, Sparkles, Ta
 import { useMemo, useState } from "react";
 
 import type { SuggestedSessionRecommendation, SuggestedSessionResult } from "@/lib/session/suggested-session";
+import { uncertaintyPresentation } from "@/lib/uncertainty/state";
 
 import { WhyDetails } from "./why-details";
 import styles from "./progression-home.module.css";
 
 const SESSION_RULE = "NEC ranks verified readiness before saved-goal relevance, then uses session-length and risk preferences as tie-breakers. Required missing evidence stays unknown or unavailable instead of being promoted to ready.";
 
-function stateLabel(state: SuggestedSessionRecommendation["state"]): string {
-  if (state === "ready") return "Ready";
-  if (state === "probably-ready") return "Probably ready";
-  if (state === "missing-requirements") return "Missing requirements";
-  if (state === "live-information-unavailable") return "Live information unavailable";
-  return "Cannot verify";
+function stateCopy(state: SuggestedSessionRecommendation["state"]) {
+  return uncertaintyPresentation(state);
 }
 
 function RecommendationMeta({ recommendation }: { recommendation: SuggestedSessionRecommendation }) {
   return (
     <div className={styles.meta}>
-      <span>{stateLabel(recommendation.state)}</span>
+      <span>{stateCopy(recommendation.state).label}</span>
       <span>{recommendation.activity}</span>
       <span>{recommendation.sessionLength} session</span>
       <span>{recommendation.riskPosture} posture</span>
       {recommendation.ship && <span>Ship: {recommendation.ship.name}</span>}
+    </div>
+  );
+}
+
+function ResolutionDetails({ recommendation }: { recommendation: SuggestedSessionRecommendation }) {
+  const presentation = stateCopy(recommendation.state);
+  if (!presentation.needsResolution && recommendation.resolveUnknowns.length === 0) return null;
+
+  return (
+    <div className={styles.resolve}>
+      <strong>{presentation.label}</strong>
+      <span>{presentation.summary}</span>
+      {recommendation.resolveUnknowns.map((item) => <span key={item}>Resolve: {item}</span>)}
     </div>
   );
 }
@@ -99,12 +109,7 @@ export function ProgressionHome({
             provenance={primary.provenance}
             unknowns={primary.unknowns}
           />
-          {primary.resolveUnknowns.length > 0 && (
-            <div className={styles.resolve}>
-              <strong>To resolve uncertainty:</strong>
-              {primary.resolveUnknowns.map((item) => <span key={item}>{item}</span>)}
-            </div>
-          )}
+          <ResolutionDetails recommendation={primary} />
         </article>
       ) : (
         <article className={styles.empty}>
@@ -121,7 +126,7 @@ export function ProgressionHome({
           <div className={styles.sectionTitle}>Alternatives</div>
           {supporting.length ? supporting.map((item) => (
             <article key={item.candidateId}>
-              <div><strong>{item.title}</strong><span>{item.activity} · {stateLabel(item.state)} · {item.sessionLength}</span></div>
+              <div><strong>{item.title}</strong><span>{item.activity} · {stateCopy(item.state).label} · {item.sessionLength}</span></div>
               <div className={styles.altAction}>{item.nextAction}</div>
               <WhyDetails
                 label="Why this?"
@@ -131,6 +136,7 @@ export function ProgressionHome({
                 provenance={item.provenance}
                 unknowns={item.unknowns}
               />
+              <ResolutionDetails recommendation={item} />
             </article>
           )) : <p className={styles.muted}>No additional supported recommendations are available yet.</p>}
         </div>
