@@ -10,7 +10,7 @@ import type { SuggestedSessionRecommendation, SuggestedSessionResult } from "@/l
 import { WhyDetails } from "./why-details";
 import styles from "./progression-home.module.css";
 
-const SESSION_RULE = "The homepage consumes the unified Suggested Session result. Required missing evidence stays unknown or unavailable instead of being promoted to ready.";
+const SESSION_RULE = "NEC ranks verified readiness before saved-goal relevance, then uses session-length and risk preferences as tie-breakers. Required missing evidence stays unknown or unavailable instead of being promoted to ready.";
 
 function stateLabel(state: SuggestedSessionRecommendation["state"]): string {
   if (state === "ready") return "Ready";
@@ -94,7 +94,8 @@ export function ProgressionHome({
           <WhyDetails
             label="Why this?"
             rule={SESSION_RULE}
-            reasons={[...primary.why, ...primary.evidence]}
+            reasons={primary.why}
+            evidence={primary.evidence}
             provenance={primary.provenance}
             unknowns={primary.unknowns}
           />
@@ -122,7 +123,14 @@ export function ProgressionHome({
             <article key={item.candidateId}>
               <div><strong>{item.title}</strong><span>{item.activity} · {stateLabel(item.state)} · {item.sessionLength}</span></div>
               <div className={styles.altAction}>{item.nextAction}</div>
-              <WhyDetails label="Why?" rule={SESSION_RULE} reasons={[...item.why, ...item.evidence]} provenance={item.provenance} unknowns={item.unknowns} />
+              <WhyDetails
+                label="Why this?"
+                rule={SESSION_RULE}
+                reasons={item.why}
+                evidence={item.evidence}
+                provenance={item.provenance}
+                unknowns={item.unknowns}
+              />
             </article>
           )) : <p className={styles.muted}>No additional supported recommendations are available yet.</p>}
         </div>
