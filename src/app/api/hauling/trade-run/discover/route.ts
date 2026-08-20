@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { classifyTradeRunFailure } from "@/lib/economy/trade-run-degraded";
 import { discoverTradeRun } from "@/lib/economy/trade-run-discovery";
 import { marketHubBySystemId } from "@/lib/economy/trade-run-market";
 import type { TradeOptimizationGoal } from "@/lib/economy/trade-run-optimizer";
@@ -40,7 +41,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
     return NextResponse.json({ origin, destination, ...result });
   } catch (error) {
-    console.error("Trade-run discovery failed", error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Trade-run discovery failed." }, { status: 500 });
+    const degraded = classifyTradeRunFailure(error);
+    console.error("Trade-run discovery unavailable", degraded.state, error instanceof Error ? error.name : "unknown error");
+    return NextResponse.json({ state: degraded.state, error: degraded.message }, { status: 503 });
   }
 }
