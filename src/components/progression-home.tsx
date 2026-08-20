@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, ChevronRight, CircleHelp, ShieldCheck, Sparkles, Target } from "lucide-react";
+import { ArrowRight, ChevronRight, ShieldCheck, Sparkles, Target } from "lucide-react";
 
 import type { DashboardData } from "@/lib/dashboard/model";
 import { buildProgressionHomeModel } from "@/lib/dashboard/progression-home";
 
+import { WhyDetails } from "./why-details";
 import styles from "./progression-home.module.css";
+
+const PROGRESSION_RULE = "Recommendations are ordered from NEC's supported dashboard advice by explicit priority; missing character data is not silently filled in.";
 
 export function ProgressionHome({ data }: { data: DashboardData }) {
   const model = buildProgressionHomeModel(data);
@@ -31,10 +34,12 @@ export function ProgressionHome({ data }: { data: DashboardData }) {
           <h2>{primary.title}</h2>
           <p>{primary.summary}</p>
           <div className={styles.action}><ArrowRight size={18} /><span><strong>Next action:</strong> {primary.action}</span></div>
-          <details className={styles.why}>
-            <summary><CircleHelp size={16} /> Why this?</summary>
-            <p>{primary.evidence}</p>
-          </details>
+          <WhyDetails
+            label="Why this?"
+            rule={PROGRESSION_RULE}
+            reasons={[primary.evidence]}
+            unknowns={model.dataGapCount ? [`${model.dataGapCount} requested dashboard data categor${model.dataGapCount === 1 ? "y is" : "ies are"} unavailable.`] : []}
+          />
         </article>
       ) : (
         <article className={styles.empty}>
@@ -52,7 +57,7 @@ export function ProgressionHome({ data }: { data: DashboardData }) {
           {model.supporting.length ? model.supporting.map((item) => (
             <article key={item.id}>
               <div><strong>{item.title}</strong><span>{item.summary}</span></div>
-              <details><summary>Why <ChevronRight size={13} /></summary><p>{item.evidence}</p></details>
+              <WhyDetails label="Why?" rule={PROGRESSION_RULE} reasons={[item.evidence]} />
             </article>
           )) : <p className={styles.muted}>No additional supported recommendations are available yet.</p>}
         </div>

@@ -6,6 +6,7 @@ import { buildAssetCleanupView, type AssetCleanupDecision, type AssetCleanupInpu
 import type { EsiBlueprint } from "@/lib/esi/types";
 
 import styles from "./asset-cleanup-view.module.css";
+import { WhyDetails } from "./why-details";
 
 const GROUPS: ReadonlyArray<{ id: AssetCleanupDecision["disposition"]; label: string; icon: typeof Boxes }> = [
   { id: "goal-critical", label: "Goal-critical", icon: Target },
@@ -109,6 +110,13 @@ function isk(value: number | null): string {
   return `${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 }).format(value)} ISK`;
 }
 
+function decisionRule(item: AssetCleanupDecision): string {
+  if (item.disposition === "sell") return "Sell requires positive replaceability and liquid-market evidence after every preservation and uncertainty check has cleared.";
+  if (item.disposition === "haul") return "Haul appears only when a supported movement decision recommends moving the item; it is not a route-safety claim.";
+  if (item.disposition === "unknown") return "Unknown rarity, source, blueprint state, liquidity, or replaceability stays Review rather than being treated as permission to sell.";
+  return "Goal use, stockpile use, fitted/allocated state, researched/useful blueprints, and supported reacquisition difficulty take priority over disposal.";
+}
+
 export function AssetCleanupView({ data, blueprints = [] }: { data: DashboardData; blueprints?: readonly EsiBlueprint[] }) {
   const decisions = cleanupDecisions(data, blueprints);
 
@@ -146,7 +154,16 @@ export function AssetCleanupView({ data, blueprints = [] }: { data: DashboardDat
               {rows.length ? <div className={styles.rows}>{rows.map((item) => (
                 <article key={item.itemId} className={styles.row}>
                   <div className={styles.identity}><strong>{item.name}</strong><span>{item.quantity.toLocaleString()} · {item.location}</span></div>
-                  <div className={styles.reason}><strong>{item.headline}</strong><span>{item.reason}</span></div>
+                  <div className={styles.reason}>
+                    <strong>{item.headline}</strong>
+                    <span>{item.reason}</span>
+                    <WhyDetails
+                      rule={decisionRule(item)}
+                      reasons={[item.reason]}
+                      evidence={item.preservationEvidence.map((entry) => `${entry.kind}: ${entry.reason}`)}
+                      unknowns={item.disposition === "unknown" ? ["NEC does not have enough positive evidence to authorize sale or hauling."] : []}
+                    />
+                  </div>
                   <div className={styles.value}>{isk(item.estimatedValueIsk)}</div>
                 </article>
               ))}</div> : <div className={styles.empty}>No assets currently have enough evidence for this group.</div>}
