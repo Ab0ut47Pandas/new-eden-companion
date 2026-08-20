@@ -10,11 +10,29 @@ import {
   importBuilderState,
   type FitBuilderState,
 } from "@/lib/fitting/builder";
+import { classifyFitIdentity } from "@/lib/fitting/identity";
+import { buildFitTacticalBriefing, type TacticalExplanationCard } from "@/lib/fitting/tactical";
+import { evaluateFitWeaknesses } from "@/lib/fitting/weakness";
 
 import styles from "./fitting-builder.module.css";
 
 function fmt(value: number | null | undefined, suffix = "") {
   return typeof value === "number" && Number.isFinite(value) ? `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}${suffix}` : "Unknown";
+}
+
+function ExplanationCard({ card }: { card: TacticalExplanationCard }) {
+  const toneClass = card.tone === "warning" ? styles.bad : card.tone === "caution" ? styles.warn : styles.ok;
+  return (
+    <article className={styles.card}>
+      <strong className={toneClass}>{card.title}</strong>
+      <p>{card.summary}</p>
+      <details>
+        <summary>Why?</summary>
+        {card.why.length ? <ul className={styles.warnings}>{card.why.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p className={styles.small}>No additional supported explanation is available.</p>}
+        {card.evidence.length ? <><strong>Evidence</strong><ul className={styles.warnings}>{card.evidence.map((evidence) => <li key={evidence}>{evidence}</li>)}</ul></> : null}
+      </details>
+    </article>
+  );
 }
 
 export function FittingBuilderClient() {
@@ -23,6 +41,35 @@ export function FittingBuilderClient() {
   const [ioError, setIoError] = useState<string | null>(null);
   const compiled = useMemo(() => compileBuilderState(state), [state]);
   const result = compiled.result;
+  const tactical = useMemo(() => {
+    if (!result) return null;
+    const provenance = ["FIT-03 validated builder catalog", "FIT-02 deterministic fitting result"] as const;
+    const identity = classifyFitIdentity({
+      weaponPreferredRangeMeters: null,
+      hasWeb: false,
+      hasScram: false,
+      hasDisruptor: false,
+      hasEwar: false,
+      hasNeutralizer: false,
+      hasRemoteRepair: false,
+      hasLocalRepair: null,
+      hasBufferTank: null,
+      hasPassiveRechargeTank: null,
+      provenance,
+    });
+    const weaknesses = evaluateFitWeaknesses({
+      weaponPreferredRangeMeters: null,
+      assumesSoloTackle: null,
+      requiresRangeControl: null,
+      mobilityPenaltySources: null,
+      capacitorStable: null,
+      capacitorDependentSystems: null,
+      primaryTankLayer: null,
+      application: null,
+      provenance,
+    });
+    return buildFitTacticalBriefing({ identity, weaknesses, fitting: result, provenance });
+  }, [result]);
 
   function addModule(definitionId: string) {
     const definition = DEFAULT_FIT_BUILDER_CATALOG.modules.find((entry) => entry.id === definitionId);
@@ -137,6 +184,31 @@ export function FittingBuilderClient() {
           <div className={styles.metric}><span>Missile range</span><strong>{fmt(result?.metrics.missileRange, " m")}</strong></div>
           <div className={styles.metric}><span>Cap stable</span><strong>{typeof result?.metrics.capacitorStable === "number" ? `${Math.round(result.metrics.capacitorStable * 100)}%` : "Unknown"}</strong></div>
         </div>
+
+        {tactical ? <div className={styles.section}>
+          <h3>Tactical explanation</h3>
+          <p><strong>{tactical.headline}</strong></p>
+          <p className={styles.small}>This translates only supported calculator, identity-classifier, and weakness-rule evidence. It is not a matchup prediction and it cannot see live combat.</p>
+
+          <h4>What this fit wants</h4>
+          <div className={styles.cards}>{tactical.whatThisFitWants.map((card) => <ExplanationCard key={card.id} card={card} />)}</div>
+
+          <h4>How to fly it</h4>
+          <div className={styles.cards}>{tactical.howToFlyIt.map((card) => <ExplanationCard key={card.id} card={card} />)}</div>
+
+          <h4>What ruins its plan</h4>
+          <div className={styles.cards}>{tactical.whatRuinsItsPlan.map((card) => <ExplanationCard key={card.id} card={card} />)}</div>
+
+          {tactical.unknowns.length ? <details className={styles.section}>
+            <summary>Unknown / not established ({tactical.unknowns.length})</summary>
+            <ul className={styles.warnings}>{tactical.unknowns.map((unknown) => <li key={unknown}>{unknown}</li>)}</ul>
+          </details> : null}
+          <details className={styles.section}>
+            <summary>Evidence provenance</summary>
+            <ul className={styles.warnings}>{tactical.provenance.map((source) => <li key={source}>{source}</li>)}</ul>
+          </details>
+        </div> : null}
+
         {result?.legality.issues.length ? <div className={styles.section}><h3>Legality issues</h3><ul className={`${styles.warnings} ${styles.bad}`}>{result.legality.issues.map((issue) => <li key={`${issue.code}-${issue.sourceId ?? "fit"}`}>{issue.summary}</li>)}</ul></div> : null}
         {result && Object.keys(result.unknownMetrics).length ? <div className={styles.section}><h3>Unknown metrics</h3><ul className={styles.warnings}>{Object.entries(result.unknownMetrics).map(([metric, reason]) => <li key={metric}><strong>{metric}</strong>: {reason}</li>)}</ul></div> : null}
         <p className={styles.small}>Validity covers only the FIT-02 modeled checks. It does not claim arbitrary Dogma effects, heat, implants, boosters, fleet effects, target application, live client state, or unsupported module semantics.</p>
