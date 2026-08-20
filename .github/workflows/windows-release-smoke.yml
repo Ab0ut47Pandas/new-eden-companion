@@ -96,7 +96,7 @@ jobs:
             $stdout = Join-Path $env:RUNNER_TEMP "nec-beta15-$Port.out.log"
             $stderr = Join-Path $env:RUNNER_TEMP "nec-beta15-$Port.err.log"
             $process = Start-Process -FilePath $node -ArgumentList "--env-file-if-exists=$envFile", $server -WorkingDirectory $packageRoot -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-            $base = "http://127.0.0.1:$Port"
+            $base = "http://localhost:$Port"
             for ($attempt = 0; $attempt -lt 60; $attempt++) {
               if ($process.HasExited) {
                 Get-Content $stdout -ErrorAction SilentlyContinue | Write-Host
