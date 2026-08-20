@@ -17,6 +17,7 @@ import { validAccessToken } from "@/lib/auth/sso";
 import { getConfigurationIssues } from "@/lib/config";
 import { demoDashboard } from "@/lib/dashboard/demo";
 import { buildLiveDashboard } from "@/lib/dashboard/live";
+import { buildDashboardSuggestedSession } from "@/lib/session/dashboard-suggested-session";
 
 export const dynamic = "force-dynamic";
 
@@ -58,10 +59,16 @@ export default async function Home({ searchParams }: HomeProps) {
   const authStatus = typeof params.auth === "string" ? params.auth : undefined;
   const detail = typeof params.detail === "string" ? params.detail : undefined;
   const connected = dashboard.mode === "live";
+  const suggestedSession = buildDashboardSuggestedSession(dashboard);
 
   return (
     <>
-      {connected && <ProgressionHome data={dashboard} />}
+      <ProgressionHome
+        result={suggestedSession}
+        characterName={dashboard.character.name}
+        connected={connected}
+        dataGapCount={dashboard.dataQuality.unavailable.length}
+      />
       <div id="detailed-dashboard">
         <DashboardShell
           data={dashboard}
