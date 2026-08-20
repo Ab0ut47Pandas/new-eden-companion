@@ -20,10 +20,10 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Current state
 
-- Current work item: `UX-01`
-- Last completed: `PVP-03`
+- Current work item: `UX-02`
+- Last completed: `UX-01`
 - Last updated: 2026-08-20
-- Roadmap reconciliation: PVP-03 was implemented and merged in PR #99 / commit `8ddb0f07278230a42d7781dfe87a1583ddda04e1`; this update advances the first genuinely unimplemented item to UX-01.
+- Roadmap reconciliation: UX-01 was implemented and merged in PR #101 / commit `74627a0f8012c14011c489915ab01226a748284c`; this update advances the first genuinely unimplemented item to UX-02.
 - Test checkpoint result: ABY-01 through ABY-06 were manually exercised in the portable app. The first test exposed player-readability issues in the Abyssal guide; PR #54 corrected card interaction, character-skill fit checks, readiness wording, fit import/navigation, and loot teaching, and the fixes shipped in v0.1.14. HAU-02's installed-app checklist remains outstanding because the user explicitly directed development to continue. IND-01, IND-02, and IND-03 installed-app checkpoints also remain recorded for QA; pending manual checkpoints do not block subsequent implementation by explicit user direction. FIT-03 now has a user-facing `/fitting` sandbox; broader installed-app fit-builder usefulness remains part of later fitting/product QA rather than a blocker for subsequent fitting work.
 - Mandatory end-state experience: tracked in the requirement documents above; Suggested session, Try something new, NEC Campaigns, Story Guide/Epic Arc, ownership-aware/self-sufficiency goal planning, goal-first progressive disclosure, Combat School, good-habits coaching, conservative asset preservation, and their installed-app checkpoints must ship before `REL-01`.
 - Mandatory end-to-end acceptance: the installed app must support a connected player's beginner-PvP self-sourcing goal from character-aware hull/fit selection through recursive owned-first acquisition/manufacturing, honest terminal sources, assembly/preflight/replacement-risk checks, tactical teaching, and Combat School without requiring manual glue between separate NEC tools. UX-07, PLN-01, PLN-02, CBT-01, QA-03, and REL-01 remain incomplete until that scenario is exercisable end to end.
@@ -119,7 +119,7 @@ This file is the persistent implementation state for the new-player progression 
 
 ## Phase J — Product integration and release quality
 
-- [ ] **UX-01 — New-player home experience.** Make progression/recommendations the primary entry point while retaining detailed dashboards for users who want them.
+- [x] **UX-01 — New-player home experience.** Make progression/recommendations the primary entry point while retaining detailed dashboards for users who want them. PR #101 adds a connected-character progression home ahead of the raw dashboard, promotes one evidence-backed next action plus supporting recommendations, exposes Why/evidence and data-gap caveats, keeps setup first for disconnected users, and retains direct access to Goals, Item Explorer, and the detailed dashboard.
 - [ ] **UX-02 — Global “Why?” affordance.** Readiness, keep/sell, fit classification, tactical warnings, and progression recommendations must expose their underlying evidence/rules.
 - [ ] **UX-03 — Unknown/limited-data UX.** Standardize wording for unavailable ESI data, stale market data, unresolved SDE placeholders, unsupported mechanics, and user confirmation requirements.
 - [ ] **UX-04 — First-run onboarding.** Explain what NEC can/cannot see, connect character, establish approximate goals/preferences, and offer `I don't know what to do` immediately.
