@@ -20,8 +20,9 @@ Existing deeper systems may be reused where they directly support the beta workf
 
 - Integration branch: `codex/companion-integration`
 - Repository baseline: package version `0.1.16`; BETA-01 baseline implementation merged in PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`.
-- Current focused-beta work item: `BETA-02`.
-- Last completed focused-beta item: `BETA-01`.
+- Current focused-beta work item: `BETA-03`.
+- Last completed focused-beta item: `BETA-02`.
+- BETA-02 implementation: unified Suggested Session evidence-composition service merged in PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275`; it returns one primary recommendation, up to two alternatives, explicit evidence/provenance/unknowns, qualitative preference-aware ranking, supported owned-ship preference, and fail-closed required-evidence handling for the BETA-03 homepage integration.
 - BETA-01 executable baseline: 75 test files / 404 tests pass; typecheck passes; lint passes with 2 recorded warnings; production build passes with the recorded updater bundle-tracing warning; Windows package-policy and updater-startup smoke pass. Full warning inventory is in `docs/BETA_01_BASELINE.md`.
 - BETA-01 screenshot limitation: this automation runtime cannot render NEC because its local container cannot resolve GitHub and the GitHub connector exposes repository/Actions operations but no browser/UI renderer. The limitation and required later screenshot set are recorded in `docs/BETA_01_BASELINE.md`; no screenshots are fabricated.
 - The legacy `docs/ROADMAP.md` remains the historical feature record, but unfinished items there do not supersede this plan while the focused beta is active.
@@ -40,7 +41,7 @@ Acceptance:
 
 ## Phase 2 — Make Suggested Session the core product
 
-- [ ] **BETA-02 — Unified Suggested Session service.** Create one recommendation service that composes supported evidence from character skills/training, current ship/fit, owned ships/modules/ammo/drones/cargo, wallet/market, location and supported nearby-risk evidence, existing activity-readiness engines, and player-selected session length/risk preferences.
+- [x] **BETA-02 — Unified Suggested Session service.** Create one recommendation service that composes supported evidence from character skills/training, current ship/fit, owned ships/modules/ammo/drones/cargo, wallet/market, location and supported nearby-risk evidence, existing activity-readiness engines, and player-selected session length/risk preferences. PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275` adds the fail-closed evidence contract, qualitative deterministic ranking, one primary plus up to two alternatives, supported owned/accessibile ship preference, one next action, missing requirements/items, provenance, and uncertainty-resolution actions without inventing unavailable state.
 - [ ] **BETA-03 — Suggested Session home integration.** Return one primary recommendation plus two alternatives and make that the homepage’s main answer instead of legacy dashboard-advice sorting. Each recommendation should expose activity, suitable ship where supported, preparation, approximate session-length class, risk posture, missing requirements/items, and one concrete next action. Add refresh and `suggest something different` controls.
 
 Recommendation safety rules:
