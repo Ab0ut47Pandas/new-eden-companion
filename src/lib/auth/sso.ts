@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createRemoteJWKSet, decodeJwt, jwtVerify, type JWTPayload } from "jose";
+import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
 
 import { config } from "@/lib/config";
 import { saveSession, type EveSession, type TokenBundle } from "@/lib/auth/session-store";
@@ -123,8 +123,4 @@ export async function validAccessToken(session: EveSession): Promise<string> {
   session.updatedAt = Date.now();
   saveSession(session);
   return session.tokens.accessToken;
-}
-
-export function unsafeTokenPreview(token: string): JWTPayload {
-  return decodeJwt(token);
 }
