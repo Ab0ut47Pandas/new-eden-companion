@@ -120,22 +120,22 @@ describe("compareTwoFits", () => {
         damageProfile: { em: 100, thermal: 0, kinetic: 0, explosive: 0 },
         primaryTankLayer: "shield",
         tankResistances: {
-          shield: { em: 0.8, thermal: 0.2, kinetic: 0.2, explosive: 0.2 },
+          shield: { em: 0.8, thermal: 0.2, kinetic: 0.2, explosive: 0 },
         },
       }),
       baseFit("Explosive ship", {
         damageProfile: { em: 0, thermal: 0, kinetic: 0, explosive: 100 },
         primaryTankLayer: "armor",
         tankResistances: {
-          armor: { em: 0.2, thermal: 0.2, kinetic: 0.2, explosive: 0.1 },
+          armor: { em: 0.5, thermal: 0.2, kinetic: 0.2, explosive: 0.1 },
         },
       }),
     );
 
     const damageTypes = dimension(result, "damage-types");
     expect(damageTypes.edge).toBe("opponent");
-    expect(damageTypes.evidence.join(" ")).toContain("0.800x");
-    expect(damageTypes.evidence.join(" ")).toContain("0.800x");
+    expect(damageTypes.evidence.join(" ")).toContain("1.000x");
+    expect(damageTypes.evidence.join(" ")).toContain("0.500x");
   });
 
   it("surfaces a neutralizer threat only when range and capacitor-dependent systems are supplied", () => {
