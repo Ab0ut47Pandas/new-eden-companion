@@ -91,6 +91,51 @@ describe("preflight checker", () => {
     expect(checks.find((check) => check.id === "analyzer")?.status).toBe("warning");
   });
 
+  it("composes exploration probe supply checks from accessible active-ship cargo", () => {
+    const checks = evaluatePreflight({
+      ...base,
+      activity: "exploration",
+      option: "wormhole",
+      tripProfile: "expedition",
+      contents: [
+        { itemId: 30, typeId: 30, name: "Core Probe Launcher I", quantity: 1, locationFlag: "HiSlot0", estimatedValue: 10 },
+        { itemId: 31, typeId: 31, name: "Core Scanner Probe I", quantity: 16, locationFlag: "Cargo", estimatedValue: 10 },
+        { itemId: 32, typeId: 32, name: "5MN Microwarpdrive I", quantity: 1, locationFlag: "MedSlot0", estimatedValue: 10 },
+      ],
+    });
+    expect(checks.find((check) => check.id === "probe-launcher")?.status).toBe("pass");
+    expect(checks.find((check) => check.id === "probes")?.status).toBe("pass");
+  });
+
+  it("composes script and capacitor-charge checks from the fitted modules and cargo", () => {
+    const checks = evaluatePreflight({
+      ...base,
+      option: "pve",
+      contents: [
+        ...base.contents,
+        { itemId: 40, typeId: 40, name: "Small Capacitor Booster II", quantity: 1, locationFlag: "MedSlot0", estimatedValue: 10 },
+        { itemId: 41, typeId: 41, name: "Sensor Booster II", quantity: 1, locationFlag: "MedSlot1", estimatedValue: 10 },
+        { itemId: 42, typeId: 42, name: "Cap Booster 400", quantity: 8, locationFlag: "Cargo", estimatedValue: 10 },
+        { itemId: 43, typeId: 43, name: "Scan Resolution Script", quantity: 2, locationFlag: "Cargo", estimatedValue: 10 },
+      ],
+    });
+    expect(checks.find((check) => check.id === "cap-charges")?.status).toBe("pass");
+    expect(checks.find((check) => check.id === "scripts")?.status).toBe("pass");
+  });
+
+  it("keeps supply readiness unknown when active-ship inventory is unavailable", () => {
+    const checks = evaluatePreflight({
+      ...base,
+      inventoryReadable: false,
+      activity: "exploration",
+      option: "relic",
+      contents: [],
+    });
+    expect(checks.find((check) => check.id === "probe-launcher")?.status).toBe("unknown");
+    expect(checks.find((check) => check.id === "probes")?.status).toBe("unknown");
+    expect(checks.find((check) => check.id === "analyzer")?.status).toBe("unknown");
+  });
+
   it("tells organized fleets that doctrine wins", () => {
     const checks = evaluatePreflight({ ...base, fleetScale: "organized" });
     expect(checks.find((check) => check.id === "fleet")?.title).toContain("doctrine");
