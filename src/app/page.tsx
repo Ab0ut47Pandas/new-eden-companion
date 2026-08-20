@@ -9,6 +9,7 @@ import { HaulingActivityShortcut } from "@/components/hauling-activity-shortcut"
 import { IndustryActivityShortcut } from "@/components/industry-activity-shortcut";
 import { ItemExplorerShortcut } from "@/components/item-explorer-shortcut";
 import { MissionActivityShortcut } from "@/components/mission-activity-shortcut";
+import { ProgressionHome } from "@/components/progression-home";
 import { SkillExportButton } from "@/components/skill-export-button";
 import { UpdateControl } from "@/components/update-control";
 import { getSession } from "@/lib/auth/session-store";
@@ -60,14 +61,17 @@ export default async function Home({ searchParams }: HomeProps) {
 
   return (
     <>
-      <DashboardShell
-        data={dashboard}
-        configured={getConfigurationIssues().length === 0}
-        connected={connected}
-        authStatus={authStatus}
-        authDetail={detail}
-        liveError={liveError}
-      />
+      {connected && <ProgressionHome data={dashboard} />}
+      <div id="detailed-dashboard">
+        <DashboardShell
+          data={dashboard}
+          configured={getConfigurationIssues().length === 0}
+          connected={connected}
+          authStatus={authStatus}
+          authDetail={detail}
+          liveError={liveError}
+        />
+      </div>
       <ItemExplorerShortcut />
       <AssetCleanupShortcut />
       <AbyssalActivityShortcut />
