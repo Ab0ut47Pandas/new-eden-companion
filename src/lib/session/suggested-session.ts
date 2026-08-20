@@ -1,3 +1,4 @@
+import type { AdventureIntent } from "@/lib/onboarding/intents";
 import type { GoalRelevance } from "@/lib/readiness/recommender";
 import type { ReadinessExplanation } from "@/lib/readiness/explanation";
 
@@ -49,6 +50,7 @@ export interface SuggestedSessionCandidate {
   goalRelevance: GoalRelevance;
   sessionLength: SessionLengthClass;
   riskPosture: SessionRiskPosture;
+  adventureIntents?: readonly AdventureIntent[];
   requiredEvidence: readonly SuggestedSessionEvidenceKey[];
   shipChoices?: readonly SupportedShipChoice[];
   preparation?: readonly string[];
@@ -62,6 +64,7 @@ export interface SuggestedSessionCandidate {
 export interface SuggestedSessionPreferences {
   sessionLength: SessionLengthPreference;
   risk: SessionRiskPreference;
+  intent?: AdventureIntent | null;
 }
 
 export interface SuggestedSessionInput {
@@ -172,8 +175,22 @@ function riskMismatch(candidate: SuggestedSessionCandidate, preference: SessionR
   return Math.abs(order.indexOf(candidate.riskPosture) - order.indexOf(preference));
 }
 
+function intentMismatch(candidate: SuggestedSessionCandidate, intent: AdventureIntent | null | undefined): number {
+  if (!intent || intent === "show-me-something" || intent === "adventure") return 0;
+  return candidate.adventureIntents?.includes(intent) ? 0 : 1;
+}
+
 function preferenceReasons(candidate: SuggestedSessionCandidate, preferences: SuggestedSessionPreferences): string[] {
   const reasons: string[] = [];
+  if (preferences.intent) {
+    if (preferences.intent === "show-me-something" || preferences.intent === "adventure") {
+      reasons.push("You asked NEC to choose an experience, so intent does not narrow the supported candidate set.");
+    } else if (candidate.adventureIntents?.includes(preferences.intent)) {
+      reasons.push("Matches the kind of experience you said sounds fun.");
+    } else {
+      reasons.push("This supported option does not directly match your selected adventure intent; a matching option ranks ahead only when readiness and saved-goal relevance are otherwise equal.");
+    }
+  }
   if (preferences.sessionLength !== "any") {
     reasons.push(candidate.sessionLength === preferences.sessionLength
       ? `Matches your ${preferences.sessionLength} session-length preference.`
@@ -263,6 +280,8 @@ export function buildSuggestedSession(input: SuggestedSessionInput): SuggestedSe
     if (state !== 0) return state;
     const goal = GOAL_ORDER[left.candidate.goalRelevance] - GOAL_ORDER[right.candidate.goalRelevance];
     if (goal !== 0) return goal;
+    const intent = intentMismatch(left.candidate, input.preferences.intent) - intentMismatch(right.candidate, input.preferences.intent);
+    if (intent !== 0) return intent;
     const length = lengthMismatch(left.candidate, input.preferences.sessionLength) - lengthMismatch(right.candidate, input.preferences.sessionLength);
     if (length !== 0) return length;
     const risk = riskMismatch(left.candidate, input.preferences.risk) - riskMismatch(right.candidate, input.preferences.risk);
