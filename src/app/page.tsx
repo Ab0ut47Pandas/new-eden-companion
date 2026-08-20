@@ -4,6 +4,7 @@ import { AbyssalActivityShortcut } from "@/components/abyssal-activity-shortcut"
 import { AssetCleanupShortcut } from "@/components/asset-cleanup-shortcut";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { ExplorationActivityShortcut } from "@/components/exploration-activity-shortcut";
+import { FirstRunOnboarding } from "@/components/first-run-onboarding";
 import { FittingBuilderShortcut } from "@/components/fitting-builder-shortcut";
 import { HaulingActivityShortcut } from "@/components/hauling-activity-shortcut";
 import { IndustryActivityShortcut } from "@/components/industry-activity-shortcut";
@@ -17,6 +18,13 @@ import { validAccessToken } from "@/lib/auth/sso";
 import { getConfigurationIssues } from "@/lib/config";
 import { demoDashboard } from "@/lib/dashboard/demo";
 import { buildLiveDashboard } from "@/lib/dashboard/live";
+import {
+  onboardingComplete,
+  onboardingPreferences,
+  ONBOARDING_COMPLETE_COOKIE,
+  SESSION_LENGTH_COOKIE,
+  SESSION_RISK_COOKIE,
+} from "@/lib/onboarding/preferences";
 import { buildDashboardSuggestedSession } from "@/lib/session/dashboard-suggested-session";
 
 export const dynamic = "force-dynamic";
@@ -59,20 +67,29 @@ export default async function Home({ searchParams }: HomeProps) {
   const authStatus = typeof params.auth === "string" ? params.auth : undefined;
   const detail = typeof params.detail === "string" ? params.detail : undefined;
   const connected = dashboard.mode === "live";
-  const suggestedSession = buildDashboardSuggestedSession(dashboard);
+  const configured = getConfigurationIssues().length === 0;
+  const preferences = onboardingPreferences({
+    sessionLength: cookieStore.get(SESSION_LENGTH_COOKIE)?.value,
+    risk: cookieStore.get(SESSION_RISK_COOKIE)?.value,
+  });
+  const firstRunComplete = connected || onboardingComplete(cookieStore.get(ONBOARDING_COMPLETE_COOKIE)?.value);
+  const suggestedSession = buildDashboardSuggestedSession(dashboard, preferences);
 
   return (
     <>
-      <ProgressionHome
-        result={suggestedSession}
-        characterName={dashboard.character.name}
-        connected={connected}
-        dataGapCount={dashboard.dataQuality.unavailable.length}
-      />
+      {!firstRunComplete && <FirstRunOnboarding configured={configured} />}
+      {firstRunComplete && (
+        <ProgressionHome
+          result={suggestedSession}
+          characterName={dashboard.character.name}
+          connected={connected}
+          dataGapCount={dashboard.dataQuality.unavailable.length}
+        />
+      )}
       <div id="detailed-dashboard">
         <DashboardShell
           data={dashboard}
-          configured={getConfigurationIssues().length === 0}
+          configured={configured}
           connected={connected}
           authStatus={authStatus}
           authDetail={detail}
