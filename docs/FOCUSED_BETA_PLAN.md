@@ -19,20 +19,23 @@ Existing deeper systems may be reused where they directly support the beta workf
 ## Current state
 
 - Integration branch: `codex/companion-integration`
-- Repository baseline: current GitHub `main` is already far beyond the old v0.1.2 local baseline; package version is currently `0.1.16`.
-- Current focused-beta work item: `BETA-01`
+- Repository baseline: package version `0.1.16`; BETA-01 baseline implementation merged in PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`.
+- Current focused-beta work item: `BETA-02`.
+- Last completed focused-beta item: `BETA-01`.
+- BETA-01 executable baseline: 75 test files / 404 tests pass; typecheck passes; lint passes with 2 recorded warnings; production build passes with the recorded updater bundle-tracing warning; Windows package-policy and updater-startup smoke pass. Full warning inventory is in `docs/BETA_01_BASELINE.md`.
+- BETA-01 screenshot limitation: this automation runtime cannot render NEC because its local container cannot resolve GitHub and the GitHub connector exposes repository/Actions operations but no browser/UI renderer. The limitation and required later screenshot set are recorded in `docs/BETA_01_BASELINE.md`; no screenshots are fabricated.
 - The legacy `docs/ROADMAP.md` remains the historical feature record, but unfinished items there do not supersede this plan while the focused beta is active.
 
 ---
 
 ## Phase 1 — Establish the correct baseline
 
-- [ ] **BETA-01 — Baseline integration checkpoint.** Bring the working copy fully to current GitHub `main`; work from `codex/companion-integration`; run tests, typecheck, lint, and production build; record baseline screenshots of homepage, goals, fitting, item explorer, and representative activity pages. Record existing warnings separately rather than silently normalizing them.
+- [x] **BETA-01 — Baseline integration checkpoint.** Bring the working copy fully to current GitHub `main`; work from `codex/companion-integration`; run tests, typecheck, lint, and production build; record baseline screenshots of homepage, goals, fitting, item explorer, and representative activity pages. Record existing warnings separately rather than silently normalizing them. PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`. Screenshot capture was genuinely unavailable in this automation runtime; the exact limitation and later-required page set are recorded in `docs/BETA_01_BASELINE.md` per the focused-beta runtime rule.
 
 Acceptance:
 - branch starts from current `main`;
 - tests/typecheck/lint/build result is recorded;
-- baseline screenshots exist for later regression comparison;
+- baseline screenshots exist for later regression comparison when a UI-capable runtime is available; this automation runtime limitation is explicitly recorded rather than treated as successful capture;
 - no product behavior is changed merely to make the baseline appear cleaner.
 
 ## Phase 2 — Make Suggested Session the core product
