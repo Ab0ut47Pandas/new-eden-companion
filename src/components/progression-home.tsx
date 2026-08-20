@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronRight, RefreshCw, ShieldCheck, Shuffle, Sparkles, Target } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ADVENTURE_INTENT_OPTIONS, adventureIntentLabel, type AdventureIntent } from "@/lib/onboarding/intents";
+import { ADVENTURE_INTENT_COOKIE } from "@/lib/onboarding/preferences";
 import type { SuggestedSessionRecommendation, SuggestedSessionResult } from "@/lib/session/suggested-session";
 import { uncertaintyPresentation } from "@/lib/uncertainty/state";
 
 import { WhyDetails } from "./why-details";
 import styles from "./progression-home.module.css";
 
-const SESSION_RULE = "NEC ranks verified readiness before saved-goal relevance, then uses session-length and risk preferences as tie-breakers. Required missing evidence stays unknown or unavailable instead of being promoted to ready.";
+const COOKIE_AGE_SECONDS = 60 * 60 * 24 * 365;
+const SESSION_RULE = "NEC ranks verified readiness before saved-goal relevance, then uses your plain-language adventure intent, session length, and risk preferences as tie-breakers. Required missing evidence stays unknown or unavailable instead of being promoted to ready.";
 
 function stateCopy(state: SuggestedSessionRecommendation["state"]) {
   return uncertaintyPresentation(state);
@@ -47,11 +50,13 @@ export function ProgressionHome({
   characterName,
   connected,
   dataGapCount,
+  intent,
 }: {
   result: SuggestedSessionResult;
   characterName: string;
   connected: boolean;
   dataGapCount: number;
+  intent: AdventureIntent | null;
 }) {
   const router = useRouter();
   const [selection, setSelection] = useState(0);
@@ -67,6 +72,12 @@ export function ProgressionHome({
     setSelection((current) => (current + 1) % ranked.length);
   }
 
+  function changeIntent(nextIntent: AdventureIntent) {
+    document.cookie = `${ADVENTURE_INTENT_COOKIE}=${encodeURIComponent(nextIntent)}; Path=/; Max-Age=${COOKIE_AGE_SECONDS}; SameSite=Lax`;
+    setSelection(0);
+    router.refresh();
+  }
+
   return (
     <section className={styles.shell} aria-labelledby="progression-home-title">
       <div className={styles.heading}>
@@ -80,6 +91,18 @@ export function ProgressionHome({
           </p>
         </div>
         <span className={styles.status}><ShieldCheck size={15} /> Evidence first</span>
+      </div>
+
+      <div className={styles.intentControl}>
+        <label htmlFor="adventure-intent">What sounds fun?</label>
+        <select
+          id="adventure-intent"
+          value={intent ?? "show-me-something"}
+          onChange={(event) => changeIntent(event.target.value as AdventureIntent)}
+        >
+          {ADVENTURE_INTENT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+        <span>{intent ? `Steering toward: ${adventureIntentLabel(intent)}. Readiness and saved goals still outrank this preference.` : "Pick plain-language intent; NEC will not make you choose a fleet role."}</span>
       </div>
 
       <div className={styles.controls}>
