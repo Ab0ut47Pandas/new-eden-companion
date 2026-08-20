@@ -23,9 +23,9 @@ Everything NEC already knows about skills, ships, fits, assets, acquisition, ind
 
 - Integration branch: `codex/companion-integration`.
 - Repository baseline: package version `0.1.16`.
-- Current focused-beta work item: `BETA-13`.
-- Last completed focused-beta item: `BETA-12`.
-- BETA-12 reconciliation: PR #128 / `4dc432eeba8570c969c028741f7b55202c4dfb51` adds provenance-required suitability evidence that separates blockers, improvements, and unknowns; fitted state never proves current online state; damage-choice warnings require a sourced expectation plus supported selected-damage evidence; and an already-owned alternative is suggested only when positive evidence establishes both accessibility and better suitability.
+- Current focused-beta work item: `BETA-14`.
+- Last completed focused-beta item: `BETA-13`.
+- BETA-13 reconciliation: PR #130 / `d049bdec8ae1894b601b6ee85309f0215893e7d7` adds a shared fail-closed final preflight summary over existing activity checks and optional suitability findings. Known blockers produce `Missing requirements`; unresolved required unknown/manual evidence produces `Cannot verify`; only resolved supported evidence produces `Preflight complete` / `No known blockers`. Non-fatal improvements remain separate, and completion explicitly is not a safety guarantee.
 - BETA-01 baseline warnings remain intentionally open for BETA-18: two recorded lint warnings and the updater whole-project bundle-tracing warning. See `docs/BETA_01_BASELINE.md`.
 - BETA-01 screenshot limitation remains recorded: this automation runtime cannot render NEC; required screenshots must be captured later in a UI-capable environment rather than fabricated.
 
@@ -60,7 +60,7 @@ Everything NEC already knows about skills, ships, fits, assets, acquisition, ind
 
 - [x] **BETA-11 — Activity preflight composition.** Use the active ship and ESI-visible accessible cargo/fit evidence to check activity-specific ammunition, drones, repair paste, probes, filaments, scripts, cap charges, and other established requirements. Existing composed behavior was reconciled and locked with focused regression coverage in PR #126 / `a475fffab1600c878994bc6dc91161bbc87398b1`.
 - [x] **BETA-12 — Ship/fit suitability and blocker severity.** Provenance-backed fit requirements now distinguish required missing/offline blockers from non-fatal improvements and unresolved online state; damage mismatch requires sourced expectations; better-owned-ship suggestions require positive accessibility and suitability evidence. PR #128 / `4dc432eeba8570c969c028741f7b55202c4dfb51`.
-- [ ] **BETA-13 — Final preflight summary.** Finish with **Preflight complete / No known blockers** or a blocker list, never a safety guarantee.
+- [x] **BETA-13 — Final preflight summary.** Shared fail-closed summary now finishes with **Preflight complete / No known blockers** only when supported blockers, unknowns, and required manual confirmations are resolved; known blockers and unverifiable evidence remain explicit, and completion is never a safety guarantee. PR #130 / `d049bdec8ae1894b601b6ee85309f0215893e7d7`.
 
 ## Phase 7 — Validation and security
 
