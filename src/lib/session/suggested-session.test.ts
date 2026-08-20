@@ -57,6 +57,29 @@ describe("buildSuggestedSession", () => {
     expect(result.ranked).toHaveLength(4);
   });
 
+  it("explains recommendation selection with readiness, preferences, evidence, and provenance", () => {
+    const result = buildSuggestedSession({
+      candidates: [candidate({
+        id: "exploration",
+        activity: "exploration",
+        title: "Run a scanning loop",
+        sessionLength: "short",
+        riskPosture: "adventurous",
+        evidence: ["Character has the supported exploration readiness inputs."],
+        provenance: ["NEC exploration readiness evaluator"],
+      })],
+      evidence: readinessCoverage,
+      preferences: { sessionLength: "short", risk: "adventurous" },
+    });
+
+    expect(result.primary?.why).toContain("readiness: ready");
+    expect(result.primary?.why).toContain("Matches your short session-length preference.");
+    expect(result.primary?.why).toContain("Matches your adventurous risk preference.");
+    expect(result.primary?.evidence).toEqual(["Character has the supported exploration readiness inputs."]);
+    expect(result.primary?.provenance).toContain("NEC exploration readiness evaluator");
+    expect(result.primary?.provenance).toContain("activity readiness engine");
+  });
+
   it("never treats missing required evidence as ready", () => {
     const result = buildSuggestedSession({
       candidates: [candidate({
@@ -179,7 +202,13 @@ describe("buildSuggestedSession", () => {
     expect(result.primary?.nextAction).toBe("Train the required skill.");
   });
 
-  it("requires candidate provenance and rejects duplicate evidence/candidate ids", () => {
+  it("requires candidate evidence/provenance and rejects duplicate evidence/candidate ids", () => {
+    expect(() => buildSuggestedSession({
+      candidates: [candidate({ id: "x", activity: "mining", title: "Mine", evidence: [] })],
+      evidence: readinessCoverage,
+      preferences: { sessionLength: "any", risk: "any" },
+    })).toThrow("requires evidence");
+
     expect(() => buildSuggestedSession({
       candidates: [candidate({ id: "x", activity: "mining", title: "Mine", provenance: [] })],
       evidence: readinessCoverage,
