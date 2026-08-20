@@ -1,71 +1,123 @@
-# New Eden Companion — End-State Experience
+# New Eden Companion — Focused Beta End-State Experience
 
-This document defines product outcomes that are mandatory before `REL-01` can be considered complete. They are not aspirational extras. The roadmap must retain explicit work items for them, and the final progression-coach release candidate must be manually exercised in the installed app.
+This document defines the user-facing outcomes that are mandatory for the focused companion-integration beta described in `docs/FOCUSED_BETA_PLAN.md`.
 
-## Suggested session
+The beta is intentionally narrower than the older progression-coach release plan. The priority is not to add more EVE categories; it is to make the systems NEC already has compose into one trustworthy answer to:
 
-NEC must offer a user-facing **Suggested session** that composes a short, explainable plan for what the connected character can realistically do right now.
+> **What should I do right now?**
 
-The plan should:
+## Suggested Session
 
-- use current character/readiness evidence rather than generic activity popularity;
-- present a small ordered session instead of an undifferentiated activity list;
-- explain why each step is being suggested;
-- surface preparation/blockers when the best next action is not immediately runnable;
+NEC must offer a user-facing **Suggested Session** that composes a short, explainable plan for what the connected character can realistically do right now.
+
+The plan must:
+
+- use current character/readiness evidence rather than generic popularity;
+- consider supported evidence from skills/training, current ship/fit, owned assets/supplies, wallet/market, location, and existing readiness engines;
+- respect user-selected session length and risk posture when supplied;
+- present one primary recommendation plus a small number of alternatives;
+- show one concrete next action rather than an undifferentiated activity list;
+- explain why the recommendation fits the character;
+- surface preparation or blockers when the best option is not immediately runnable;
 - preserve unknowns when ESI or NEC knowledge cannot establish a fact;
-- never imply that NEC can see live gameplay or prove completion when it cannot.
+- never imply that NEC can see live gameplay or prove completion when it cannot;
+- never invent safety, profitability, DPS, success chance, or readiness percentages.
 
-## Try something new
+Unknown required evidence must not be silently treated as ready. A potentially useful option may still be shown as **Cannot verify** when NEC can explain what information is missing and how the player can resolve it.
 
-NEC must offer a **Try something new** suggestion that deliberately diversifies away from the user's usual/current recommendations.
+## Suggest Something Different
 
-It must:
+The focused beta must let the player ask for a different plausible recommendation without pretending NEC knows their complete play history.
 
-- use available local feedback such as `tried`, `not interested`, and explicit goals;
-- avoid claiming that ESI exposes complete play history;
-- explain why the alternative is plausible for the character;
-- respect readiness and acquisition constraints instead of recommending novelty at any cost;
-- allow the user to dismiss or mark suggestions as tried/not interested locally.
+It should:
 
-## NEC Campaigns
+- use explicit goals, local feedback, and current readiness where available;
+- avoid simply returning the same activity under a different label;
+- respect readiness/acquisition constraints;
+- explain why the alternative is plausible;
+- allow local feedback such as tried, not interested, or similar lightweight preference state.
 
-NEC must provide an optional quest-style progression layer made from real EVE activities.
+## Adventure-first onboarding
 
-Campaigns must include:
+A new or directionless player must not be required to understand EVE fleet roles or career taxonomies before NEC becomes useful.
 
-- chapters containing small, concrete objectives;
-- readiness, acquisition, fitting, and briefing help linked to the existing NEC systems;
-- explicit local/manual completion when ESI cannot prove an objective happened;
-- meaningful NEC-local milestones and progression feedback;
-- no fabricated in-game rewards, mission state, standings consequences, loot, or completion claims;
-- honest distinction between what NEC observed from ESI, what the user confirmed, and what remains unknown.
+First-run intent selection should support plain-language choices such as:
 
-At least one coherent campaign must ship far enough to validate the chapter/objective/progression experience end to end.
+- fight someone;
+- explore;
+- explore somewhere dangerous;
+- mine or gather resources;
+- build something;
+- haul or trade;
+- make ISK;
+- play with a friend;
+- show me something;
+- give me an adventure.
 
-## Story Guide mode
+NEC may translate these into activities/ships internally, but the user-facing starting point should be an achievable experience rather than a specialist role.
 
-NEC must provide **Story Guide** mode for real EVE narrative content.
+For two inexperienced friends, NEC must not assume one of them is the fleet leader. Prefer shared objectives and simple/symmetrical responsibilities when possible.
 
-Before `REL-01`, at least one current Epic Arc must be implemented as a fully guided vertical slice with:
+If current ESI cannot establish AIR Career Program or Career Agent completion, that status remains user-confirmed/local. Skills, ships, assets, or wallet state can inform capability but are never proof that AIR/tutorial content was completed.
 
-- spoiler-light arc overview and entry requirements;
-- character-specific preflight/readiness;
-- mission/chapter navigation;
-- an optional detailed walkthrough rather than forcing spoilers up front;
-- sourced branches, choices, consequences, and rewards only where they can be established;
-- validated fit guidance appropriate to the covered content;
-- local manual guide state where ESI does not expose the player's current mission or completion state;
-- no invented quest state, narrative consequences, or rewards.
+## Goal → Acquire → Fit → Preflight
 
-## Manual end-state checkpoint
+The focused beta must compose existing NEC systems into a coherent goal workflow rather than requiring the player to manually glue together separate tools.
 
-Before `REL-01` is complete, Nate must manually test the installed application for these end-state workflows. Automated tests and CI are necessary but not sufficient for judging whether the composed session, diversification, campaign progression, and Story Guide interactions are actually understandable and useful.
+A selected activity, ship, fitting, or skill goal should:
 
-The checkpoint should exercise at minimum:
+- reuse already-owned ships, modules, rigs, charges, drones, materials, supplies, blueprints, and trained skills first;
+- identify the uncovered remainder;
+- expose supported buy/build/haul/substitute/source options for missing requirements;
+- preserve explicit non-manufacturable, LP, loot, salvage, PI, reaction, exploration, NPC-seeded, and unknown boundaries when evidence establishes them;
+- distinguish the shortest usable training milestone from optional optimization skills;
+- retain the parent reason for every inserted chore or prerequisite;
+- show one next action plus a compact milestone path by default;
+- reveal deeper dependency detail on demand.
 
-1. generating and following a Suggested session;
-2. requesting a Try something new alternative and recording feedback;
-3. progressing through multiple NEC Campaign objectives, including at least one manually confirmed objective;
-4. navigating the guided Epic Arc slice from spoiler-light overview into detailed mission help;
-5. confirming that unknown/unobservable state is presented honestly rather than inferred;
-6. restarting the installed app and confirming local campaign/story progress persists correctly.
+The end-to-end path must reach a preflight state that checks supported activity supplies and fit requirements.
+
+The final wording should use language such as **Preflight complete** or **No known blockers**, never `safe to undock` and never a guarantee of safety.
+
+## Honest uncertainty
+
+Meaningful recommendation and preflight states must distinguish at least:
+
+- **Ready**
+- **Probably ready**
+- **Missing requirements**
+- **Cannot verify**
+- **Live information unavailable**
+
+Where possible, NEC should tell the player what action would resolve the uncertainty.
+
+## Focused-beta manual checkpoint
+
+Before the focused beta release is complete, the installed application must be manually exercised through at least:
+
+1. `Connect or demo → Suggested Session`;
+2. choosing the primary recommendation and viewing `Why this?`;
+3. requesting a different recommendation;
+4. selecting a goal;
+5. reusing at least one already-owned requirement;
+6. resolving at least one missing requirement through an evidence-backed acquisition path that is not simply `buy it`;
+7. fitting/assembly guidance where applicable;
+8. final preflight with fatal blockers separated from improvements;
+9. a degraded/unknown-data case that remains honest and actionable;
+10. persistence across restart for relevant local preferences/goal state;
+11. a usability pass by someone genuinely new to EVE/NEC.
+
+Automated tests and CI are necessary but not sufficient for judging whether this composed workflow is understandable.
+
+## Explicitly deferred until after the focused beta
+
+The following remain worthwhile product directions, but they do **not** block the focused companion-integration beta:
+
+- NEC Campaigns;
+- Story Guide;
+- Epic Arc expansion;
+- additional activity categories;
+- large visual redesigns;
+- other unrelated feature-growth work from the legacy roadmap.
+
+These should resume only after focused-beta player feedback has been collected.
