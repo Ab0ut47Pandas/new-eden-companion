@@ -26,17 +26,27 @@ function activityKey(title: string): string {
   return `activity:${normalized || "custom"}`;
 }
 
+function fittingKey(title: string): string {
+  const normalized = title.toLocaleLowerCase("en-US").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `fitting:${normalized || "custom"}`;
+}
+
 export async function saveItemGoalAction(formData: FormData): Promise<void> {
   const characterId = await currentCharacterId();
   const typeId = Number(formString(formData, "typeId"));
+  const requestedKind = formString(formData, "goalKind");
   if (!Number.isSafeInteger(typeId) || typeId <= 0) throw new Error("Invalid item goal.");
   const item = getStaticType(typeId);
   if (!item || item.isPlaceholder) throw new Error("This item is not resolved well enough to save as a goal.");
 
+  const semanticKind = requestedKind === "ship" || requestedKind === "skill" ? requestedKind : "item";
+  if (semanticKind === "ship" && !item.kinds.includes("ship")) throw new Error("The selected type is not a resolved ship.");
+  if (semanticKind === "skill" && !item.kinds.includes("skill")) throw new Error("The selected type is not a resolved skill.");
+
   getGoalStore().saveGoal({
     characterId,
     kind: "item",
-    targetKey: `type:${typeId}`,
+    targetKey: semanticKind === "item" ? `type:${typeId}` : `${semanticKind}:type:${typeId}`,
     targetTypeId: typeId,
     title: item.name ?? `Type ${typeId}`,
   });
@@ -53,6 +63,19 @@ export async function saveActivityGoalAction(formData: FormData): Promise<void> 
     characterId,
     kind: "activity",
     targetKey: activityKey(title),
+    title,
+  });
+  revalidatePath("/goals");
+}
+
+export async function saveFittingGoalAction(formData: FormData): Promise<void> {
+  const characterId = await currentCharacterId();
+  const title = formString(formData, "title");
+  if (!title) throw new Error("Enter a fitting goal first.");
+  getGoalStore().saveGoal({
+    characterId,
+    kind: "activity",
+    targetKey: fittingKey(title),
     title,
   });
   revalidatePath("/goals");
