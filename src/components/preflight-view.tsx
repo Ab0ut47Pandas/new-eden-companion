@@ -39,6 +39,7 @@ import {
   type FleetScale,
   type TripProfile,
 } from "@/lib/preflight/checker";
+import { summarizePreflight } from "@/lib/preflight/summary";
 
 const activityIcons = {
   combat: Swords,
@@ -103,7 +104,7 @@ export function PreflightView({ data, connected }: { data: DashboardData; connec
     result[check.status] += 1;
     return result;
   }, { pass: 0, warning: 0, danger: 0, unknown: 0, manual: 0, info: 0 });
-  const remainingManual = checks.filter((check) => check.status === "manual" && !confirmedManual.has(check.id)).length;
+  const summary = summarizePreflight({ checks, confirmedManualIds: confirmedManual });
   const carriedValue = data.character.shipContents
     .filter((item) => /^(Cargo|DroneBay|FighterBay|FleetHangar|ShipHangar|Specialized)/.test(item.locationFlag))
     .reduce((sum, item) => sum + item.estimatedValue, 0);
@@ -232,14 +233,14 @@ export function PreflightView({ data, connected }: { data: DashboardData; connec
         </section>
 
         <section className="panel preflight-report">
-          <header className={counts.danger ? "no-go" : counts.warning || remainingManual ? "review" : counts.unknown ? "unknown" : "plausible"}>
-            <div className="preflight-report-icon">{counts.danger ? <ShieldAlert size={23} /> : counts.warning || remainingManual ? <AlertTriangle size={23} /> : counts.unknown ? <CircleHelp size={23} /> : <CheckCircle2 size={23} />}</div>
+          <header className={summary.state === "blocked" ? "no-go" : summary.state === "cannot-verify" ? "unknown" : summary.improvements.length ? "review" : "plausible"}>
+            <div className="preflight-report-icon">{summary.state === "blocked" ? <ShieldAlert size={23} /> : summary.state === "cannot-verify" ? <CircleHelp size={23} /> : summary.improvements.length ? <AlertTriangle size={23} /> : <CheckCircle2 size={23} />}</div>
             <div>
               <div className="eyebrow">{selectedActivity.shortLabel} check</div>
-              <h2>{counts.danger ? "NO-GO — do not activate this yet" : counts.warning ? `${counts.warning} warning${counts.warning === 1 ? "" : "s"}${remainingManual ? ` · ${remainingManual} to confirm` : ""}` : remainingManual ? `${remainingManual} in-game check${remainingManual === 1 ? "" : "s"} left` : counts.unknown ? "Manual confirmation needed" : "Preflight complete"}</h2>
-              <p>{counts.danger ? "At least one hard blocker or likely ship-loss mismatch was found. Read the red items before you change ships, fit or scenario." : counts.warning ? "Fix or consciously accept the warnings, then finish the in-game checks." : remainingManual ? "The supplies look reasonable. Tick off the things only the EVE client can prove." : "No obvious mismatch was found. This is still not a guarantee the fit will survive."}</p>
+              <h2>{summary.title}</h2>
+              <p><strong>{summary.subtitle}.</strong> {summary.detail}</p>
             </div>
-            <span>{counts.pass} found <b>·</b> {counts.danger} no-go <b>·</b> {counts.warning} warnings <b>·</b> {remainingManual} manual</span>
+            <span>{counts.pass} found <b>·</b> {summary.blockers.length} blockers <b>·</b> {summary.improvements.length} improvements <b>·</b> {summary.pendingManual.length} to confirm</span>
           </header>
           <div className="preflight-check-list">
             {sectionOrder.map((section) => {
