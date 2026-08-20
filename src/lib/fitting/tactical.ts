@@ -187,7 +187,7 @@ export function buildFitTacticalBriefing(input: FitTacticalBriefingInput): FitTa
   const unknowns = [...new Set([
     ...input.identity.unknowns,
     ...input.weaknesses.unknowns,
-    ...(input.fitting?.fitValid == null ? ["overall fitting validity is not fully established"] : []),
+    ...(input.fitting && input.fitting.fitValid == null ? ["overall fitting validity is not fully established"] : []),
   ])].sort();
   const provenance = [...new Set([...input.provenance, ...input.identity.provenance, ...input.weaknesses.provenance])];
   const headlineRole = input.identity.primaryCombatRole ? ROLE_LABELS[input.identity.primaryCombatRole] : "Mixed / unresolved role";
