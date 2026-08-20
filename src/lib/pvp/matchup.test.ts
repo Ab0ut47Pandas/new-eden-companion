@@ -158,12 +158,14 @@ describe("compareTwoFits", () => {
     expect(capacitor.caveats.join(" ")).toMatch(/does not calculate time-to-cap-out/i);
   });
 
-  it("keeps unsupported dimensions unknown and never produces a winner or win percentage", () => {
+  it("keeps unsupported dimensions unknown and never exposes winner or win-probability fields", () => {
     const result = compareTwoFits(baseFit("You"), baseFit("Opponent"));
 
     expect(result.unknowns.length).toBeGreaterThan(0);
     expect(result.limitations.join(" ")).toMatch(/never emits a win percentage/i);
-    expect(JSON.stringify(result)).not.toMatch(/winProbability|winner|chanceToWin/i);
+    expect(result).not.toHaveProperty("winProbability");
+    expect(result).not.toHaveProperty("winner");
+    expect(result).not.toHaveProperty("chanceToWin");
   });
 
   it("uses only opponent-specific EHP for the tank dimension", () => {
