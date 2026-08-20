@@ -32,7 +32,7 @@ describe("buildDashboardSuggestedSession", () => {
     data.advice = [
       {
         id: "jobs-finishing",
-        priority: "soon",
+        priority: "now",
         title: "Industry jobs are finishing",
         summary: "Existing industry work needs attention.",
         evidence: "The dashboard has supported job-state evidence.",
@@ -40,7 +40,7 @@ describe("buildDashboardSuggestedSession", () => {
       },
       {
         id: "asset-concentration",
-        priority: "soon",
+        priority: "watch",
         title: "Assets are concentrated",
         summary: "Existing assets may need movement planning.",
         evidence: "The dashboard has supported asset/location evidence.",
