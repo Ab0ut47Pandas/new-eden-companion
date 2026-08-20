@@ -104,8 +104,8 @@ jobs:
                 throw "Portable NEC exited before becoming ready (code $($process.ExitCode))."
               }
               try {
-                $response = Invoke-WebRequest -Uri $base -UseBasicParsing -TimeoutSec 2
-                if ($response.StatusCode -eq 200) { return @{ Process = $process; Base = $base } }
+                $response = Invoke-WebRequest -Uri "$base/api/static-data/health" -UseBasicParsing -TimeoutSec 2 -SkipHttpErrorCheck
+                if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) { return @{ Process = $process; Base = $base } }
               } catch {}
               Start-Sleep -Seconds 1
             }
