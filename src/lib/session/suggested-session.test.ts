@@ -159,7 +159,7 @@ describe("buildSuggestedSession", () => {
       state: "unmet" as const,
       summary: "Required skill is not trained",
       why: "The activity requires the skill.",
-      evidence: ["Skill level below requirement"],
+      evidence: [{ source: "derived" as const, label: "Skill level below requirement" }],
     };
     const result = buildSuggestedSession({
       candidates: [candidate({
