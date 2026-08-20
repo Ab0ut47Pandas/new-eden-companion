@@ -75,10 +75,13 @@ jobs:
           $extract = Join-Path $env:RUNNER_TEMP 'nec-beta15-portable'
           if (Test-Path $extract) { Remove-Item -Recurse -Force $extract }
           Expand-Archive -LiteralPath $zip.FullName -DestinationPath $extract -Force
-          $node = Join-Path $extract 'runtime\node.exe'
-          $server = Join-Path $extract 'server.js'
-          if (-not (Test-Path $node) -or -not (Test-Path $server)) { throw "Portable runtime/server is missing." }
-          $envFile = Join-Path $extract '.env.local'
+
+          $serverFile = Get-ChildItem -Path $extract -Recurse -File -Filter 'server.js' | Where-Object { Test-Path (Join-Path $_.Directory.FullName 'runtime\node.exe') } | Select-Object -First 1
+          if (-not $serverFile) { throw "Portable package root with server.js and runtime/node.exe is missing." }
+          $packageRoot = $serverFile.Directory.FullName
+          $server = $serverFile.FullName
+          $node = Join-Path $packageRoot 'runtime\node.exe'
+          $envFile = Join-Path $packageRoot '.env.local'
           @(
             'AUTH_SECRET=beta15-portable-validation-secret-1234567890',
             'EVE_CLIENT_ID='
@@ -89,7 +92,7 @@ jobs:
             $env:PORT = [string]$Port
             $env:NODE_ENV = 'production'
             if ($StaticDatabasePath) { $env:STATIC_DATABASE_PATH = $StaticDatabasePath } else { Remove-Item Env:STATIC_DATABASE_PATH -ErrorAction SilentlyContinue }
-            $process = Start-Process -FilePath $node -ArgumentList "--env-file-if-exists=$envFile", $server -WorkingDirectory $extract -PassThru -WindowStyle Hidden
+            $process = Start-Process -FilePath $node -ArgumentList "--env-file-if-exists=$envFile", $server -WorkingDirectory $packageRoot -PassThru -WindowStyle Hidden
             $base = "http://127.0.0.1:$Port"
             for ($attempt = 0; $attempt -lt 60; $attempt++) {
               if ($process.HasExited) { throw "Portable NEC exited before becoming ready (code $($process.ExitCode))." }
@@ -139,17 +142,11 @@ jobs:
               salesTaxPercent = 7.5
               goal = 'profit'
             } | ConvertTo-Json
-            try {
-              Invoke-WebRequest -Uri "$($degraded.Base)/api/hauling/trade-run/discover" -Method Post -ContentType 'application/json' -Body $body -UseBasicParsing -TimeoutSec 15 | Out-Null
-              throw 'Trade-run discovery unexpectedly succeeded without static data.'
-            } catch {
-              $response = $_.Exception.Response
-              if (-not $response -or [int]$response.StatusCode -ne 503) { throw }
-              $reader = [System.IO.StreamReader]::new($response.GetResponseStream())
-              try { $payload = $reader.ReadToEnd() | ConvertFrom-Json } finally { $reader.Dispose() }
-              if ($payload.state -ne 'Cannot verify') { throw "Expected Cannot verify for missing static data; got '$($payload.state)'." }
-              if ($payload.error -match 'profit' -and $payload.error -match '\d') { throw 'Degraded trade-run response appears to invent profitability.' }
-            }
+            $response = Invoke-WebRequest -Uri "$($degraded.Base)/api/hauling/trade-run/discover" -Method Post -ContentType 'application/json' -Body $body -UseBasicParsing -TimeoutSec 15 -SkipHttpErrorCheck
+            if ($response.StatusCode -ne 503) { throw "Expected HTTP 503 for missing static data; got $($response.StatusCode)." }
+            $payload = $response.Content | ConvertFrom-Json
+            if ($payload.state -ne 'Cannot verify') { throw "Expected Cannot verify for missing static data; got '$($payload.state)'." }
+            if ($payload.error -match 'profit' -and $payload.error -match '\d') { throw 'Degraded trade-run response appears to invent profitability.' }
           } finally {
             Stop-Process -Id $degraded.Process.Id -Force -ErrorAction SilentlyContinue
             $degraded.Process.WaitForExit(10000) | Out-Null
