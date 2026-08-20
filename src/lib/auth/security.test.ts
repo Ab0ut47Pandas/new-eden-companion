@@ -18,6 +18,16 @@ describe("safeAuthErrorSummary", () => {
     for (const secret of secrets) expect(serialized).not.toContain(secret);
   });
 
+  it("does not expose a mutable Error.name value", () => {
+    const error = new Error("ordinary failure");
+    error.name = "refresh-token-in-error-name";
+
+    const summary = safeAuthErrorSummary(error);
+
+    expect(summary).toEqual({ errorType: "Error" });
+    expect(JSON.stringify(summary)).not.toContain("refresh-token-in-error-name");
+  });
+
   it("does not stringify arbitrary thrown objects that may contain credentials", () => {
     const summary = safeAuthErrorSummary({
       access_token: "access-secret",
