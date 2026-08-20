@@ -61,7 +61,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
   return (
     <>
-      <ProgressionHome data={dashboard} />
+      {connected && <ProgressionHome data={dashboard} />}
       <div id="detailed-dashboard">
         <DashboardShell
           data={dashboard}
