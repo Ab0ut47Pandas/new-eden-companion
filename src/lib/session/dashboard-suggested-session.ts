@@ -1,3 +1,4 @@
+import type { AdventureIntent } from "@/lib/onboarding/intents";
 import type { AdviceCard, DashboardData } from "@/lib/dashboard/model";
 import type { ReadinessExplanation } from "@/lib/readiness/explanation";
 import {
@@ -16,6 +17,7 @@ interface AdviceMetadata {
   href?: string;
   sessionLength: SessionLengthClass;
   riskPosture: SessionRiskPosture;
+  adventureIntents?: readonly AdventureIntent[];
   requiredEvidence: readonly SuggestedSessionEvidenceKey[];
 }
 
@@ -51,6 +53,7 @@ const ADVICE_METADATA: Record<string, AdviceMetadata> = {
     href: "/assets",
     sessionLength: "short",
     riskPosture: "cautious",
+    adventureIntents: ["make-isk"],
     requiredEvidence: ["wallet", "owned-equipment", "market"],
   },
   "asset-concentration": {
@@ -58,12 +61,14 @@ const ADVICE_METADATA: Record<string, AdviceMetadata> = {
     href: "/activities/hauling",
     sessionLength: "medium",
     riskPosture: "balanced",
+    adventureIntents: ["hauling-trade"],
     requiredEvidence: ["owned-equipment", "market", "location"],
   },
   "expiring-orders": {
     activity: "Market review",
     sessionLength: "short",
     riskPosture: "cautious",
+    adventureIntents: ["hauling-trade", "make-isk"],
     requiredEvidence: ["market"],
   },
   "jobs-finishing": {
@@ -71,6 +76,7 @@ const ADVICE_METADATA: Record<string, AdviceMetadata> = {
     href: "/activities/industry",
     sessionLength: "medium",
     riskPosture: "cautious",
+    adventureIntents: ["industry-building", "make-isk"],
     requiredEvidence: ["activity-readiness"],
   },
   "steady-state": DEFAULT_METADATA,
@@ -143,6 +149,7 @@ function candidateForAdvice(card: AdviceCard, data: DashboardData): SuggestedSes
     goalRelevance: "none",
     sessionLength: metadata.sessionLength,
     riskPosture: metadata.riskPosture,
+    adventureIntents: metadata.adventureIntents,
     requiredEvidence: metadata.requiredEvidence,
     preparation: [card.summary],
     missingRequirements: [],
@@ -155,7 +162,7 @@ function candidateForAdvice(card: AdviceCard, data: DashboardData): SuggestedSes
 
 export function buildDashboardSuggestedSession(
   data: DashboardData,
-  preferences: SuggestedSessionPreferences = { sessionLength: "any", risk: "any" },
+  preferences: SuggestedSessionPreferences = { sessionLength: "any", risk: "any", intent: null },
 ): SuggestedSessionResult {
   const candidates = data.advice
     .map((card) => candidateForAdvice(card, data))
