@@ -15,6 +15,18 @@ describe("buildDashboardSuggestedSession", () => {
     expect(result.primary?.provenance.length).toBeGreaterThan(0);
   });
 
+  it("keeps Why this explanation facts and provenance on every meaningful dashboard recommendation", () => {
+    const data = demoDashboard();
+    const result = buildDashboardSuggestedSession(data, { sessionLength: "short", risk: "cautious" });
+
+    expect(result.ranked.length).toBeGreaterThan(0);
+    for (const recommendation of result.ranked) {
+      expect(recommendation.why.length).toBeGreaterThan(0);
+      expect(recommendation.evidence.length).toBeGreaterThan(0);
+      expect(recommendation.provenance.length).toBeGreaterThan(0);
+    }
+  });
+
   it("fails closed when evidence required by a recommendation is unavailable", () => {
     const data = demoDashboard();
     data.mode = "live";
