@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { WhyDetails } from "@/components/why-details";
 import {
   compileBuilderState,
   createEmptyBuilderState,
@@ -26,11 +27,11 @@ function ExplanationCard({ card }: { card: TacticalExplanationCard }) {
     <article className={styles.card}>
       <strong className={toneClass}>{card.title}</strong>
       <p>{card.summary}</p>
-      <details>
-        <summary>Why?</summary>
-        {card.why.length ? <ul className={styles.warnings}>{card.why.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p className={styles.small}>No additional supported explanation is available.</p>}
-        {card.evidence.length ? <><strong>Evidence</strong><ul className={styles.warnings}>{card.evidence.map((evidence) => <li key={evidence}>{evidence}</li>)}</ul></> : null}
-      </details>
+      <WhyDetails
+        rule="Tactical guidance is emitted only from supported calculator, fit-identity, or weakness-rule output; missing matchup or live-combat state stays outside the conclusion."
+        reasons={card.why}
+        evidence={card.evidence}
+      />
     </article>
   );
 }
@@ -189,6 +190,14 @@ export function FittingBuilderClient() {
           <h3>Tactical explanation</h3>
           <p><strong>{tactical.headline}</strong></p>
           <p className={styles.small}>This translates only supported calculator, identity-classifier, and weakness-rule evidence. It is not a matchup prediction and it cannot see live combat.</p>
+          <WhyDetails
+            label="Why this fit identity?"
+            rule="The fit identity comes from explainable FIT-04 role/tank evidence. Ties and missing evidence remain mixed, unclassified, or unknown rather than being forced into a role."
+            reasons={tactical.whatThisFitWants[0]?.why ?? []}
+            evidence={tactical.whatThisFitWants[0]?.evidence ?? []}
+            provenance={tactical.provenance}
+            unknowns={tactical.unknowns}
+          />
 
           <h4>What this fit wants</h4>
           <div className={styles.cards}>{tactical.whatThisFitWants.map((card) => <ExplanationCard key={card.id} card={card} />)}</div>
