@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const exchangeAuthorizationCode = vi.fn();
+const { exchangeAuthorizationCode } = vi.hoisted(() => ({
+  exchangeAuthorizationCode: vi.fn(),
+}));
 
 vi.mock("@/lib/auth/sso", () => ({
   exchangeAuthorizationCode,
