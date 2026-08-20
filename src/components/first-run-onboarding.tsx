@@ -55,7 +55,7 @@ export function FirstRunOnboarding({ configured }: { configured: boolean }) {
   function connectCharacter() {
     persistPreferences(configured);
     if (configured) {
-      window.location.assign("/api/auth/login?profile=recommended");
+      router.push("/api/auth/login?profile=recommended");
       return;
     }
     window.location.hash = "detailed-dashboard";
@@ -75,7 +75,7 @@ export function FirstRunOnboarding({ configured }: { configured: boolean }) {
       <div className={styles.boundaries}>
         <article>
           <Database size={18} />
-          <div><strong>What NEC can use</strong><span>Only data available through the EVE SSO/ESI permissions you grant, plus NEC's local static data and your explicit local choices.</span></div>
+          <div><strong>What NEC can use</strong><span>Only data available through the EVE SSO/ESI permissions you grant, plus NEC&apos;s local static data and your explicit local choices.</span></div>
         </article>
         <article>
           <ShieldCheck size={18} />
