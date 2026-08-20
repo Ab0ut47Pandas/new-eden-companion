@@ -18,27 +18,31 @@ export default async function TradeRunPage() {
     return <TradeRunDiscoveryView data={dashboard} connected={false} />;
   }
 
+  const session = getSession(sessionId);
+  if (!session) {
+    return (
+      <LiveDataUnavailable
+        title="Trade-run planner"
+        detail="NEC found a character-session cookie, but the corresponding local session is unavailable. Your current wallet and location cannot be verified."
+        backHref="/activities/hauling"
+        backLabel="Hauling readiness"
+      />
+    );
+  }
+
+  let dashboard: Awaited<ReturnType<typeof buildLiveDashboard>> | null = null;
   try {
-    const session = getSession(sessionId);
-    if (!session) {
-      return (
-        <LiveDataUnavailable
-          title="Trade-run planner"
-          detail="NEC found a character-session cookie, but the corresponding local session is unavailable. Your current wallet and location cannot be verified."
-          backHref="/activities/hauling"
-          backLabel="Hauling readiness"
-        />
-      );
-    }
     const token = await validAccessToken(session);
-    const dashboard = await buildLiveDashboard({
+    dashboard = await buildLiveDashboard({
       characterId: session.characterId,
       characterName: session.characterName,
       token,
     });
-    return <TradeRunDiscoveryView data={dashboard} connected />;
   } catch (error) {
     console.warn("Unable to build live trade-run discovery; live evidence remains unavailable", error instanceof Error ? error.name : "unknown error");
+  }
+
+  if (!dashboard) {
     return (
       <LiveDataUnavailable
         title="Trade-run planner"
@@ -48,4 +52,6 @@ export default async function TradeRunPage() {
       />
     );
   }
+
+  return <TradeRunDiscoveryView data={dashboard} connected />;
 }
