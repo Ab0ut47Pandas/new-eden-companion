@@ -20,8 +20,9 @@ Existing deeper systems may be reused where they directly support the beta workf
 
 - Integration branch: `codex/companion-integration`
 - Repository baseline: package version `0.1.16`; BETA-01 baseline implementation merged in PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`.
-- Current focused-beta work item: `BETA-04`.
-- Last completed focused-beta item: `BETA-03`.
+- Current focused-beta work item: `BETA-05`.
+- Last completed focused-beta item: `BETA-04`.
+- BETA-04 implementation: recommendation explanations merged in PR #113 / `6e4a746fe27ceb086e119e154f70dbd28107cb47`; Suggested Session now separates reasoning, supported character/evaluator evidence, and provenance in `Why this?`, exposes the actual readiness → goal relevance → preference tie-break ranking rule, includes session/risk preference rationale, and rejects meaningful candidates without supported evidence.
 - BETA-03 implementation: Suggested Session homepage integration merged in PR #111 / `8499c731b4a88167cb5d30d4bb11835b73386187`; the homepage now consumes the BETA-02 service result, renders one primary recommendation plus up to two alternatives, exposes activity/session/risk/next-action details, supports refresh and `Suggest something different`, renders demo data explicitly as demo, and fails closed when required evidence is unavailable.
 - BETA-02 implementation: unified Suggested Session evidence-composition service merged in PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275`; it returns one primary recommendation, up to two alternatives, explicit evidence/provenance/unknowns, qualitative preference-aware ranking, supported owned-ship preference, and fail-closed required-evidence handling for the BETA-03 homepage integration.
 - BETA-01 executable baseline: 75 test files / 404 tests pass; typecheck passes; lint passes with 2 recorded warnings; production build passes with the recorded updater bundle-tracing warning; Windows package-policy and updater-startup smoke pass. Full warning inventory is in `docs/BETA_01_BASELINE.md`.
@@ -53,7 +54,7 @@ Recommendation safety rules:
 
 ## Phase 3 — Explanations and uncertainty
 
-- [ ] **BETA-04 — Recommendation explanations.** Every meaningful recommendation exposes `Why this?`, the character facts/rules that produced it, and relevant provenance.
+- [x] **BETA-04 — Recommendation explanations.** Every meaningful recommendation exposes `Why this?`, the character facts/rules that produced it, and relevant provenance. PR #113 / `6e4a746fe27ceb086e119e154f70dbd28107cb47` separates reasoning from evidence/provenance in the existing `Why this?` disclosure, exposes ranking/preference rationale, applies the same explanation structure to primary and alternative recommendations, and requires supported evidence plus provenance for every meaningful Suggested Session candidate.
 - [ ] **BETA-05 — Standard uncertainty language.** Standardize at least: **Ready**, **Probably ready**, **Missing requirements**, **Cannot verify**, and **Live information unavailable**. Explain what the user can do to resolve missing information where possible.
 
 Never replace uncertainty with fabricated precision.
