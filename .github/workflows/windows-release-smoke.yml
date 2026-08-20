@@ -84,7 +84,8 @@ jobs:
           $envFile = Join-Path $packageRoot '.env.local'
           @(
             'AUTH_SECRET=beta15-portable-validation-secret-1234567890',
-            'EVE_CLIENT_ID='
+            'EVE_CLIENT_ID=beta15-portable-client-id',
+            'EVE_REDIRECT_URI=http://localhost:3000/api/auth/callback'
           ) | Set-Content -LiteralPath $envFile -Encoding utf8
 
           function Start-Nec([int]$Port, [string]$StaticDatabasePath = '') {
@@ -92,16 +93,24 @@ jobs:
             $env:PORT = [string]$Port
             $env:NODE_ENV = 'production'
             if ($StaticDatabasePath) { $env:STATIC_DATABASE_PATH = $StaticDatabasePath } else { Remove-Item Env:STATIC_DATABASE_PATH -ErrorAction SilentlyContinue }
-            $process = Start-Process -FilePath $node -ArgumentList "--env-file-if-exists=$envFile", $server -WorkingDirectory $packageRoot -PassThru -WindowStyle Hidden
+            $stdout = Join-Path $env:RUNNER_TEMP "nec-beta15-$Port.out.log"
+            $stderr = Join-Path $env:RUNNER_TEMP "nec-beta15-$Port.err.log"
+            $process = Start-Process -FilePath $node -ArgumentList "--env-file-if-exists=$envFile", $server -WorkingDirectory $packageRoot -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
             $base = "http://127.0.0.1:$Port"
             for ($attempt = 0; $attempt -lt 60; $attempt++) {
-              if ($process.HasExited) { throw "Portable NEC exited before becoming ready (code $($process.ExitCode))." }
+              if ($process.HasExited) {
+                Get-Content $stdout -ErrorAction SilentlyContinue | Write-Host
+                Get-Content $stderr -ErrorAction SilentlyContinue | Write-Host
+                throw "Portable NEC exited before becoming ready (code $($process.ExitCode))."
+              }
               try {
                 $response = Invoke-WebRequest -Uri $base -UseBasicParsing -TimeoutSec 2
                 if ($response.StatusCode -eq 200) { return @{ Process = $process; Base = $base } }
               } catch {}
               Start-Sleep -Seconds 1
             }
+            Get-Content $stdout -ErrorAction SilentlyContinue | Write-Host
+            Get-Content $stderr -ErrorAction SilentlyContinue | Write-Host
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             throw "Portable NEC did not become ready on port $Port."
           }
