@@ -202,7 +202,7 @@ export function compileBuilderState(state: FitBuilderState, catalog: FitBuilderC
       errors.push(`Unknown module: ${selection.definitionId}`);
       continue;
     }
-    let module: FittingModuleInput = { ...definition.module, id: selection.instanceId };
+    let resolvedModule: FittingModuleInput = { ...definition.module, id: selection.instanceId };
     if (definition.note) warnings.push(`${definition.name}: ${definition.note}`);
     if (selection.chargeId) {
       const charge = catalog.charges.find((entry) => entry.id === selection.chargeId);
@@ -214,11 +214,11 @@ export function compileBuilderState(state: FitBuilderState, catalog: FitBuilderC
         errors.push(`${charge.name} is not validated for ${definition.name}`);
         continue;
       }
-      module = { ...module, turret: mergeTurret(module.turret, charge.turretPatch), missile: mergeMissile(module.missile, charge.missilePatch) };
+      resolvedModule = { ...resolvedModule, turret: mergeTurret(resolvedModule.turret, charge.turretPatch), missile: mergeMissile(resolvedModule.missile, charge.missilePatch) };
     } else if (definition.supportedChargeIds?.length) {
       warnings.push(`${definition.name} has no validated charge selected; weapon damage/range may remain unknown.`);
     }
-    modules.push(module);
+    modules.push(resolvedModule);
   }
 
   const drones: DroneGroupInput[] = [];
