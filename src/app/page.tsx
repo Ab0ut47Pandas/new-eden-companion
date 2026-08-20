@@ -4,6 +4,7 @@ import { AbyssalActivityShortcut } from "@/components/abyssal-activity-shortcut"
 import { AssetCleanupShortcut } from "@/components/asset-cleanup-shortcut";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { ExplorationActivityShortcut } from "@/components/exploration-activity-shortcut";
+import { FittingBuilderShortcut } from "@/components/fitting-builder-shortcut";
 import { HaulingActivityShortcut } from "@/components/hauling-activity-shortcut";
 import { IndustryActivityShortcut } from "@/components/industry-activity-shortcut";
 import { ItemExplorerShortcut } from "@/components/item-explorer-shortcut";
@@ -74,6 +75,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <IndustryActivityShortcut />
       <ExplorationActivityShortcut />
       <MissionActivityShortcut />
+      <FittingBuilderShortcut />
       <SkillExportButton
         characterName={dashboard.character.name}
         skills={dashboard.skills}
