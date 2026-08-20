@@ -3,12 +3,17 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { getSession } from "@/lib/auth/session-store";
+import { validAccessToken } from "@/lib/auth/sso";
+import { buildOwnedFirstGoalPlan, type OwnedFirstGoalPlan } from "@/lib/goals/owned-first-plan";
 import { getGoalStore, type SavedGoal } from "@/lib/goals/store";
+import { loadCharacterAssetCoverage } from "@/lib/player/asset-coverage";
+import { loadCharacterSkillReadiness } from "@/lib/player/skill-readiness";
 import { searchStaticItems, staticDatabaseAvailable } from "@/lib/sde/database";
 
 import {
   addGoalStepAction,
   saveActivityGoalAction,
+  saveFittingGoalAction,
   saveItemGoalAction,
   setGoalCompletedAction,
   setGoalStepCompletedAction,
@@ -21,40 +26,94 @@ interface GoalsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
+type GoalCoveragePlan = ReturnType<typeof buildOwnedFirstGoalPlan>;
+
 function single(value: string | string[] | undefined): string {
   return typeof value === "string" ? value : "";
 }
 
-async function viewer(): Promise<{ characterId: number; characterName: string } | null> {
+async function viewer(): Promise<{ characterId: number; characterName: string; token: string } | null> {
   const sessionId = (await cookies()).get("eve_session")?.value;
   if (!sessionId) return null;
   const session = getSession(sessionId);
-  return session ? { characterId: session.characterId, characterName: session.characterName } : null;
+  if (!session) return null;
+  try {
+    return {
+      characterId: session.characterId,
+      characterName: session.characterName,
+      token: await validAccessToken(session),
+    };
+  } catch {
+    return { characterId: session.characterId, characterName: session.characterName, token: "" };
+  }
 }
 
 function progressLabel(goal: SavedGoal): string {
-  if (goal.steps.length === 0) return "No checklist yet";
+  if (goal.steps.length === 0) return "No manual checklist yet";
   const complete = goal.steps.filter((step) => step.completed).length;
   return `${complete}/${goal.steps.length} checklist steps complete`;
 }
 
-function GoalCard({ goal }: { goal: SavedGoal }) {
+function semanticGoalKind(goal: SavedGoal): "activity" | "ship" | "fitting" | "skill" | "item" {
+  if (goal.targetKey.startsWith("ship:type:")) return "ship";
+  if (goal.targetKey.startsWith("skill:type:")) return "skill";
+  if (goal.targetKey.startsWith("fitting:")) return "fitting";
+  return goal.kind;
+}
+
+function skillGoalLevel(goal: SavedGoal): number {
+  const match = goal.targetKey.match(/:level:([1-5])$/);
+  return match ? Number(match[1]) : 1;
+}
+
+function requirementSummary(plan: GoalCoveragePlan | null): string {
+  if (!plan) return "Dependency details are not established for this goal yet.";
+  if (plan.unknown.length > 0) return `${plan.unknown.length} requirement${plan.unknown.length === 1 ? "" : "s"} cannot be verified yet.`;
+  if (plan.uncovered.length > 0) return `${plan.uncovered.length} requirement${plan.uncovered.length === 1 ? "" : "s"} remain uncovered after reusing what you already have.`;
+  if (plan.covered.length > 0) return "The currently established requirements are already covered.";
+  return "No structured requirements have been established for this goal yet.";
+}
+
+function GoalCard({ goal, plan }: { goal: SavedGoal; plan: GoalCoveragePlan | null }) {
+  const semanticKind = semanticGoalKind(goal);
   return (
     <article className={styles.infoCard}>
       <div className={styles.resultTop}>
         <span className={goal.status === "completed" ? styles.kindPill : styles.pill}>{goal.status}</span>
-        <span className={styles.mutedPill}>{goal.kind}</span>
+        <span className={styles.mutedPill}>{semanticKind}</span>
       </div>
       <h3>
-        {goal.kind === "item" && goal.targetTypeId ? (
+        {goal.targetTypeId ? (
           <Link className={styles.itemLink} href={`/items/${goal.targetTypeId}`}>{goal.title} <ExternalLink size={12} /></Link>
         ) : goal.title}
       </h3>
       <p className={styles.description}>{progressLabel(goal)}</p>
 
+      <div className={styles.terminal}>
+        <strong>Owned/trained first:</strong> {requirementSummary(plan)}
+        {plan && plan.covered.length > 0 && (
+          <ul className={styles.skillList}>
+            {plan.covered.map((entry) => <li key={entry.requirement.id}>Covered - {entry.requirement.title}: {entry.explanation}</li>)}
+          </ul>
+        )}
+        {plan && plan.uncovered.length > 0 && (
+          <ul className={styles.skillList}>
+            {plan.uncovered.map((entry) => <li key={entry.requirement.id}>Uncovered - {entry.requirement.title}: {entry.explanation}</li>)}
+          </ul>
+        )}
+        {plan && plan.unknown.length > 0 && (
+          <ul className={styles.skillList}>
+            {plan.unknown.map((entry) => <li key={entry.requirement.id}>Cannot verify - {entry.requirement.title}: {entry.explanation}</li>)}
+          </ul>
+        )}
+        {(semanticKind === "activity" || semanticKind === "fitting") && !plan && (
+          <p className={styles.description}>NEC will not invent a dependency list from a free-text activity or fitting name. A structured activity or selected/imported fit must supply the actual requirements first.</p>
+        )}
+      </div>
+
       <div className={styles.alternatives}>
         {goal.steps.length === 0 ? (
-          <div className={styles.terminal}>Add your own checklist now. Later readiness/goal planning will be able to generate ordered steps from the character state.</div>
+          <div className={styles.terminal}>Manual checklist steps remain optional. BETA goal planning now keeps owned/trained coverage separate from user-confirmed progress.</div>
         ) : (
           <ul className={styles.skillList}>
             {goal.steps.map((step) => (
@@ -105,6 +164,41 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
     ? searchStaticItems(itemQuery, { limit: 12 }).filter((item) => !item.isPlaceholder)
     : [];
 
+  const [assetCoverage, skillCoverage] = current && current.token
+    ? await Promise.all([
+        loadCharacterAssetCoverage(current.characterId, current.token),
+        loadCharacterSkillReadiness(current.characterId, current.token),
+      ])
+    : [null, null];
+
+  const ownedItems = assetCoverage?.visibility === "available"
+    ? [...assetCoverage.byType.values()].map((entry) => ({
+        typeId: entry.typeId,
+        accessibleQuantity: entry.knownLocationQuantity,
+        inaccessibleQuantity: entry.unknownLocationQuantity,
+      }))
+    : null;
+  const trainedSkills = skillCoverage?.visibility === "available"
+    ? [...skillCoverage.bySkill.values()].map((entry) => ({ typeId: entry.skillTypeId, trainedLevel: entry.trainedLevel }))
+    : null;
+
+  const plans = new Map<string, OwnedFirstGoalPlan>();
+  for (const goal of goals) {
+    const semanticKind = semanticGoalKind(goal);
+    if (!goal.targetTypeId || (semanticKind !== "ship" && semanticKind !== "skill")) continue;
+    const requirements = semanticKind === "ship"
+      ? [{ id: `hull:${goal.targetTypeId}`, kind: "hull" as const, title: goal.title, reason: "This hull is the selected ship goal.", typeId: goal.targetTypeId, quantity: 1 }]
+      : [{ id: `skill:${goal.targetTypeId}`, kind: "skill" as const, title: goal.title, reason: "This trained skill level is the selected skill goal.", typeId: goal.targetTypeId, requiredLevel: skillGoalLevel(goal) }];
+    plans.set(goal.id, buildOwnedFirstGoalPlan({
+      goal: { kind: semanticKind, key: goal.targetKey, title: goal.title, typeId: goal.targetTypeId },
+      requirements,
+      ownedItems,
+      trainedSkills,
+      ownershipProvenance: assetCoverage?.visibility === "available" ? ["ESI character assets"] : ["ESI character assets unavailable"],
+      skillProvenance: skillCoverage?.visibility === "available" ? ["ESI character skills"] : ["ESI character skills unavailable"],
+    }));
+  }
+
   return (
     <main className={styles.shell}>
       <div className={styles.container}>
@@ -114,31 +208,31 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
         </div>
 
         <section className={styles.hero}>
-          <div className={styles.eyebrow}>Local progression state</div>
+          <div className={styles.eyebrow}>Focused beta goal planning</div>
           <h1>Goals & plans</h1>
-          <p>Save things you want to obtain or activities you want to learn. Goals and checklist progress stay in your private local NEC database and are separate from the replaceable CCP static-data database.</p>
+          <p>Choose an activity, ship, fitting, or skill goal. NEC reuses established owned/trained requirements first and keeps unknown ownership separate from genuinely missing parts.</p>
         </section>
 
         {!current ? (
           <div className={styles.notice}>Connect an EVE character first. Goals are stored per character so progress does not bleed between alts.</div>
         ) : (
           <>
-            <div className={styles.notice}>Showing goals for {current.characterName}. For now, checklist steps are user-entered; later readiness phases will generate explainable progression steps from your character state.</div>
+            <div className={styles.notice}>Showing goals for {current.characterName}. Asset and skill coverage comes from authorized ESI data when available; inaccessible or unavailable state is not silently treated as missing.</div>
 
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
-                <div><div className={styles.eyebrow}>Obtain something</div><h2>Save an item goal</h2></div>
-                <p>Search the installed CCP static database, then save the exact item.</p>
+                <div><div className={styles.eyebrow}>Ship or skill</div><h2>Choose a resolved EVE target</h2></div>
+                <p>Search the installed CCP static database. Ship and skill targets retain their exact type identity.</p>
               </div>
               <form className={styles.searchForm} action="/goals" method="get">
                 <label className={styles.searchBox}>
                   <Search size={17} aria-hidden="true" />
-                  <input type="search" name="item" defaultValue={itemQuery} placeholder="Rifter, Gila, Tritanium, blueprint..." aria-label="Search item goals" />
+                  <input type="search" name="item" defaultValue={itemQuery} placeholder="Rifter, Minmatar Frigate..." aria-label="Search ship or skill goals" />
                 </label>
-                <button className={styles.searchButton} type="submit">Find item</button>
+                <button className={styles.searchButton} type="submit">Find target</button>
               </form>
-              {itemQuery && !staticDatabaseAvailable() && <div className={styles.error}>Static EVE data is unavailable, so NEC cannot safely resolve that item goal.</div>}
-              {itemQuery && staticDatabaseAvailable() && itemResults.length === 0 && <div className={styles.emptyState}><strong>No matching item found.</strong>Try the exact item name or a broader group/category.</div>}
+              {itemQuery && !staticDatabaseAvailable() && <div className={styles.error}>Static EVE data is unavailable, so NEC cannot safely resolve that goal target.</div>}
+              {itemQuery && staticDatabaseAvailable() && itemResults.length === 0 && <div className={styles.emptyState}><strong>No matching item found.</strong>Try the exact name or a broader group/category.</div>}
               {itemResults.length > 0 && (
                 <div className={styles.results}>
                   {itemResults.map((item) => (
@@ -146,10 +240,21 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
                       <div className={styles.resultTop}>{item.kinds.map((kind) => <span className={styles.kindPill} key={kind}>{kind}</span>)}</div>
                       <h3><Link className={styles.itemLink} href={`/items/${item.typeId}`}>{item.name ?? `Type ${item.typeId}`}</Link></h3>
                       <p className={styles.description}>{item.categoryName ?? "Unknown category"} · {item.groupName ?? "Unknown group"} · Type {item.typeId}</p>
-                      <form action={saveItemGoalAction}>
-                        <input type="hidden" name="typeId" value={item.typeId} />
-                        <button className={styles.secondaryLink} type="submit"><Target size={15} /> Save as goal</button>
-                      </form>
+                      {item.kinds.includes("ship") && (
+                        <form action={saveItemGoalAction}>
+                          <input type="hidden" name="typeId" value={item.typeId} />
+                          <input type="hidden" name="goalKind" value="ship" />
+                          <button className={styles.secondaryLink} type="submit"><Target size={15} /> Choose ship goal</button>
+                        </form>
+                      )}
+                      {item.kinds.includes("skill") && (
+                        <form className={styles.searchForm} action={saveItemGoalAction}>
+                          <input type="hidden" name="typeId" value={item.typeId} />
+                          <input type="hidden" name="goalKind" value="skill" />
+                          <label className={styles.searchBox}>Target level <select name="level" defaultValue="1" aria-label={`Target level for ${item.name ?? `Type ${item.typeId}`}`}><option value="1">I</option><option value="2">II</option><option value="3">III</option><option value="4">IV</option><option value="5">V</option></select></label>
+                          <button className={styles.secondaryLink} type="submit"><Target size={15} /> Choose skill goal</button>
+                        </form>
+                      )}
                     </article>
                   ))}
                 </div>
@@ -158,16 +263,31 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
 
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
-                <div><div className={styles.eyebrow}>Add a direction</div><h2>Save an activity goal</h2></div>
-                <p>Examples: Run Level 4 missions, learn exploration, start PI, try T1 Abyssals.</p>
+                <div><div className={styles.eyebrow}>Activity</div><h2>Choose an activity goal</h2></div>
+                <p>Use an existing NEC activity direction; a free-text name does not authorize NEC to invent requirements.</p>
               </div>
               <form className={styles.searchForm} action={saveActivityGoalAction}>
                 <label className={styles.searchBox}>
                   <Target size={17} aria-hidden="true" />
-                  <input type="text" name="title" placeholder="What do you want to learn or do?" maxLength={160} aria-label="Activity goal" />
+                  <input type="text" name="title" placeholder="Learn exploration, run T1 Abyssals..." maxLength={160} aria-label="Activity goal" />
                 </label>
-                <button className={styles.searchButton} type="submit">Save goal</button>
+                <button className={styles.searchButton} type="submit">Choose activity goal</button>
               </form>
+            </section>
+
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <div><div className={styles.eyebrow}>Fitting</div><h2>Choose a fitting goal</h2></div>
+                <p>Name the fit you want to assemble. NEC will only materialize modules, rigs, charges, drones, and consumables after a structured fit supplies those exact requirements.</p>
+              </div>
+              <form className={styles.searchForm} action={saveFittingGoalAction}>
+                <label className={styles.searchBox}>
+                  <Target size={17} aria-hidden="true" />
+                  <input type="text" name="title" placeholder="Rifter brawl fit..." maxLength={160} aria-label="Fitting goal" />
+                </label>
+                <button className={styles.searchButton} type="submit">Choose fitting goal</button>
+              </form>
+              <Link className={styles.secondaryLink} href="/fitting">Open Fitting Builder <ExternalLink size={12} /></Link>
             </section>
 
             <section className={styles.section}>
@@ -176,9 +296,9 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
                 <p>{activeGoals.length} active goal{activeGoals.length === 1 ? "" : "s"}</p>
               </div>
               {activeGoals.length === 0 ? (
-                <div className={styles.emptyState}><strong>No active goals yet.</strong>Save an item or activity above to start tracking progress.</div>
+                <div className={styles.emptyState}><strong>No active goals yet.</strong>Choose an activity, ship, fitting, or skill above.</div>
               ) : (
-                <div className={styles.results}>{activeGoals.map((goal) => <GoalCard goal={goal} key={goal.id} />)}</div>
+                <div className={styles.results}>{activeGoals.map((goal) => <GoalCard goal={goal} plan={plans.get(goal.id) ?? null} key={goal.id} />)}</div>
               )}
             </section>
 
@@ -188,7 +308,7 @@ export default async function GoalsPage({ searchParams }: GoalsPageProps) {
                   <div><div className={styles.eyebrow}>History</div><h2>Completed goals</h2></div>
                   <p>{completedGoals.length} completed</p>
                 </div>
-                <div className={styles.results}>{completedGoals.map((goal) => <GoalCard goal={goal} key={goal.id} />)}</div>
+                <div className={styles.results}>{completedGoals.map((goal) => <GoalCard goal={goal} plan={plans.get(goal.id) ?? null} key={goal.id} />)}</div>
               </section>
             )}
           </>
