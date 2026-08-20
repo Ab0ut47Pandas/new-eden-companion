@@ -1,119 +1,90 @@
 # New Eden Companion — Focused Companion Integration Beta
 
-This document is the authoritative implementation order for the next NEC beta. Until this plan is complete, it takes priority over unfinished feature-growth work in `docs/ROADMAP.md`.
+This document is the authoritative implementation order for the current NEC beta. Until BETA-20 is complete, it takes priority over unfinished feature-growth work in `docs/ROADMAP.md`.
 
 ## Product target
-
-The immediate deliverable is simple:
 
 > Open New Eden Companion and receive one trustworthy, understandable, achievable answer to **“What should I do right now?”**
 
 Everything NEC already knows about skills, ships, fits, assets, acquisition, industry, markets, location, readiness, and combat should support that answer instead of competing for attention as disconnected tools.
 
-## Scope rule
+## Scope and safety rules
 
-Do not add new activity categories or large unrelated feature systems until this focused beta is complete. Prefer integration, explanation, degraded-state handling, end-to-end workflow quality, security, and release polish.
-
-Existing deeper systems may be reused where they directly support the beta workflow. NEC Campaigns, Story Guide, Epic Arc expansion, additional activity categories, and large visual redesigns are explicitly post-beta work and do not block this focused beta release.
+- Do not add new activity categories, Campaigns, Story Guide, Epic Arc expansion, large visual redesigns, or unrelated feature-growth work before BETA-20.
+- Prefer integration, explanation, degraded-state handling, security, validation, and release polish.
+- Unknown required evidence must never be silently treated as ready.
+- Never invent safety, profitability, DPS, success chance, readiness percentages, live client state, facility access, mission state, loot, rewards, probabilities, or market certainty.
+- AIR/Career completion remains user-confirmed/local unless current ESI can establish it; skills/assets/wallet are never proof of completion.
+- Selling requires positive evidence; uncertain rarity/source/replaceability remains Keep/Review.
+- Final preflight language is **Preflight complete / No known blockers**, never `safe to undock` or another safety guarantee.
+- `docs/END_STATE_EXPERIENCE.md` remains the focused-beta end-state acceptance reference.
 
 ## Current state
 
 - Integration branch: `codex/companion-integration`
-- Repository baseline: package version `0.1.16`; BETA-01 baseline implementation merged in PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`.
-- Current focused-beta work item: `BETA-11`.
-- Last completed focused-beta item: `BETA-10`.
-- BETA-10 implementation: compact goal checklist and parent-reason progression merged in PR #124 / `b416c80700847aaefb828081f4f9728a9dd37977`; Goals now presents one obvious next action plus up to six real milestones, collapses established owned/trained coverage instead of turning it into chores, keeps shortest usable skill milestones ahead of optional optimization, preserves unknown ownership/source state as Cannot verify, retains every prerequisite's parent reason, and moves deep dependency/acquisition evidence behind progressive disclosure.
-- BETA-09 implementation: acquisition choices and training milestones merged in PR #123 / `b8e2ddc91cf2eab949cfd7643fd2a06e6682695d`; uncovered requirements now expose only evidence-backed buy/build/haul/substitute/source choices, preserve explicit terminal-source and unknown boundaries, keep unknown ownership from becoming an acquisition order, and separate the shortest usable training milestone from optional optimization levels.
-- BETA-08 implementation: goal entry and owned-first dependency planning merged in PR #121 / `6071b45f2abcf897ef8d32d225790fb4d069260e`; Goals now supports activity, ship, fitting, and skill targets, while the owned-first planner covers skill/hull/module/rig/charge/drone/consumable/material/blueprint requirements, reuses established trained skills and accessible owned quantities before reporting the uncovered remainder, keeps inaccessible/unavailable evidence explicit, requires parent reasons for dependencies, and refuses to invent requirement lists from free-text activity/fitting names until a structured activity or selected/imported fit supplies those facts.
-- BETA-07 implementation: adventure-first intent selection merged in PR #119 / `582aa19398ec074489d9433d7dbd242f1ecd15d2`; onboarding and the Suggested Session home now accept plain-language intents such as fighting, exploration, mining, hauling/trade, building, dangerous exploration, playing with a friend, making ISK, or asking NEC to choose. Intent only breaks ties after verified readiness and saved-goal relevance, so unsupported choices do not fabricate activities or override blockers; AIR/tutorial completion remains local/user-confirmed rather than inferred from skills, ships, assets, or wallet state.
-- BETA-06 implementation: short first-run onboarding merged in PR #117 / `08c35e5657be974e3fbbfe8b94c4aa37ba04c76b`; disconnected/new users now see ESI capability/limit guidance, choose connect or explicitly labeled demo data, set local session-length/risk preferences that feed the unified Suggested Session service, and land on the primary recommendation after onboarding. AIR/tutorial completion is not inferred from skills, ships, assets, or wallet state.
-- BETA-05 implementation: standard uncertainty language merged in PR #115 / `18d8375359a8558ab7a3a25bf6ffd8657574934c`; Suggested Session and Activity Briefing now share the exact user-facing states **Ready**, **Probably ready**, **Missing requirements**, **Cannot verify**, and **Live information unavailable**, with fail-closed unknown/live-data wording and existing resolution actions surfaced where available.
-- BETA-04 implementation: recommendation explanations merged in PR #113 / `6e4a746fe27ceb086e119e154f70dbd28107cb47`; Suggested Session now separates reasoning, supported character/evaluator evidence, and provenance in `Why this?`, exposes the actual readiness → goal relevance → preference tie-break ranking rule, includes session/risk preference rationale, and rejects meaningful candidates without supported evidence.
-- BETA-03 implementation: Suggested Session homepage integration merged in PR #111 / `8499c731b4a88167cb5d30d4bb11835b73386187`; the homepage now consumes the BETA-02 service result, renders one primary recommendation plus up to two alternatives, exposes activity/session/risk/next-action details, supports refresh and `Suggest something different`, renders demo data explicitly as demo, and fails closed when required evidence is unavailable.
-- BETA-02 implementation: unified Suggested Session evidence-composition service merged in PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275`; it returns one primary recommendation, up to two alternatives, explicit evidence/provenance/unknowns, qualitative preference-aware ranking, supported owned/accessibile ship preference, and fail-closed required-evidence handling for the BETA-03 homepage integration.
-- BETA-01 executable baseline: 75 test files / 404 tests pass; typecheck passes; lint passes with 2 recorded warnings; production build passes with the recorded updater bundle-tracing warning; Windows package-policy and updater-startup smoke pass. Full warning inventory is in `docs/BETA_01_BASELINE.md`.
-- BETA-01 screenshot limitation: this automation runtime cannot render NEC because its local container cannot resolve GitHub and the GitHub connector exposes repository/Actions operations but no browser/UI renderer. The limitation and required later screenshot set are recorded in `docs/BETA_01_BASELINE.md`; no screenshots are fabricated.
-- The legacy `docs/ROADMAP.md` remains the historical feature record, but unfinished items there do not supersede this plan while the focused beta is active.
+- Repository baseline: package version `0.1.16`.
+- Current focused-beta work item: `BETA-12`.
+- Last completed focused-beta item: `BETA-11`.
+- BETA-11 reconciliation: the existing Preflight system already composed the active ship with ESI-visible fitted/cargo and stored-supply evidence for ammunition, drones, Nanite Repair Paste, probes, filaments, scripts, capacitor charges, and established activity equipment. PR #126 / `a475fffab1600c878994bc6dc91161bbc87398b1` added focused regression coverage for probes, script/cap-charge composition, and fail-closed unknown behavior when active-ship inventory is unavailable rather than duplicating the preflight engine.
+- BETA-01 baseline warnings remain intentionally open for BETA-18: two recorded lint warnings and the updater whole-project bundle-tracing warning. See `docs/BETA_01_BASELINE.md`.
+- BETA-01 screenshot limitation remains recorded: this automation runtime cannot render NEC; required screenshots must be captured later in a UI-capable environment rather than fabricated.
 
 ---
 
 ## Phase 1 — Establish the correct baseline
 
-- [x] **BETA-01 — Baseline integration checkpoint.** Bring the working copy fully to current GitHub `main`; work from `codex/companion-integration`; run tests, typecheck, lint, and production build; record baseline screenshots of homepage, goals, fitting, item explorer, and representative activity pages. Record existing warnings separately rather than silently normalizing them. PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`. Screenshot capture was genuinely unavailable in this automation runtime; the exact limitation and later-required page set are recorded in `docs/BETA_01_BASELINE.md` per the focused-beta runtime rule.
-
-Acceptance:
-- branch starts from current `main`;
-- tests/typecheck/lint/build result is recorded;
-- baseline screenshots exist for later regression comparison when a UI-capable runtime is available; this automation runtime limitation is explicitly recorded rather than treated as successful capture;
-- no product behavior is changed merely to make the baseline appear cleaner.
+- [x] **BETA-01 — Baseline integration checkpoint.** Current-main tests/typecheck/lint/build and Windows smoke recorded; screenshot-runtime limitation recorded. PR #107 / `da3f3bf28213b9169f454349fc429a2d796a23d1`.
 
 ## Phase 2 — Make Suggested Session the core product
 
-- [x] **BETA-02 — Unified Suggested Session service.** Create one recommendation service that composes supported evidence from character skills/training, current ship/fit, owned ships/modules/ammo/drones/cargo, wallet/market, location and supported nearby-risk evidence, existing activity-readiness engines, and player-selected session length/risk preferences. PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275` adds the fail-closed evidence contract, qualitative deterministic ranking, one primary plus up to two alternatives, supported owned/accessibile ship preference, one next action, missing requirements/items, provenance, and uncertainty-resolution actions without inventing unavailable state.
-- [x] **BETA-03 — Suggested Session home integration.** Return one primary recommendation plus two alternatives and make that the homepage’s main answer instead of legacy dashboard-advice sorting. Each recommendation should expose activity, suitable ship where supported, preparation, approximate session-length class, risk posture, missing requirements/items, and one concrete next action. Add refresh and `suggest something different` controls. PR #111 / `8499c731b4a88167cb5d30d4bb11835b73386187` routes existing dashboard evidence through the unified service, centers the result on the homepage, adds the requested controls, preserves unavailable required evidence as unavailable/cannot-verify state, and keeps demo recommendations explicitly labeled as demo.
-
-Recommendation safety rules:
-- unknown required evidence must never be silently treated as ready;
-- an otherwise plausible activity may be shown as **cannot verify yet** with a concrete way to resolve the uncertainty;
-- never invent safety, profitability, DPS, success chance, or readiness percentages;
-- do not promote a specialist fleet role as a solo destination unless the user explicitly asks for that role.
+- [x] **BETA-02 — Unified Suggested Session service.** Compose supported character/readiness evidence and preferences into one primary recommendation plus two alternatives. PR #109 / `f12f8042bbc735404387df4cf7b46af5444b0275`.
+- [x] **BETA-03 — Suggested Session home integration.** Center the homepage on that service with activity, supported ship, preparation, session/risk class, missing requirements, one next action, refresh, and suggest-something-different. PR #111 / `8499c731b4a88167cb5d30d4bb11835b73386187`.
 
 ## Phase 3 — Explanations and uncertainty
 
-- [x] **BETA-04 — Recommendation explanations.** Every meaningful recommendation exposes `Why this?`, the character facts/rules that produced it, and relevant provenance. PR #113 / `6e4a746fe27ceb086e119e154f70dbd28107cb47` separates reasoning from evidence/provenance in the existing `Why this?` disclosure, exposes ranking/preference rationale, applies the same explanation structure to primary and alternative recommendations, and requires supported evidence plus provenance for every meaningful Suggested Session candidate.
-- [x] **BETA-05 — Standard uncertainty language.** Standardize at least: **Ready**, **Probably ready**, **Missing requirements**, **Cannot verify**, and **Live information unavailable**. Explain what the user can do to resolve missing information where possible. PR #115 / `18d8375359a8558ab7a3a25bf6ffd8657574934c` adds a shared focused-beta uncertainty presentation model, maps existing readiness-engine states onto that shared language without changing readiness mechanics, updates Activity Briefing to stop using legacy Nearly ready / Not recommended yet / Needs information wording, makes activity briefings explain the state meaning and surface the existing readiness next action when uncertainty or a blocker can be resolved, updates Suggested Session primary and alternative cards to consume the shared state copy and show resolution guidance consistently, including alternatives, and keeps unavailable/missing evidence fail-closed and explicitly states that NEC will not replace missing live information with assumptions.
-
-Never replace uncertainty with fabricated precision.
+- [x] **BETA-04 — Recommendation explanations.** Expose `Why this?`, evidence, rules, and provenance. PR #113 / `6e4a746fe27ceb086e119e154f70dbd28107cb47`.
+- [x] **BETA-05 — Standard uncertainty language.** Standardize Ready, Probably ready, Missing requirements, Cannot verify, and Live information unavailable with resolution guidance where possible. PR #115 / `18d8375359a8558ab7a3a25bf6ffd8657574934c`.
 
 ## Phase 4 — First-run experience
 
-- [x] **BETA-06 — Short first-run onboarding.** Explain what NEC can/cannot see, connect a character or choose demo data, ask risk/session-length preferences, and end with an achievable first recommendation. PR #117 / `08c35e5657be974e3fbbfe8b94c4aa37ba04c76b` adds the bounded first-run screen, local preferences, connect/demo flow, explicit ESI/live-state/AIR-completion limitations, and direct handoff to Suggested Session without introducing new activity categories.
-- [x] **BETA-07 — Adventure-first intent selection.** Let a new or directionless player choose what sounds fun before asking them to understand EVE careers or fleet roles. Support intents such as combat, exploration, mining, hauling/trade, industry/building, `explore somewhere dangerous`, `play with a friend`, `show me something`, and `give me an adventure`. PR #119 / `582aa19398ec074489d9433d7dbd242f1ecd15d2` adds the plain-language intent vocabulary to first-run onboarding and the home Suggested Session controls, persists the local choice, and uses it only as a conservative ranking tie-breaker over existing supported candidates after readiness and goal relevance. Unsupported intents do not fabricate matching activities, and the friend path does not assume a leader or specialist role.
-
-AIR/Career status rule:
-- if current ESI cannot prove AIR Career Program or Career Agent completion, keep it user-confirmed/local;
-- skills, ships, assets, or wallet may inform capability but are never proof of tutorial/AIR completion.
+- [x] **BETA-06 — Short first-run onboarding.** Explain ESI limits, connect or demo, capture session/risk preferences, and land on Suggested Session. PR #117 / `08c35e5657be974e3fbbfe8b94c4aa37ba04c76b`.
+- [x] **BETA-07 — Adventure-first intent selection.** Support plain-language intents such as combat, exploration, mining, hauling/trade, building, dangerous exploration, playing with a friend, show me something, and give me an adventure without requiring fleet-role jargon. PR #119 / `582aa19398ec074489d9433d7dbd242f1ecd15d2`.
 
 ## Phase 5 — Goal and acquisition planning
 
-- [x] **BETA-08 — Goal entry and owned-first dependency plan.** Let the player choose an activity, ship, fitting, or skill goal. Reuse already-owned/trained parts first and build the uncovered dependency list for skills, hulls, modules, rigs, charges, drones, consumables, materials, and blueprints. PR #121 / `6071b45f2abcf897ef8d32d225790fb4d069260e` adds the focused goal/requirement model, ship/skill/static target entry plus activity/fitting goal entry, owned/trained-first coverage with explicit partial/inaccessible/unknown states, and parent-reason enforcement; structured requirements are never invented from free-text activity/fitting names.
-- [x] **BETA-09 — Acquisition choices and training milestones.** For uncovered requirements, show evidence-backed buy/build/haul/substitute/source choices, with explicit non-manufacturable/LP/loot/salvage/PI/reaction/etc. terminal sources where established. Show the shortest usable training milestone separately from optional optimization skills. PR #123 / `b8e2ddc91cf2eab949cfd7643fd2a06e6682695d`.
-- [x] **BETA-10 — Goal checklist with parent reason.** Convert the plan into a followable checklist with one obvious next action and compact milestones. Every chore must retain its parent reason: e.g. `mine Tritanium because it is required for the PvP hull you chose`, not simply `mine Tritanium`. PR #124 / `b416c80700847aaefb828081f4f9728a9dd37977`.
+- [x] **BETA-08 — Goal entry and owned-first dependency plan.** Activity/ship/fit/skill goals; reuse owned/trained parts first; preserve unknown/inaccessible state and parent reasons. PR #121 / `6071b45f2abcf897ef8d32d225790fb4d069260e`.
+- [x] **BETA-09 — Acquisition choices and training milestones.** Evidence-backed buy/build/haul/substitute/source choices with explicit terminal-source boundaries and shortest usable training milestone separate from optimization. PR #123 / `b8e2ddc91cf2eab949cfd7643fd2a06e6682695d`.
+- [x] **BETA-10 — Goal checklist with parent reason.** One obvious next action plus compact milestones; every chore retains its parent reason and deep dependencies stay behind progressive disclosure. PR #124 / `b416c80700847aaefb828081f4f9728a9dd37977`.
 
 ## Phase 6 — Preflight integration
 
-- [ ] **BETA-11 — Activity preflight composition.** Use the active ship and ESI-visible accessible cargo/fit evidence to check activity-specific supplies including ammunition, drones, repair paste, probes, filaments, scripts, cap charges, and other established requirements.
+- [x] **BETA-11 — Activity preflight composition.** Use the active ship and ESI-visible accessible cargo/fit evidence to check activity-specific ammunition, drones, repair paste, probes, filaments, scripts, cap charges, and other established requirements. Existing composed behavior was reconciled and locked with focused regression coverage in PR #126 / `a475fffab1600c878994bc6dc91161bbc87398b1`.
 - [ ] **BETA-12 — Ship/fit suitability and blocker severity.** Validate supported fitted/online requirements, identify inappropriate ships/damage choices where evidence establishes that, suggest a more suitable owned ship when supported, and separate fatal blockers from useful improvements.
-- [ ] **BETA-13 — Final preflight summary.** Finish with **Preflight complete / No known blockers** or a blocker list. Never label the player or route `safe to undock` and never imply a safety guarantee.
+- [ ] **BETA-13 — Final preflight summary.** Finish with **Preflight complete / No known blockers** or a blocker list, never a safety guarantee.
 
 ## Phase 7 — Validation and security
 
-- [ ] **BETA-14 — SSO/token security review.** Complete the open EVE SSO/token-storage review and verify secrets/tokens cannot leak into logs or browser responses.
-- [ ] **BETA-15 — Portable/degraded-state validation.** Exercise hauling and industry in the portable Windows release and test degraded behavior when ESI, market sources, or the static database are unavailable.
-- [ ] **BETA-16 — End-to-end integration test.** Add and exercise the core path: `Connect/demo → Suggested Session → Goal → Acquire → Fit → Preflight`.
-- [ ] **BETA-17 — New-player usability checkpoint.** Test with a genuinely new EVE player, not only someone familiar with NEC, and verify important recommendations against SDE/ESI evidence and actual gameplay where applicable.
-
-The end-to-end test must include at least one case where required data is unknown, one owned-part reuse case, and one acquisition-source boundary that is not simply `buy it`.
+- [ ] **BETA-14 — SSO/token security review.** Complete the EVE SSO/token-storage review and verify secrets/tokens cannot leak into logs or browser responses.
+- [ ] **BETA-15 — Portable/degraded-state validation.** Exercise hauling and industry in the portable Windows release and test degraded ESI, market-source, and static-database behavior.
+- [ ] **BETA-16 — End-to-end integration test.** Exercise `Connect/demo → Suggested Session → Goal → Acquire → Fit → Preflight`, including an unknown-data case, owned-part reuse, a non-market acquisition boundary, and relevant persistence.
+- [ ] **BETA-17 — New-player usability checkpoint.** Test with a genuinely new EVE/NEC player and verify important recommendations against supported SDE/ESI/game evidence where applicable.
 
 ## Phase 8 — Cleanup and focused beta release
 
-- [ ] **BETA-18 — Build/lint/updater cleanup.** Resolve the updater whole-project bundle-tracing warning and remaining lint warnings that exist at the focused-beta baseline, without masking real problems.
-- [ ] **BETA-19 — User-facing documentation.** Update README to reflect the current app, add current screenshots, a simple `download → connect/demo → start` guide, privacy notes, external data sources, and ESI limitations.
-- [ ] **BETA-20 — Focused beta release.** Build the Windows release candidate, perform clean-install/update/rollback tests, publish through the normal stable updater path, and collect player feedback before beginning another large feature phase.
+- [ ] **BETA-18 — Build/lint/updater cleanup.** Resolve the updater bundle-tracing warning and focused-beta baseline lint warnings without masking real problems.
+- [ ] **BETA-19 — User-facing documentation.** Update README, current screenshots, `download → connect/demo → start` guide, privacy notes, external data sources, and ESI limitations.
+- [ ] **BETA-20 — Focused beta release.** Build the Windows release candidate, perform clean-install/update/rollback tests, publish through the normal stable updater path, and collect player feedback before resuming feature growth.
 
 ---
 
-## Focused beta completion rule
+## Focused-beta manual checkpoint
 
-The focused beta is complete only when BETA-01 through BETA-20 are complete, the installed-app end-to-end path is understandable and functional, required uncertainty remains honest, security/release validation passes, and a new player can reach a useful first recommendation without needing prior knowledge of NEC’s internal tools.
+Before BETA-20 is complete, manually exercise the installed-app path required by `docs/END_STATE_EXPERIENCE.md`, including primary/different Suggested Session recommendations, Why-this evidence, goal planning, owned-part reuse, a non-market acquisition path, fit/assembly guidance, blocker-vs-improvement preflight, degraded/unknown state, persistence across restart, and a genuinely new-player usability pass.
+
+## Completion rule
+
+The focused beta is complete only when BETA-01 through BETA-20 are complete, CI and security/release validation pass, the installed-app end-to-end workflow is understandable and functional, required uncertainty remains honest, and the focused-beta manual checkpoint has passed.
 
 ## Post-beta backlog
 
-Resume only after feedback from the focused beta:
-
-- NEC Campaigns
-- Story Guide
-- Epic Arc expansion
-- Additional activity categories
-- Large visual redesigns
-- Other roadmap features that do not directly support the focused beta integration path
+Resume only after focused-beta player feedback: NEC Campaigns, Story Guide, Epic Arc expansion, additional activity categories, large visual redesigns, and other unrelated legacy-roadmap feature growth.
