@@ -80,6 +80,65 @@ describe("buildSuggestedSession", () => {
     expect(result.primary?.provenance).toContain("activity readiness engine");
   });
 
+  it("uses plain-language adventure intent as a tie-breaker before time/risk preferences", () => {
+    const result = buildSuggestedSession({
+      candidates: [
+        candidate({
+          id: "industry",
+          activity: "industry",
+          title: "Build something",
+          adventureIntents: ["industry-building"],
+          sessionLength: "short",
+          riskPosture: "cautious",
+        }),
+        candidate({
+          id: "mining",
+          activity: "mining",
+          title: "Mine useful ore",
+          adventureIntents: ["mining"],
+          sessionLength: "long",
+          riskPosture: "balanced",
+        }),
+      ],
+      evidence: readinessCoverage,
+      preferences: { sessionLength: "short", risk: "cautious", intent: "mining" },
+    });
+
+    expect(result.primary?.candidateId).toBe("mining");
+    expect(result.primary?.why).toContain("Matches the kind of experience you said sounds fun.");
+  });
+
+  it("keeps verified readiness ahead of a selected adventure intent", () => {
+    const result = buildSuggestedSession({
+      candidates: [
+        candidate({ id: "ready", activity: "mining", title: "Ready mining", adventureIntents: ["mining"] }),
+        candidate({
+          id: "combat",
+          activity: "combat",
+          title: "Unverified fight",
+          adventureIntents: ["combat"],
+          readiness: readiness("unknown"),
+        }),
+      ],
+      evidence: readinessCoverage,
+      preferences: { sessionLength: "any", risk: "any", intent: "combat" },
+    });
+
+    expect(result.primary?.candidateId).toBe("ready");
+    expect(result.ranked[1].candidateId).toBe("combat");
+    expect(result.ranked[1].state).toBe("cannot-verify");
+  });
+
+  it("treats show-me-something and adventure as open-ended rather than fabricated activity matches", () => {
+    const result = buildSuggestedSession({
+      candidates: [candidate({ id: "planning", activity: "planning", title: "Review a goal" })],
+      evidence: readinessCoverage,
+      preferences: { sessionLength: "any", risk: "any", intent: "adventure" },
+    });
+
+    expect(result.primary?.why).toContain("You asked NEC to choose an experience, so intent does not narrow the supported candidate set.");
+  });
+
   it("never treats missing required evidence as ready", () => {
     const result = buildSuggestedSession({
       candidates: [candidate({

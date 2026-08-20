@@ -28,12 +28,14 @@
 .preferenceGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .preferenceGrid fieldset { border: 1px solid rgba(137, 162, 181, .18); border-radius: 14px; padding: 16px; min-width: 0; }
 .preferenceGrid legend { display: inline-flex; align-items: center; gap: 7px; padding: 0 7px; font-weight: 800; }
-.optionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
-.optionGrid button { min-height: 74px; text-align: left; border: 1px solid rgba(137, 162, 181, .2); border-radius: 10px; background: rgba(255,255,255,.025); color: #d7e3e8; padding: 11px; cursor: pointer; }
-.optionGrid button:hover { background: rgba(128, 217, 191, .06); }
-.optionGrid button.selected { border-color: rgba(128, 217, 191, .55); background: rgba(128, 217, 191, .1); }
-.optionGrid button strong, .optionGrid button span { display: block; }
-.optionGrid button span { margin-top: 4px; color: #91a3ae; font-size: .78rem; line-height: 1.35; }
+.intentFieldset { grid-column: 1 / -1; }
+.optionGrid, .intentGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.intentGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.optionGrid button, .intentGrid button { min-height: 74px; text-align: left; border: 1px solid rgba(137, 162, 181, .2); border-radius: 10px; background: rgba(255,255,255,.025); color: #d7e3e8; padding: 11px; cursor: pointer; }
+.optionGrid button:hover, .intentGrid button:hover { background: rgba(128, 217, 191, .06); }
+.optionGrid button.selected, .intentGrid button.selected { border-color: rgba(128, 217, 191, .55); background: rgba(128, 217, 191, .1); }
+.optionGrid button strong, .optionGrid button span, .intentGrid button strong, .intentGrid button span { display: block; }
+.optionGrid button span, .intentGrid button span { margin-top: 4px; color: #91a3ae; font-size: .78rem; line-height: 1.35; }
 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
 .actions button { display: inline-flex; align-items: center; gap: 7px; border-radius: 10px; padding: 11px 14px; cursor: pointer; font-weight: 800; }
@@ -41,9 +43,13 @@
 .secondary { border: 1px solid rgba(137, 162, 181, .24); background: rgba(255,255,255,.035); color: #d7e3e8; }
 .note { margin: 10px 0 0; color: #7f929f; font-size: .82rem; line-height: 1.45; }
 
+@media (max-width: 980px) {
+  .intentGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 760px) {
   .shell { width: min(100% - 18px, 1180px); margin-top: 10px; padding: 18px; }
   .heading, .boundaries { grid-template-columns: 1fr; flex-direction: column; }
   .boundaries, .preferenceGrid { grid-template-columns: 1fr; }
-  .optionGrid { grid-template-columns: 1fr; }
+  .optionGrid, .intentGrid { grid-template-columns: 1fr; }
 }

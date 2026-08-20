@@ -1,10 +1,12 @@
 "use client";
 
-import { Clock3, Database, ShieldCheck, Sparkles, UserRoundCheck } from "lucide-react";
+import { Clock3, Compass, Database, ShieldCheck, Sparkles, UserRoundCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ADVENTURE_INTENT_OPTIONS, type AdventureIntent } from "@/lib/onboarding/intents";
 import {
+  ADVENTURE_INTENT_COOKIE,
   ONBOARDING_COMPLETE_COOKIE,
   SESSION_LENGTH_COOKIE,
   SESSION_RISK_COOKIE,
@@ -40,10 +42,12 @@ export function FirstRunOnboarding({ configured }: { configured: boolean }) {
   const router = useRouter();
   const [sessionLength, setSessionLength] = useState<SessionLengthPreference>("short");
   const [risk, setRisk] = useState<SessionRiskPreference>("balanced");
+  const [intent, setIntent] = useState<AdventureIntent>("adventure");
 
   function persistPreferences(markComplete: boolean) {
     saveCookie(SESSION_LENGTH_COOKIE, sessionLength);
     saveCookie(SESSION_RISK_COOKIE, risk);
+    saveCookie(ADVENTURE_INTENT_COOKIE, intent);
     if (markComplete) saveCookie(ONBOARDING_COMPLETE_COOKIE, "1");
   }
 
@@ -67,7 +71,7 @@ export function FirstRunOnboarding({ configured }: { configured: boolean }) {
         <div>
           <div className={styles.eyebrow}><Sparkles size={15} /> First run</div>
           <h1 id="first-run-title">Get one useful answer first.</h1>
-          <p>Choose how much time you have and how much exposure you want. NEC uses those only after supported readiness, then takes you straight to a Suggested Session.</p>
+          <p>Start with what sounds fun, then tell NEC how much time and exposure you want. Readiness still comes first; these choices only steer supported options.</p>
         </div>
         <span className={styles.badge}><ShieldCheck size={15} /> Evidence first</span>
       </div>
@@ -84,6 +88,23 @@ export function FirstRunOnboarding({ configured }: { configured: boolean }) {
       </div>
 
       <div className={styles.preferenceGrid}>
+        <fieldset className={styles.intentFieldset}>
+          <legend><Compass size={16} /> What sounds fun?</legend>
+          <div className={styles.intentGrid}>
+            {ADVENTURE_INTENT_OPTIONS.map((option) => (
+              <button
+                type="button"
+                key={option.value}
+                className={intent === option.value ? styles.selected : undefined}
+                aria-pressed={intent === option.value}
+                onClick={() => setIntent(option.value)}
+              >
+                <strong>{option.label}</strong><span>{option.detail}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
         <fieldset>
           <legend><Clock3 size={16} /> How long do you want to play?</legend>
           <div className={styles.optionGrid}>

@@ -27,6 +27,34 @@ describe("buildDashboardSuggestedSession", () => {
     }
   });
 
+  it("maps adventure intent only onto existing supported activity advice", () => {
+    const data = demoDashboard();
+    data.advice = [
+      {
+        id: "jobs-finishing",
+        priority: "now",
+        title: "Industry jobs are finishing",
+        summary: "Existing industry work needs attention.",
+        evidence: "The dashboard has supported job-state evidence.",
+        action: "Review the industry jobs.",
+      },
+      {
+        id: "asset-concentration",
+        priority: "watch",
+        title: "Assets are concentrated",
+        summary: "Existing assets may need movement planning.",
+        evidence: "The dashboard has supported asset/location evidence.",
+        action: "Review the hauling plan.",
+      },
+    ];
+
+    const industry = buildDashboardSuggestedSession(data, { sessionLength: "any", risk: "any", intent: "industry-building" });
+    const hauling = buildDashboardSuggestedSession(data, { sessionLength: "any", risk: "any", intent: "hauling-trade" });
+
+    expect(industry.primary?.candidateId).toBe("dashboard-jobs-finishing");
+    expect(hauling.primary?.candidateId).toBe("dashboard-asset-concentration");
+  });
+
   it("fails closed when evidence required by a recommendation is unavailable", () => {
     const data = demoDashboard();
     data.mode = "live";

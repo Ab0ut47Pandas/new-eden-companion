@@ -22,7 +22,12 @@
 .eyebrow, .status { display: inline-flex; align-items: center; gap: 7px; color: #80d9bf; }
 .status { white-space: nowrap; padding: 8px 10px; border: 1px solid rgba(128, 217, 191, 0.28); border-radius: 999px; background: rgba(128, 217, 191, 0.07); }
 
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin: -8px 0 18px; }
+.intentControl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: -8px 0 14px; color: #91a3ae; font-size: .84rem; }
+.intentControl label { color: #d7e3e8; font-weight: 800; }
+.intentControl select { border: 1px solid rgba(137, 162, 181, 0.24); border-radius: 9px; background: #0d1a23; color: #d7e3e8; padding: 8px 10px; }
+.intentControl span { flex: 1 1 360px; line-height: 1.4; }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 18px; }
 .controls button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(137, 162, 181, 0.24); border-radius: 9px; background: rgba(255,255,255,0.035); color: #d7e3e8; padding: 9px 12px; cursor: pointer; }
 .controls button:hover:not(:disabled) { background: rgba(128, 217, 191, 0.08); }
 .controls button:disabled { opacity: 0.45; cursor: default; }
@@ -58,4 +63,5 @@
   .shell { width: min(100% - 18px, 1180px); margin-top: 10px; padding: 18px; }
   .heading { flex-direction: column; }
   .lowerGrid { grid-template-columns: 1fr; }
+  .intentControl { align-items: flex-start; flex-direction: column; }
 }
