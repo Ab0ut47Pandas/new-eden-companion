@@ -31,17 +31,13 @@ export interface FitWeaknessEvidence {
   scramRangeMeters?: number | null;
   disruptorRangeMeters?: number | null;
   assumesSoloTackle?: boolean | null;
-
   requiresRangeControl?: boolean | null;
   mobilityPenaltySources?: readonly string[] | null;
-
   capacitorStable?: boolean | null;
   capacitorDependentSystems?: readonly string[] | null;
-
   primaryTankLayer?: TankLayer | null;
   tankResistances?: Partial<Record<TankLayer, Partial<ResistanceVector>>> | null;
   expectedIncomingDamage?: Partial<Record<DamageType, number | null>> | null;
-
   application?: FitApplicationEvidence | null;
   provenance: readonly string[];
 }
@@ -67,10 +63,6 @@ function finitePositive(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value > 0;
 }
 
-function addFinding(findings: FitWeaknessFinding[], finding: FitWeaknessFinding): void {
-  findings.push(finding);
-}
-
 function longestTackleRange(evidence: FitWeaknessEvidence): number | null {
   const candidates = [evidence.scramRangeMeters, evidence.disruptorRangeMeters].filter(finitePositive);
   return candidates.length ? Math.max(...candidates) : null;
@@ -81,7 +73,8 @@ function evaluateRangeAndTackle(
   findings: FitWeaknessFinding[],
   unknowns: string[],
 ): void {
-  if (!finitePositive(evidence.weaponPreferredRangeMeters)) {
+  const preferred = evidence.weaponPreferredRangeMeters;
+  if (!finitePositive(preferred)) {
     unknowns.push("weapon engagement range is not established");
     return;
   }
@@ -90,30 +83,30 @@ function evaluateRangeAndTackle(
     unknowns.push("solo tackle responsibility is not established");
     return;
   }
-  if (evidence.assumesSoloTackle === false) return;
+  if (!evidence.assumesSoloTackle) return;
 
   const tackleRange = longestTackleRange(evidence);
   if (!tackleRange) {
-    addFinding(findings, {
+    findings.push({
       code: "solo-plan-without-established-tackle",
       category: "tackle",
       severity: "warning",
       summary: "The fit assumes it must hold its own target, but no supported warp-tackle envelope is established.",
       why: "A solo engagement plan that depends on preventing escape needs supported tackle evidence. NEC will not infer tackle from a module name or role label.",
-      evidence: [`Preferred weapon range: ${Math.round(evidence.weaponPreferredRangeMeters)} m`],
+      evidence: [`Preferred weapon range: ${Math.round(preferred)} m`],
     });
     return;
   }
 
-  if (evidence.weaponPreferredRangeMeters > tackleRange) {
-    addFinding(findings, {
+  if (preferred > tackleRange) {
+    findings.push({
       code: "weapon-plan-beyond-own-tackle",
       category: "range-plan",
       severity: "caution",
       summary: "The preferred weapon range extends beyond the fit's established self-tackle envelope.",
       why: "At the preferred damage range, the fit cannot establish from its own validated tackle data that it can also prevent the target from warping. That can be intentional, but the plan needs an explicit disengage or support assumption.",
       evidence: [
-        `Preferred weapon range: ${Math.round(evidence.weaponPreferredRangeMeters)} m`,
+        `Preferred weapon range: ${Math.round(preferred)} m`,
         `Longest established tackle range: ${Math.round(tackleRange)} m`,
       ],
     });
@@ -130,14 +123,13 @@ function evaluateMobility(
     return;
   }
   if (!evidence.requiresRangeControl) return;
-
   if (evidence.mobilityPenaltySources == null) {
     unknowns.push("mobility penalty evidence is not established");
     return;
   }
   if (evidence.mobilityPenaltySources.length === 0) return;
 
-  addFinding(findings, {
+  findings.push({
     code: "range-control-with-supported-mobility-penalties",
     category: "mobility",
     severity: "caution",
@@ -163,7 +155,7 @@ function evaluateCapacitor(
   }
   if (evidence.capacitorStable || systems.length === 0) return;
 
-  addFinding(findings, {
+  findings.push({
     code: "unstable-cap-with-cap-dependent-plan",
     category: "capacitor",
     severity: "warning",
@@ -180,9 +172,12 @@ function normalizedDamageProfile(
   if (values.some((value) => value == null || typeof value !== "number" || !Number.isFinite(value) || value < 0)) {
     return null;
   }
-  const total = values.reduce((sum, value) => sum + (value ?? 0), 0);
+  const numericValues = values as number[];
+  const total = numericValues.reduce((sum, value) => sum + value, 0);
   if (total <= 0) return null;
-  return Object.fromEntries(DAMAGE_TYPES.map((type, index) => [type, (values[index] ?? 0) / total])) as Record<DamageType, number>;
+  return Object.fromEntries(
+    DAMAGE_TYPES.map((type, index) => [type, numericValues[index] / total]),
+  ) as Record<DamageType, number>;
 }
 
 function evaluateResistance(
@@ -190,11 +185,12 @@ function evaluateResistance(
   findings: FitWeaknessFinding[],
   unknowns: string[],
 ): void {
-  if (!evidence.primaryTankLayer) {
+  const tankLayer = evidence.primaryTankLayer;
+  if (!tankLayer) {
     unknowns.push("primary tank layer is not established");
     return;
   }
-  const layer = evidence.tankResistances?.[evidence.primaryTankLayer];
+  const layer = evidence.tankResistances?.[tankLayer];
   if (!layer) {
     unknowns.push("primary tank resistances are not established");
     return;
@@ -214,7 +210,10 @@ function evaluateResistance(
     return;
   }
 
-  const numeric = Object.fromEntries(DAMAGE_TYPES.map((type, index) => [type, resistances[index] as number])) as Record<DamageType, number>;
+  const numericResists = resistances as number[];
+  const numeric = Object.fromEntries(
+    DAMAGE_TYPES.map((type, index) => [type, numericResists[index]]),
+  ) as Record<DamageType, number>;
   const weakestValue = Math.min(...DAMAGE_TYPES.map((type) => numeric[type]));
   const weakestTypes = DAMAGE_TYPES.filter((type) => numeric[type] === weakestValue);
   const dominantShare = Math.max(...DAMAGE_TYPES.map((type) => normalized[type]));
@@ -222,13 +221,15 @@ function evaluateResistance(
   const exposed = dominantTypes.filter((type) => weakestTypes.includes(type));
   if (exposed.length === 0) return;
 
-  addFinding(findings, {
+  findings.push({
     code: "dominant-damage-hits-weakest-resist",
     category: "resistance",
     severity: "warning",
     summary: `The expected dominant damage type (${exposed.join("/")}) matches the weakest resistance on the primary tank layer.`,
     why: "CCP applies each damage type against its corresponding resistance. This finding is emitted only because both the tank layer/resist profile and expected incoming damage composition were supplied as supported evidence.",
-    evidence: exposed.map((type) => `${type}: ${(numeric[type] * 100).toFixed(1)}% resist, ${(normalized[type] * 100).toFixed(1)}% of expected incoming damage`),
+    evidence: exposed.map(
+      (type) => `${type}: ${(numeric[type] * 100).toFixed(1)}% resist, ${(normalized[type] * 100).toFixed(1)}% of expected incoming damage`,
+    ),
   });
 }
 
@@ -242,12 +243,10 @@ function evaluateApplication(
     unknowns.push("target-specific damage application is not established");
     return;
   }
-  if (application.provenance.length === 0) {
-    throw new Error("Application evidence requires provenance");
-  }
+  if (application.provenance.length === 0) throw new Error("Application evidence requires provenance");
   if (application.status !== "poor") return;
 
-  addFinding(findings, {
+  findings.push({
     code: "supported-poor-application",
     category: "application",
     severity: "warning",
