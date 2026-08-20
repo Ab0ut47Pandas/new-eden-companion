@@ -15,11 +15,14 @@ on:
       - "package.json"
       - "package-lock.json"
       - "src/app/activities/**"
+      - "src/app/api/hauling/**"
       - "src/lib/activity/**"
+      - "src/lib/economy/trade-run-degraded*"
       - "src/components/activity-*.tsx"
       - "src/components/activity-*.module.css"
       - "src/components/abyssal-*.tsx"
       - "src/components/abyssal-*.module.css"
+      - "src/components/live-data-unavailable.tsx"
 
 permissions:
   contents: read
@@ -63,6 +66,94 @@ jobs:
           $privateDb = Get-ChildItem -Path $extract -Recurse -File | Where-Object { $_.FullName -match '[\\/]data[\\/].*\.(db|sqlite|sqlite3)$' }
           if ($privateDb) { throw "Portable ZIP contains a private data database." }
           Write-Host "Package contains static DB: $($staticDb[0].FullName)"
+      - name: Exercise portable hauling, industry, and degraded states
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Get-ChildItem -Path dist -Filter '*.zip' | Select-Object -First 1
+          if (-not $zip) { throw "Packaging produced no ZIP." }
+          $extract = Join-Path $env:RUNNER_TEMP 'nec-beta15-portable'
+          if (Test-Path $extract) { Remove-Item -Recurse -Force $extract }
+          Expand-Archive -LiteralPath $zip.FullName -DestinationPath $extract -Force
+          $node = Join-Path $extract 'runtime\node.exe'
+          $server = Join-Path $extract 'server.js'
+          if (-not (Test-Path $node) -or -not (Test-Path $server)) { throw "Portable runtime/server is missing." }
+          $envFile = Join-Path $extract '.env.local'
+          @(
+            'AUTH_SECRET=beta15-portable-validation-secret-1234567890',
+            'EVE_CLIENT_ID='
+          ) | Set-Content -LiteralPath $envFile -Encoding utf8
+
+          function Start-Nec([int]$Port, [string]$StaticDatabasePath = '') {
+            $env:HOSTNAME = 'localhost'
+            $env:PORT = [string]$Port
+            $env:NODE_ENV = 'production'
+            if ($StaticDatabasePath) { $env:STATIC_DATABASE_PATH = $StaticDatabasePath } else { Remove-Item Env:STATIC_DATABASE_PATH -ErrorAction SilentlyContinue }
+            $process = Start-Process -FilePath $node -ArgumentList "--env-file-if-exists=$envFile", $server -WorkingDirectory $extract -PassThru -WindowStyle Hidden
+            $base = "http://127.0.0.1:$Port"
+            for ($attempt = 0; $attempt -lt 60; $attempt++) {
+              if ($process.HasExited) { throw "Portable NEC exited before becoming ready (code $($process.ExitCode))." }
+              try {
+                $response = Invoke-WebRequest -Uri $base -UseBasicParsing -TimeoutSec 2
+                if ($response.StatusCode -eq 200) { return @{ Process = $process; Base = $base } }
+              } catch {}
+              Start-Sleep -Seconds 1
+            }
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            throw "Portable NEC did not become ready on port $Port."
+          }
+
+          function Assert-Page([string]$Uri, [string]$Needle, [hashtable]$Headers = @{}) {
+            $response = Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec 15 -Headers $Headers
+            if ($response.StatusCode -ne 200) { throw "Expected HTTP 200 from $Uri; got $($response.StatusCode)." }
+            if ($response.Content -notmatch [regex]::Escape($Needle)) { throw "Expected '$Needle' in $Uri." }
+            return $response.Content
+          }
+
+          $healthy = Start-Nec 3000
+          try {
+            Assert-Page "$($healthy.Base)/activities/hauling" 'Hauling readiness' | Out-Null
+            Assert-Page "$($healthy.Base)/activities/hauling/trade-run" 'Find me the best run' | Out-Null
+            Assert-Page "$($healthy.Base)/activities/industry/manufacturing" 'Manufacturing planner' | Out-Null
+
+            $staleHeaders = @{ Cookie = 'eve_session=missing-beta15-session' }
+            $haulingUnavailable = Assert-Page "$($healthy.Base)/activities/hauling" 'Live information unavailable' $staleHeaders
+            if ($haulingUnavailable -match 'Demo data is active') { throw 'Hauling substituted demo data for an unavailable connected session.' }
+            $tradeUnavailable = Assert-Page "$($healthy.Base)/activities/hauling/trade-run" 'Live information unavailable' $staleHeaders
+            if ($tradeUnavailable -match 'Demo wallet shown') { throw 'Trade-run planner substituted demo wallet data for an unavailable connected session.' }
+          } finally {
+            Stop-Process -Id $healthy.Process.Id -Force -ErrorAction SilentlyContinue
+            $healthy.Process.WaitForExit(10000) | Out-Null
+          }
+
+          $missingDb = Join-Path $env:RUNNER_TEMP 'nec-beta15-missing-static.db'
+          if (Test-Path $missingDb) { Remove-Item -Force $missingDb }
+          $degraded = Start-Nec 3001 $missingDb
+          try {
+            Assert-Page "$($degraded.Base)/activities/industry/manufacturing" 'local static EVE database is not installed' | Out-Null
+            $body = @{
+              originSystemId = 30002187
+              destinationSystemId = 30000142
+              cargoCapacityM3 = 1000
+              capitalIsk = 100000000
+              salesTaxPercent = 7.5
+              goal = 'profit'
+            } | ConvertTo-Json
+            try {
+              Invoke-WebRequest -Uri "$($degraded.Base)/api/hauling/trade-run/discover" -Method Post -ContentType 'application/json' -Body $body -UseBasicParsing -TimeoutSec 15 | Out-Null
+              throw 'Trade-run discovery unexpectedly succeeded without static data.'
+            } catch {
+              $response = $_.Exception.Response
+              if (-not $response -or [int]$response.StatusCode -ne 503) { throw }
+              $reader = [System.IO.StreamReader]::new($response.GetResponseStream())
+              try { $payload = $reader.ReadToEnd() | ConvertFrom-Json } finally { $reader.Dispose() }
+              if ($payload.state -ne 'Cannot verify') { throw "Expected Cannot verify for missing static data; got '$($payload.state)'." }
+              if ($payload.error -match 'profit' -and $payload.error -match '\d') { throw 'Degraded trade-run response appears to invent profitability.' }
+            }
+          } finally {
+            Stop-Process -Id $degraded.Process.Id -Force -ErrorAction SilentlyContinue
+            $degraded.Process.WaitForExit(10000) | Out-Null
+          }
       - name: Replace stale running NEC instance
         run: node scripts/test-portable-launcher-stale-instance.mjs
       - uses: actions/upload-artifact@v4
