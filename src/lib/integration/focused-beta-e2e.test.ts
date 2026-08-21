@@ -139,7 +139,7 @@ describe("BETA-16 focused beta end-to-end integration", () => {
       });
     });
 
-    const nonMarket = acquisitionPlans.find((plan) => plan.requirement.id === "special-source");
+    const nonMarket = acquisitionPlans.find((plan) => plan.coverage.requirement.id === "special-source");
     expect(nonMarket?.choices).toEqual([
       expect.objectContaining({ kind: "source", label: "Supported non-market source fixture" }),
     ]);
