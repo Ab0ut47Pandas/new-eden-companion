@@ -23,9 +23,9 @@ Everything NEC already knows about skills, ships, fits, assets, acquisition, ind
 
 - Integration branch: `codex/companion-integration`.
 - Repository baseline: package version `0.1.16`.
-- Current focused-beta work item: `BETA-15`.
-- Last completed focused-beta item: `BETA-14`.
-- BETA-14 reconciliation: PR #132 / `17c389410fc0d021395235e9a69fd330639cb565` completes the EVE SSO/token-storage review, preserves Authorization Code + PKCE and server-only token handling, hardens callback logging to error-type-only output, removes the unused unverified token-preview helper, records the local `AUTH_SECRET`/host security boundary, and adds regression tests proving representative authorization codes, PKCE verifiers, access/refresh tokens, and session IDs cannot leak into callback logs or browser redirects.
+- Current focused-beta work item: `BETA-16`.
+- Last completed focused-beta item: `BETA-15`.
+- BETA-15 reconciliation: PR #134 / `49507a352907ef69c5ad60c89e476f0f209ba01c` validates portable Windows hauling, trade-run, and manufacturing flows; stale-session ESI/live-data failure remains explicit rather than falling back to demo; degraded market/static-data paths fail closed as Live information unavailable/Cannot verify; and the current CCP static DB plus package, portable startup, stale-instance replacement, and degraded-state smoke all passed.
 - BETA-01 baseline warnings remain intentionally open for BETA-18: two recorded lint warnings and the updater whole-project bundle-tracing warning. See `docs/BETA_01_BASELINE.md`.
 - BETA-01 screenshot limitation remains recorded: this automation runtime cannot render NEC; required screenshots must be captured later in a UI-capable environment rather than fabricated.
 
@@ -65,7 +65,7 @@ Everything NEC already knows about skills, ships, fits, assets, acquisition, ind
 ## Phase 7 — Validation and security
 
 - [x] **BETA-14 — SSO/token security review.** Current CCP SSO boundaries reviewed; PKCE/state/session/token handling hardened; sensitive-value regression tests prove representative codes, verifiers, tokens, and session IDs do not appear in callback logs or browser redirect responses. PR #132 / `17c389410fc0d021395235e9a69fd330639cb565`.
-- [ ] **BETA-15 — Portable/degraded-state validation.** Exercise hauling and industry in the portable Windows release and test degraded ESI, market-source, and static-database behavior.
+- [x] **BETA-15 — Portable/degraded-state validation.** Portable Windows smoke now exercises hauling, trade-run, and manufacturing; stale/missing ESI session state is explicit instead of substituted with demo data; degraded market/static-data behavior fails closed without invented profitability; current CCP static-data build/checksum, package inspection, portable startup, stale-instance replacement, and degraded-state checks passed. PR #134 / `49507a352907ef69c5ad60c89e476f0f209ba01c`.
 - [ ] **BETA-16 — End-to-end integration test.** Exercise `Connect/demo → Suggested Session → Goal → Acquire → Fit → Preflight`, including an unknown-data case, owned-part reuse, a non-market acquisition boundary, and relevant persistence.
 - [ ] **BETA-17 — New-player usability checkpoint.** Test with a genuinely new EVE/NEC player and verify important recommendations against supported SDE/ESI/game evidence where applicable.
 
